@@ -5,19 +5,17 @@ The goal of this project is to make a supervised machine learning model which ca
 
 ## Background
 
-Path tracing can generate stunning renders with physically accurate properties. Unfortunately the complexity of path tracing makes it near impossible to achieve real time performance. With the increasing focus on machine learning and the new push towards ray tracing with the RTX line of Nvidia Graphics Cards, I hope to combine these two, to make a POC of predicting renders.
+Path tracing can generate stunning renders with physically accurate properties. Unfortunately the complexity of path tracing makes it near impossible to achieve real time performance. With the increasing focus on machine learning and the new push towards ray tracing graphics with the RTX line of Nvidia GPUS, I hope to combine these two fields, to make a POC of predicting renders.
 
 ## Modules
 
-### Renderer
+### Renderer (C++)
 
 A path tracing renderer with support for live rendering (the texture is showed and updated always), as well as outputting images at certain times/rendering completion percentadges
 The renderer should also support having a postprocessing step where a model predicts the values of the render.
 
-### Dataset Creater
-The dataset creater will run the renderer and store the resulting renders at different times. 
+Part of the renderer will be a dataset creater will run the renderer and store the resulting renders at different times. 
 
-### Training
+### Training (python)
 
 The training module should contain a pytorch ML model as well as training definition and testing and evaluation. The goal is to output a model.
-
