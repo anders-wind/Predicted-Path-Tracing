@@ -16,6 +16,13 @@ The renderer should also support having a postprocessing step where a model pred
 
 Part of the renderer will be a dataset creater will run the renderer and store the resulting renders at different times. 
 
-### Training (python)
+### Training (Python)
 
 The training module should contain a pytorch ML model as well as training definition and testing and evaluation. The goal is to output a model.
+
+
+
+## Litterature
+
+- https://research.nvidia.com/sites/default/files/publications/dnn_denoise_author.pdf
+- https://arxiv.org/pdf/1612.03144.pdf
