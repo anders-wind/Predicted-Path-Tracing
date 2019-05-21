@@ -2,12 +2,10 @@
 Module for the combined dataset
 """
 
-from typing import List
+from typing import List, Dict
 from pathlib import Path
 from dataclasses import dataclass
-from torch import Tensor
 from torch.utils.data import Dataset
-from torchvision import transforms
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -51,16 +49,6 @@ class CombinedDataPoint():
 
 
 @dataclass
-class CombinedDataTensor():
-    """
-    A combination of input and output.
-    """
-    name: str
-    image: Tensor  # 3d [H,W,channel(r,g,b)]
-    render: Tensor  # 3d [H,W,channel(r,g,b,depth,completion)]
-
-
-@dataclass
 class CombinedDataset(Dataset):
     """
     CombinedDataset is a collection of images, renders and names
@@ -76,23 +64,29 @@ class CombinedDataset(Dataset):
                  names: List[str],
                  images: List[np.ndarray],
                  renders: List[np.ndarray],
-                 transform: transforms = None):
+                 transform=None):
         self.dataset_path = dataset_path
         self.names = names
         self.images = images
         self.renders = renders
         self.transform = transform
 
+    def set_transform(self, transform):
+        """
+        Sets the transform of the dataset
+        """
+        self.transform = transform
+
     def __len__(self):
         return len(self.names)
 
-    def __getitem__(self, idx: int):
-        item = CombinedDataPoint(
+    def __getitem__(self, idx: int) -> Dict:
+        item = dict(
             name=self.names[idx],
             image=self.images[idx],
             render=self.renders[idx],
         )
-
         if self.transform:
             item = self.transform(item)
+
         return item
