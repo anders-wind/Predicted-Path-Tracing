@@ -27,8 +27,8 @@ class DummyDatasetRepository(DatasetRepositoryBase):
 
     def __init__(self, samples: int):
         self.samples = samples
-        self.width = 2
-        self.height = 2
+        self.width = 20
+        self.height = 20
 
     def load_dataset(self) -> CombinedDataset:
         names = [f"{i}" for i in range(self.samples)]
