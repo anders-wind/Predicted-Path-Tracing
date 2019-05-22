@@ -49,9 +49,9 @@ class TrainingService():
         optimizer = optim.Adam(net.parameters(), lr=0.002)
 
         best_loss = 10000.0
-        stale_rounds = 0
         for epoch in range(self.epochs):
             running_loss = 0.0
+            stale_rounds = 0
             for i, data in enumerate(train_loader):
                 inputs, outputs = data["render"], data["image"]
                 optimizer.zero_grad()
