@@ -1,7 +1,11 @@
 """
 Module for DataRepositories which can get datasets
 """
+from typing import Tuple
 from abc import ABC, abstractmethod
+import numpy as np
+from torch.utils.data import DataLoader
+from torch.utils.data.sampler import SubsetRandomSampler
 from .dataset_repository import DatasetRepositoryBase
 from .dataset import CombinedDataset
 
@@ -18,7 +22,7 @@ class DatasetServiceBase(ABC):
         """
 
     @abstractmethod
-    def get_data_loader(self) -> CombinedDataset:
+    def get_training_and_test_loaders(self, dataset: CombinedDataset) -> Tuple[DataLoader, DataLoader]:
         """
         get a dataset
         """
@@ -38,3 +42,24 @@ class DatasetService(ABC):
         """
         combined_data = self.dataset_repository.load_dataset()
         return combined_data
+
+    def get_training_and_test_loaders(
+            self,
+            dataset: CombinedDataset,
+            batch_size: int = 16,
+            validation_split: float = 0.2,
+            shuffle_dataset: bool = True,
+    ) -> Tuple[DataLoader, DataLoader]:
+        dataset_size = len(dataset)
+        indices = list(range(dataset_size))
+        split = int(np.floor(validation_split * dataset_size))
+        if shuffle_dataset:
+            np.random.shuffle(indices)
+
+        train_indices, test_indices = indices[split:], indices[:split]
+        train_sampler = SubsetRandomSampler(train_indices)
+        test_sampler = SubsetRandomSampler(test_indices)
+
+        train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler)
+        test_loader = DataLoader(dataset, batch_size=batch_size, sampler=test_sampler)
+        return train_loader, test_loader

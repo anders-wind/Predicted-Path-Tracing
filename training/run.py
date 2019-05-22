@@ -40,12 +40,12 @@ def run():
 
     # transforms and dataloader
     dataset.set_transform(transforms.Compose([Transposer(), ToTensor()]))
-    dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
+    train_loader, test_loader = data_service.get_training_and_test_loaders(dataset)
 
     # print_shapes(dataset, dataloader)
 
     training_service = TrainingService(epochs=2)
-    net = training_service.train(dataloader)
+    net = training_service.train(train_loader, test_loader)
 
     predicted = net.forward_single(dataset[0]["render"])
     figure, axarr = plt.subplots(3)
