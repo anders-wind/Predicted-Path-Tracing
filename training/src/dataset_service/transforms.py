@@ -22,6 +22,6 @@ class ToTensor(object):
         render = render.transpose((2, 0, 1))
         return dict(
             name=name,
-            image=torch.from_numpy(image).float(),
-            render=torch.from_numpy(render).float(),
+            image=torch.from_numpy(image).float().to(0),
+            render=torch.from_numpy(render).float().to(0),
         )

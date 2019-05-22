@@ -3,10 +3,11 @@ The runner module
 """
 from torch.utils.data import DataLoader
 from torchvision import transforms
+import matplotlib.pyplot as plt
 from src.dataset_service.dataset_repository import DummyDatasetRepository
 from src.dataset_service.dataset_service import DatasetService
 from src.dataset_service.transforms import ToTensor
-from src.dataset_service.dataset import CombinedDataPoint
+# from src.dataset_service.dataset import CombinedDataPoint
 from src.training_service.training_service import TrainingService
 
 
@@ -28,7 +29,7 @@ def run():
     """
     Main run method
     """
-    data_repository = DummyDatasetRepository(1000)
+    data_repository = DummyDatasetRepository(100000)
     data_service = DatasetService(data_repository)
     dataset = data_service.get_dataset()
 
@@ -39,12 +40,19 @@ def run():
 
     # transforms and dataloader
     dataset.set_transform(transforms.Compose([ToTensor()]))
-    dataloader = DataLoader(dataset, batch_size=10, shuffle=True, num_workers=4)
+    dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 
     # print_shapes(dataset, dataloader)
 
-    training_service = TrainingService(epochs=5)
-    training_service.train(dataloader)
+    training_service = TrainingService(epochs=2)
+    net = training_service.train(dataloader)
+
+    predicted = net.forward_single(dataset[0]["render"])
+    figure, axarr = plt.subplots(3)
+    axarr[0].imshow(dataset[0]["image"].detach().cpu().numpy().transpose((1, 2, 0)))
+    axarr[1].imshow(dataset[0]["render"].detach().cpu().numpy().transpose((1, 2, 0))[:, :, :3])
+    axarr[2].imshow(predicted.detach().cpu().numpy().transpose((1, 2, 0)))
+    figure.show()
 
 
 if __name__ == "__main__":

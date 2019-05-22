@@ -20,7 +20,7 @@ class TrainingService():
         """
         net = FirstNet()
         criterion = nn.MSELoss()
-        optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+        optimizer = optim.Adam(net.parameters(), lr=0.002)
 
         for epoch in range(self.epochs):
             running_loss = 0.0
@@ -33,8 +33,8 @@ class TrainingService():
                 optimizer.step()
 
                 running_loss += loss.item()
-                if i % 10 == 0:
-                    print('[%d, %5d] loss: %.3f' % (epoch, i, running_loss / 10))
+                if i % 100 == 99:
+                    print('[%d, %5d] loss: %.3f' % (epoch, i, running_loss / 100))
                     running_loss = 0.0
 
             print('Finished Epoch: ', epoch)
