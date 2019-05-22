@@ -1,6 +1,7 @@
 """
 The runner module
 """
+import numpy as np
 from torchvision import transforms
 import matplotlib.pyplot as plt
 from src.dataset_service.dataset_repository import DummyDatasetRepository
@@ -50,6 +51,8 @@ def run():
     """
     Main run method
     """
+    np.random.seed(42)
+
     # ========= Create Services
     data_repository = DummyDatasetRepository(32000)
     data_service = DatasetService(data_repository)
