@@ -24,12 +24,12 @@ class TrainingService():
     def __init__(self, epochs: int):
         self.epochs = epochs
 
-    def train(self, train_loader, test_loader):
+    def train(self, train_loader: DataLoader, test_loader: DataLoader):
         """
         Train a NN on the data
         """
         best_net = None
-        best_loss = 100000
+        best_loss = 100000.0
         for _ in range(3):
             net = FirstNet()
             self._optimize_net(net, train_loader)

@@ -1,14 +1,20 @@
 """
 The runner module
 """
-from torch.utils.data import DataLoader
 from torchvision import transforms
 import matplotlib.pyplot as plt
 from src.dataset_service.dataset_repository import DummyDatasetRepository
 from src.dataset_service.dataset_service import DatasetService
 from src.dataset_service.transforms import ToTensor, Transposer
-# from src.dataset_service.dataset import CombinedDataPoint
+from src.dataset_service.dataset import CombinedDataPoint
 from src.training_service.training_service import TrainingService
+
+
+def print_original_shapes(dataset):
+    print("original")
+    for sample in dataset:
+        sample = CombinedDataPoint(**sample)
+        print(f"name: {sample.name}, image: {sample.image.shape}, render: {sample.render.shape}")
 
 
 def print_shapes(dataset, dataloader):
@@ -25,6 +31,22 @@ def print_shapes(dataset, dataloader):
             print(f"name: {name}, image: {image.shape}, render: {render.shape}")
 
 
+def show_images(net, input_render, target_image):
+    """
+    Plots the input_render, the target_image, and the prediction image
+    """
+    predicted = net.forward_single(input_render)
+    figure, axarr = plt.subplots(ncols=3)
+    axarr[0].imshow(input_render.detach().cpu().numpy().transpose((1, 2, 0))[:, :, :3], label="input")
+    axarr[0].title.set_text('input')
+    axarr[1].imshow(target_image.detach().cpu().numpy().transpose((1, 2, 0)), label="target")
+    axarr[1].title.set_text('target')
+    axarr[2].imshow(predicted.detach().cpu().numpy().transpose((1, 2, 0)), label="prediction")
+    axarr[2].title.set_text('prediction')
+    figure.legend()
+    figure.show()
+
+
 def run():
     """
     Main run method
@@ -33,26 +55,17 @@ def run():
     data_service = DatasetService(data_repository)
     dataset = data_service.get_dataset()
 
-    # print("original")
-    # for sample in dataset:
-    #     sample = CombinedDataPoint(**sample)
-    #     print(f"name: {sample.name}, image: {sample.image.shape}, render: {sample.render.shape}")
+    # print_original_shapes(dataset)
 
     # transforms and dataloader
     dataset.set_transform(transforms.Compose([Transposer(), ToTensor()]))
     train_loader, test_loader = data_service.get_training_and_test_loaders(dataset)
 
-    # print_shapes(dataset, dataloader)
+    # print_shapes(dataset, train_loader)
 
     training_service = TrainingService(epochs=2)
     net = training_service.train(train_loader, test_loader)
-
-    predicted = net.forward_single(dataset[0]["render"])
-    figure, axarr = plt.subplots(3)
-    axarr[0].imshow(dataset[0]["image"].detach().cpu().numpy().transpose((1, 2, 0)))
-    axarr[1].imshow(dataset[0]["render"].detach().cpu().numpy().transpose((1, 2, 0))[:, :, :3])
-    axarr[2].imshow(predicted.detach().cpu().numpy().transpose((1, 2, 0)))
-    figure.show()
+    show_images(net, input_render=dataset[0]["render"], target_image=dataset[0]["image"])
 
 
 if __name__ == "__main__":
