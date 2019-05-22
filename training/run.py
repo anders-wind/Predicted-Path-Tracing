@@ -6,7 +6,7 @@ from torchvision import transforms
 import matplotlib.pyplot as plt
 from src.dataset_service.dataset_repository import DummyDatasetRepository
 from src.dataset_service.dataset_service import DatasetService
-from src.dataset_service.transforms import ToTensor
+from src.dataset_service.transforms import ToTensor, Transposer
 # from src.dataset_service.dataset import CombinedDataPoint
 from src.training_service.training_service import TrainingService
 
@@ -29,7 +29,7 @@ def run():
     """
     Main run method
     """
-    data_repository = DummyDatasetRepository(100000)
+    data_repository = DummyDatasetRepository(32000)
     data_service = DatasetService(data_repository)
     dataset = data_service.get_dataset()
 
@@ -39,7 +39,7 @@ def run():
     #     print(f"name: {sample.name}, image: {sample.image.shape}, render: {sample.render.shape}")
 
     # transforms and dataloader
-    dataset.set_transform(transforms.Compose([ToTensor()]))
+    dataset.set_transform(transforms.Compose([Transposer(), ToTensor()]))
     dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 
     # print_shapes(dataset, dataloader)
