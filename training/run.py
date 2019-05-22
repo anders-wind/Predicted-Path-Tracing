@@ -43,7 +43,6 @@ def show_images(net, input_render, target_image):
     axarr[1].title.set_text('target')
     axarr[2].imshow(predicted.detach().cpu().numpy().transpose((1, 2, 0)), label="prediction")
     axarr[2].title.set_text('prediction')
-    figure.legend()
     figure.show()
 
 
@@ -51,20 +50,22 @@ def run():
     """
     Main run method
     """
+    # ========= Create Services
     data_repository = DummyDatasetRepository(32000)
     data_service = DatasetService(data_repository)
+    training_service = TrainingService(epochs=2)
+
+    # ========= Create data
     dataset = data_service.get_dataset()
-
     # print_original_shapes(dataset)
-
-    # transforms and dataloader
     dataset.set_transform(transforms.Compose([Transposer(), ToTensor()]))
     train_loader, test_loader = data_service.get_training_and_test_loaders(dataset)
-
     # print_shapes(dataset, train_loader)
 
-    training_service = TrainingService(epochs=2)
+    # ========= Train
     net = training_service.train(train_loader, test_loader)
+
+    # ========= Show Results
     show_images(net, input_render=dataset[0]["render"], target_image=dataset[0]["image"])
 
 
