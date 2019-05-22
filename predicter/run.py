@@ -6,22 +6,22 @@ import matplotlib.pyplot as plt
 from src.dataset_service.dataset_repository import DummyDatasetRepository
 from src.dataset_service.dataset_service import DatasetService
 from src.dataset_service.transforms import ToTensor, Transposer
-from src.dataset_service.dataset import CombinedDataPoint
 from src.training_service.training_service import TrainingService
 
 
-def print_original_shapes(dataset):
-    print("original")
-    for sample in dataset:
-        sample = CombinedDataPoint(**sample)
-        print(f"name: {sample.name}, image: {sample.image.shape}, render: {sample.render.shape}")
-
-
-def print_shapes(dataset, dataloader):
+def print_dataset_shapes(dataset):
+    """
+    Prints the shapes of the elements in dataset
+    """
     print("transformed")
     for sample in dataset:
         print(f"name: {sample['name']}, image: {sample['image'].shape}, render: {sample['render'].shape}")
 
+
+def print_loader_shapes(dataloader):
+    """
+    Prints the shape of the elements in the dataloader
+    """
     print("dataloader")
     for _, sample_batched in enumerate(dataloader):
         name_batch = sample_batched["name"]
@@ -57,10 +57,11 @@ def run():
 
     # ========= Create data
     dataset = data_service.get_dataset()
-    # print_original_shapes(dataset)
+    # print_dataset_shapes(dataset)
     dataset.set_transform(transforms.Compose([Transposer(), ToTensor()]))
+    # print_dataset_shapes(dataset)
     train_loader, test_loader = data_service.get_training_and_test_loaders(dataset)
-    # print_shapes(dataset, train_loader)
+    # print_loader_shapes(train_loader)
 
     # ========= Train
     net = training_service.train(train_loader, test_loader)
