@@ -267,5 +267,11 @@ struct rgb : public vec3
     }
 };
 
+inline std::ostream& operator<<(std::ostream& is, rgb& t)
+{
+    is << t.e[0] * 255.99 << " " << t.e[1] * 255.99 << " " << t.e[2] * 255.99;
+    return is;
+}
+
 } // namespace shared
 } // namespace ppt

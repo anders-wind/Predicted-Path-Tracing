@@ -12,13 +12,11 @@
 #include <cuda.h>
 #include <curand_kernel.h>
 #include <device_launch_parameters.h>
-#include <fstream>
-#include <iostream>
 #include <limits>
-#include <memory>
 #include <random>
 #include <shared/cuda_helpers.cuh>
 #include <shared/random_helpers.cuh>
+#include <shared/scoped_timer.cuh>
 #include <shared/vec3.cuh>
 #include <time.h>
 #include <vector>
@@ -37,7 +35,6 @@ namespace cuda_renderer
 #define FLT_MAX 1000000000.0f
 
 void write_ppm_image(std::vector<rgb> colors, int w, int h, std::string filename);
-std::vector<rgb> cuda_ray_render(int w, int h, int samples);
 
 __device__ vec3 color(const ray& r, hitable** world, curandState* local_rand_state)
 {
@@ -77,7 +74,7 @@ render(vec3* image_matrix, int max_x, int max_y, int samples, camera** camera, h
 
     int pixel_index = RM(row, col, max_x);
     curandState local_rand_state = rand_state[pixel_index];
-    rgb pix(0, 0, 0);
+    rgb pix(0.1, 0.1, 0.1);
 
     for (int s = 0; s < samples; s++)
     {
@@ -125,6 +122,71 @@ __global__ void free_world(hitable** d_list, hitable** d_world, camera** d_camer
     }
     delete *d_world;
     delete *d_camera;
+}
+
+std::vector<rgb> cuda_ray_render(int w, int h, int samples)
+{
+    const auto timer = scoped_timer("cuda_ray_render");
+
+    curandState* d_rand_state;
+    checkCudaErrors(cudaMalloc((void**)&d_rand_state, w * h * sizeof(curandState)));
+
+    hitable** d_list;
+    checkCudaErrors(cudaMalloc((void**)&d_list, 5 * sizeof(hitable*)));
+
+    hitable** d_world;
+    checkCudaErrors(cudaMalloc((void**)&d_world, sizeof(hitable*)));
+
+    camera** d_camera;
+    checkCudaErrors(cudaMalloc((void**)&d_camera, sizeof(camera*)));
+
+    create_world<<<1, 1>>>(d_list, d_world, d_camera);
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+
+    size_t render_image_bytes = w * h * sizeof(vec3);
+    vec3* d_image_matrix;
+    vec3* h_image_matrix = new vec3[w * h];
+    checkCudaErrors(cudaMalloc((void**)&d_image_matrix, render_image_bytes));
+
+    int tx = 8, ty = 8;
+    dim3 blocks(h / ty + 1, w / tx + 1);
+    dim3 threads(tx, ty);
+
+    render_init<<<blocks, threads>>>(w, h, d_rand_state);
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+
+    render<<<blocks, threads>>>(d_image_matrix, w, h, samples, d_camera, d_world, d_rand_state);
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+    checkCudaErrors(cudaMemcpy(h_image_matrix, d_image_matrix, render_image_bytes, cudaMemcpyDeviceToHost));
+
+    auto colors = std::vector<rgb>(w * h);
+
+    auto sum_vec = vec3(0, 0, 0);
+    for (int i = 0; i < h; i++)
+    {
+        for (int j = 0; j < w; j++)
+        {
+            const size_t pixel_index = RM(i, j, w);
+            colors[pixel_index] = h_image_matrix[pixel_index];
+            sum_vec = sum_vec + h_image_matrix[pixel_index];
+        }
+    }
+    std::cout << "sum_vec: " << sum_vec << std::endl;
+
+
+    // free up the memory
+    checkCudaErrors(cudaDeviceSynchronize());
+    free_world<<<1, 1>>>(d_list, d_world, d_camera);
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaFree(d_list));
+    checkCudaErrors(cudaFree(d_world));
+    checkCudaErrors(cudaFree(d_image_matrix));
+    free(h_image_matrix);
+
+    return colors;
 }
 
 } // namespace cuda_renderer

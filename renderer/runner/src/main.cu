@@ -6,9 +6,9 @@ int main()
 {
     using namespace ppt::shared;
     using namespace ppt::path_tracer;
-    int w = 1200;
-    int h = 600;
-    int s = 400;
+    int w = 600;
+    int h = 300;
+    int s = 1;
     try
     {
         auto colors = cuda_renderer::cuda_ray_render(w, h, s);
