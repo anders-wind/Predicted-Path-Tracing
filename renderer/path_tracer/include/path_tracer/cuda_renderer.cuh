@@ -74,7 +74,7 @@ render(vec3* image_matrix, int max_x, int max_y, int samples, camera** camera, h
 
     int pixel_index = RM(row, col, max_x);
     curandState local_rand_state = rand_state[pixel_index];
-    rgb pix(0.1, 0.1, 0.1);
+    rgb pix(0.0f, 0.0f, 0.0f);
 
     for (int s = 0; s < samples; s++)
     {
@@ -106,8 +106,8 @@ __global__ void create_world(hitable** d_list, hitable** d_world, camera** d_cam
         d_list[0] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.1, 0.2, 0.5)));
         d_list[1] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.8, 0.8, 0.0)));
         d_list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2), 0.0));
-        d_list[3] = new sphere(vec3(-1, 0, -1), 0.5, new dielectric(1.5f));
-        d_list[4] = new sphere(vec3(-1, 0, -1), -0.45, new dielectric(1.5f));
+        d_list[3] = new sphere(vec3(-1, 0.1, -1), 0.5, new dielectric(1.5f));
+        d_list[4] = new sphere(vec3(-1, 0.1, -1), -0.45, new dielectric(1.5f));
         *d_world = new hitable_list(d_list, 5);
         *d_camera = new camera();
     }
@@ -164,17 +164,14 @@ std::vector<rgb> cuda_ray_render(int w, int h, int samples)
 
     auto colors = std::vector<rgb>(w * h);
 
-    auto sum_vec = vec3(0, 0, 0);
     for (int i = 0; i < h; i++)
     {
         for (int j = 0; j < w; j++)
         {
             const size_t pixel_index = RM(i, j, w);
             colors[pixel_index] = h_image_matrix[pixel_index];
-            sum_vec = sum_vec + h_image_matrix[pixel_index];
         }
     }
-    std::cout << "sum_vec: " << sum_vec << std::endl;
 
 
     // free up the memory

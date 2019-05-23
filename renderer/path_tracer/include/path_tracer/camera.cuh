@@ -17,9 +17,9 @@ struct camera
 
     __host__ __device__ camera()
     {
-        _lower_left_corner = vec3(-2.0, -1.0, -1.0);
-        _horizontal = vec3(4.0, 0.0, 0.0);
-        _vertical = vec3(0.0, 2.0, 0.0);
+        _lower_left_corner = vec3(-8.0, -4.5, -2.5);
+        _horizontal = vec3(16, 0.0, 0.0);
+        _vertical = vec3(0.0, 9.0, 0.0);
         _origin = vec3(0.0, 0.0, 0.0);
     }
 
