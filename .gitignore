@@ -4,3 +4,6 @@
 **/.mypy_cache
 **/CMakeFiles
 **/CMakeCache.txt
+**/cmake_install.cmake
+**/Makefile
+**/*.so
