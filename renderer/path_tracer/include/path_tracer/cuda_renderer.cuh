@@ -68,7 +68,7 @@ __device__ vec3 color(const ray& r, hitable** world, curandState* local_rand_sta
 }
 
 __global__ void
-render(vec3* fb, int max_x, int max_y, int samples, camera** camera, hitable** world, curandState* rand_state)
+render(vec3* image_matrix, int max_x, int max_y, int samples, camera** camera, hitable** world, curandState* rand_state)
 {
     int row = threadIdx.x + blockIdx.x * blockDim.x;
     int col = threadIdx.y + blockIdx.y * blockDim.y;
@@ -87,7 +87,7 @@ render(vec3* fb, int max_x, int max_y, int samples, camera** camera, hitable** w
         pix += color(r, world, rand_state);
     }
     pix = (pix / float(samples)).v_sqrt();
-    fb[pixel_index] = pix;
+    image_matrix[pixel_index] = pix;
 }
 
 __global__ void render_init(int max_x, int max_y, curandState* rand_state)
