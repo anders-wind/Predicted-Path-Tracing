@@ -12,9 +12,6 @@ include(GNUInstallDirs)
 file(GLOB_RECURSE SOURCES "src/*.cu" "src/*.cpp")
 file(GLOB_RECURSE HEADERS "include/*.cuh" "include/*.hpp")
 
-message(STATUS "Sources: " ${SOURCES})
-message(STATUS "Headers: " ${HEADERS})
-
 add_library(${MODULE_NAME} 
     SHARED ${SOURCES} ${HEADERS})
 

@@ -3,25 +3,25 @@
 // This is here so CodeMaid doesn't reorganize this document
 // </Auto-Generated>
 
+#include "camera.cuh"
+#include "hitable.cuh"
+#include "hitable_list.cuh"
+#include "material.cuh"
+#include "ray.cuh"
+#include "sphere.cuh"
 #include <cuda.h>
 #include <curand_kernel.h>
 #include <device_launch_parameters.h>
-#include <iostream>
 #include <fstream>
-#include <time.h>
-#include <vector>
-#include <memory>
+#include <iostream>
 #include <limits>
+#include <memory>
 #include <random>
 #include <shared/cuda_helpers.cuh>
-#include <shared/vec3.cuh>
-#include "ray.cuh"
-#include "sphere.cuh"
-#include "hitable.cuh"
-#include "hitable_list.cuh"
-#include "camera.cuh"
-#include "material.cuh"
 #include <shared/random_helpers.cuh>
+#include <shared/vec3.cuh>
+#include <time.h>
+#include <vector>
 
 namespace ppt
 {
@@ -29,103 +29,102 @@ namespace path_tracer
 {
 namespace cuda_renderer
 {
-#define RM(row, col, w) row *w + col
-#define CM(row, col, h) col *h + row
+#define RM(row, col, w) row* w + col
+#define CM(row, col, h) col* h + row
 
-#define RM3(row, col, w) 3 * row *w + 3 * col
-#define CM3(row, col, h) 3 * col *h + 3 * row
+#define RM3(row, col, w) 3 * row* w + 3 * col
+#define CM3(row, col, h) 3 * col* h + 3 * row
 #define FLT_MAX 1000000000.0f
 
 void write_ppm_image(std::vector<rgb> colors, int w, int h, std::string filename);
 std::vector<rgb> cuda_ray_render(int w, int h, int samples);
 
-__device__ vec3 color(const ray &r, hitable **world, curandState *local_rand_state)
+__device__ vec3 color(const ray& r, hitable** world, curandState* local_rand_state)
 {
-	ray cur_ray = r;
-	vec3 cur_attenuation = vec3(1.0f, 1.0f, 1.0f);
-	for (int i = 0; i < 50; i++)
-	{
-		hit_record rec;
-		if ((*world)->hit(cur_ray, 0.001f, FLT_MAX, rec))
-		{
-			ray scattered;
-			vec3 attenuation;
-			if (rec.mat_ptr->scatter(cur_ray, rec, attenuation, scattered, local_rand_state))
-			{
-				cur_attenuation *= attenuation;
-				cur_ray = scattered;
-			}
-		}
-		else
-		{
-			vec3 unit_direction = unit_vector(cur_ray.direction());
-			float t = 0.5f * (unit_direction.y() + 1.0f);
-			vec3 c = vec3(1.0, 1.0, 1.0) * (1.0f - t) + vec3(0.5, 0.7, 1.0) * t;
-			return c * cur_attenuation;
-		}
-	}
-	return vec3(0.0, 0.0, 0.0); // exceeded recursion
+    ray cur_ray = r;
+    vec3 cur_attenuation = vec3(1.0f, 1.0f, 1.0f);
+    for (int i = 0; i < 50; i++)
+    {
+        hit_record rec;
+        if ((*world)->hit(cur_ray, 0.001f, FLT_MAX, rec))
+        {
+            ray scattered;
+            vec3 attenuation;
+            if (rec.mat_ptr->scatter(cur_ray, rec, attenuation, scattered, local_rand_state))
+            {
+                cur_attenuation *= attenuation;
+                cur_ray = scattered;
+            }
+        }
+        else
+        {
+            vec3 unit_direction = unit_vector(cur_ray.direction());
+            float t = 0.5f * (unit_direction.y() + 1.0f);
+            vec3 c = vec3(1.0, 1.0, 1.0) * (1.0f - t) + vec3(0.5, 0.7, 1.0) * t;
+            return c * cur_attenuation;
+        }
+    }
+    return vec3(0.0, 0.0, 0.0); // exceeded recursion
 }
 
-__global__ void render(vec3 *fb, int max_x, int max_y, int samples, camera **camera, hitable **world, curandState *rand_state)
+__global__ void
+render(vec3* fb, int max_x, int max_y, int samples, camera** camera, hitable** world, curandState* rand_state)
 {
-	int row = threadIdx.x + blockIdx.x * blockDim.x;
-	int col = threadIdx.y + blockIdx.y * blockDim.y;
-	if ((col >= max_x) || (row >= max_y))
-		return;
-	int pixel_index = RM(row, col, max_x);
-	curandState local_rand_state = rand_state[pixel_index];
-	rgb pix(0, 0, 0);
-	for (int s = 0; s < samples; s++)
-	{
-		float u = float(col + curand_uniform(&local_rand_state)) / float(max_x);
-		float v = float(max_y - row + curand_uniform(&local_rand_state)) / float(max_y);
-		ray r = (*camera)->get_ray(u, v);
-		pix += color(r, world, rand_state);
-	}
-	pix = (pix / float(samples)).v_sqrt();
-	fb[pixel_index] = pix;
+    int row = threadIdx.x + blockIdx.x * blockDim.x;
+    int col = threadIdx.y + blockIdx.y * blockDim.y;
+    if ((col >= max_x) || (row >= max_y))
+        return;
+
+    int pixel_index = RM(row, col, max_x);
+    curandState local_rand_state = rand_state[pixel_index];
+    rgb pix(0, 0, 0);
+
+    for (int s = 0; s < samples; s++)
+    {
+        float u = float(col + curand_uniform(&local_rand_state)) / float(max_x);
+        float v = float(max_y - row + curand_uniform(&local_rand_state)) / float(max_y);
+        ray r = (*camera)->get_ray(u, v);
+        pix += color(r, world, rand_state);
+    }
+    pix = (pix / float(samples)).v_sqrt();
+    fb[pixel_index] = pix;
 }
 
-__global__ void render_init(int max_x, int max_y, curandState *rand_state)
+__global__ void render_init(int max_x, int max_y, curandState* rand_state)
 {
-	int row = threadIdx.x + blockIdx.x * blockDim.x;
-	int col = threadIdx.y + blockIdx.y * blockDim.y;
-	if ((col >= max_x) || (row >= max_y))
-		return;
-	int pixel_index = RM(row, col, max_x);
-	//Each thread gets same seed, a different sequence number, no offset
-	curand_init(1984, pixel_index, 0, &rand_state[pixel_index]);
+    int row = threadIdx.x + blockIdx.x * blockDim.x;
+    int col = threadIdx.y + blockIdx.y * blockDim.y;
+    if ((col >= max_x) || (row >= max_y))
+        return;
+
+    int pixel_index = RM(row, col, max_x);
+    // Each thread gets same seed, a different sequence number, no offset
+    curand_init(1984, pixel_index, 0, &rand_state[pixel_index]);
 }
 
-__global__ void create_world(hitable **d_list, hitable **d_world, camera **d_camera)
+__global__ void create_world(hitable** d_list, hitable** d_world, camera** d_camera)
 {
-	if (threadIdx.x == 0 && blockIdx.x == 0)
-	{
-		d_list[0] = new sphere(vec3(0, 0, -1), 0.5,
-							   new lambertian(vec3(0.1, 0.2, 0.5)));
-		d_list[1] = new sphere(vec3(0, -100.5, -1), 100,
-							   new lambertian(vec3(0.8, 0.8, 0.0)));
-		d_list[2] = new sphere(vec3(1, 0, -1), 0.5,
-							   new metal(vec3(0.8, 0.6, 0.2), 0.0));
-		d_list[3] = new sphere(vec3(-1, 0, -1), 0.5,
-							   new dielectric(1.5f));
-		d_list[4] = new sphere(vec3(-1, 0, -1), -0.45,
-							   new dielectric(1.5f));
-		*d_world = new hitable_list(d_list, 5);
-		*d_camera = new camera();
-	}
+    if (threadIdx.x == 0 && blockIdx.x == 0)
+    {
+        d_list[0] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.1, 0.2, 0.5)));
+        d_list[1] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.8, 0.8, 0.0)));
+        d_list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2), 0.0));
+        d_list[3] = new sphere(vec3(-1, 0, -1), 0.5, new dielectric(1.5f));
+        d_list[4] = new sphere(vec3(-1, 0, -1), -0.45, new dielectric(1.5f));
+        *d_world = new hitable_list(d_list, 5);
+        *d_camera = new camera();
+    }
 }
 
-__global__ void free_world(hitable **d_list, hitable **d_world, camera **d_camera)
+__global__ void free_world(hitable** d_list, hitable** d_world, camera** d_camera)
 {
-	for (int i = 0; i < 5; i++)
-	{
-		delete ((sphere *)d_list[i])->_material;
-		delete d_list[i];
-	}
-	delete *d_world;
-	delete *d_camera;
+    for (int i = 0; i < 5; i++)
+    {
+        delete ((sphere*)d_list[i])->_material;
+        delete d_list[i];
+    }
+    delete *d_world;
+    delete *d_camera;
 }
 
 } // namespace cuda_renderer
