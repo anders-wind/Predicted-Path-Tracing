@@ -11,8 +11,7 @@ void write_ppm_image(std::vector<rgb> colors, int w, int h, std::string filename
 {
     std::ofstream myfile;
     myfile.open(filename + ".ppm");
-    myfile << "P3\n"
-           << w << " " << h << "\n255\n";
+    myfile << "P3\n" << w << " " << h << "\n255\n";
     for (int i = 0; i < h; i++)
     {
         for (int j = 0; j < w; j++)
@@ -27,21 +26,21 @@ void write_ppm_image(std::vector<rgb> colors, int w, int h, std::string filename
 std::vector<rgb> cuda_ray_render(int w, int h, int samples)
 {
 
-    curandState *d_rand_state;
-    checkCudaErrors(cudaMalloc((void **)&d_rand_state, w * h * sizeof(curandState)));
-    hitable **d_list;
-    checkCudaErrors(cudaMalloc((void **)&d_list, 5 * sizeof(hitable *)));
-    hitable **d_world;
-    checkCudaErrors(cudaMalloc((void **)&d_world, sizeof(hitable *)));
-    camera **d_camera;
-    checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera *)));
+    curandState* d_rand_state;
+    checkCudaErrors(cudaMalloc((void**)&d_rand_state, w * h * sizeof(curandState)));
+    hitable** d_list;
+    checkCudaErrors(cudaMalloc((void**)&d_list, 5 * sizeof(hitable*)));
+    hitable** d_world;
+    checkCudaErrors(cudaMalloc((void**)&d_world, sizeof(hitable*)));
+    camera** d_camera;
+    checkCudaErrors(cudaMalloc((void**)&d_camera, sizeof(camera*)));
     create_world<<<1, 1>>>(d_list, d_world, d_camera);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
     size_t fb_size = w * h * sizeof(vec3);
-    vec3 *fb;
-    checkCudaErrors(cudaMallocManaged((void **)&fb, fb_size));
+    vec3* fb;
+    checkCudaErrors(cudaMallocManaged((void**)&fb, fb_size));
 
     clock_t start, stop;
     start = clock();
@@ -62,15 +61,15 @@ std::vector<rgb> cuda_ray_render(int w, int h, int samples)
     std::cerr << "took " << timer_seconds << " seconds.\n";
 
     auto colors = std::vector<rgb>(w * h);
-    //auto world = std::make_shared<hitable_list>();
-    //world->add_hitable(std::make_shared<sphere>(vec3(0, 0, -1), 0.5f, std::make_shared<lambertian>(vec3(0.8f, 0.3f, 0.3f))));
-    //world->add_hitable(std::make_shared<sphere>(vec3(0, -100.5, -1), 100.0f, std::make_shared<lambertian>(vec3(0.8f, 0.8f, 0.0f))));
-    //world->add_hitable(std::make_shared<sphere>(vec3(1, 0, -1), 0.5f, std::make_shared<metal>(vec3(0.8f, 0.6f, 0.2f), 0.3f)));
-    //world->add_hitable(std::make_shared<sphere>(vec3(-1, 0, -1), 0.5f, std::make_shared<dielectric>(1.5f)));
-    //world->add_hitable(std::make_shared<sphere>(vec3(-1, 0, -1), -0.45f, std::make_shared<dielectric>(1.5f)));
+    // auto world = std::make_shared<hitable_list>();
+    // world->add_hitable(std::make_shared<sphere>(vec3(0, 0, -1), 0.5f,
+    // std::make_shared<lambertian>(vec3(0.8f, 0.3f, 0.3f)))); world->add_hitable(std::make_shared<sphere>(vec3(0,
+    // -100.5, -1), 100.0f, std::make_shared<lambertian>(vec3(0.8f, 0.8f, 0.0f)))); world->add_hitable(std::make_shared<sphere>(vec3(1,
+    // 0, -1), 0.5f, std::make_shared<metal>(vec3(0.8f, 0.6f, 0.2f), 0.3f))); world->add_hitable(std::make_shared<sphere>(vec3(-1,
+    // 0, -1), 0.5f, std::make_shared<dielectric>(1.5f))); world->add_hitable(std::make_shared<sphere>(vec3(-1,
+    // 0, -1), -0.45f, std::make_shared<dielectric>(1.5f)));
 
-    std::cout << "P3\n"
-              << h << " " << w << "\n255\n";
+    std::cout << "P3\n" << h << " " << w << "\n255\n";
     for (int i = 0; i < h; i++)
     {
         for (int j = 0; j < w; j++)
