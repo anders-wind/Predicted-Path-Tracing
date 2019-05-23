@@ -43,19 +43,17 @@ __device__ vec3 color(const ray& r, hitable** world, curandState* local_rand_sta
     for (int i = 0; i < 10; i++)
     {
         hit_record rec;
-        if ((*world)->hit(cur_ray, 0.001f, FLT_MAX, rec))
-        {
-            ray scattered;
-            vec3 attenuation;
-            if (rec.mat_ptr->scatter(cur_ray, rec, attenuation, scattered, local_rand_state))
-            {
-                cur_attenuation *= attenuation;
-                cur_ray = scattered;
-            }
-        }
-        else
+        if (!(*world)->hit(cur_ray, 0.001f, FLT_MAX, rec))
         {
             break;
+        }
+
+        ray scattered;
+        vec3 attenuation;
+        if (rec.mat_ptr->scatter(cur_ray, rec, attenuation, scattered, local_rand_state))
+        {
+            cur_attenuation *= attenuation;
+            cur_ray = scattered;
         }
     }
     vec3 unit_direction = unit_vector(cur_ray.direction());
