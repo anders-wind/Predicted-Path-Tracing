@@ -40,7 +40,7 @@ __device__ vec3 color(const ray& r, hitable** world, curandState* local_rand_sta
 {
     ray cur_ray = r;
     vec3 cur_attenuation = vec3(1.0f, 1.0f, 1.0f);
-    for (int i = 0; i < 50; i++)
+    for (int i = 0; i < 10; i++)
     {
         hit_record rec;
         if ((*world)->hit(cur_ray, 0.001f, FLT_MAX, rec))
@@ -55,13 +55,13 @@ __device__ vec3 color(const ray& r, hitable** world, curandState* local_rand_sta
         }
         else
         {
-            vec3 unit_direction = unit_vector(cur_ray.direction());
-            float t = 0.5f * (unit_direction.y() + 1.0f);
-            vec3 c = vec3(1.0, 1.0, 1.0) * (1.0f - t) + vec3(0.5, 0.7, 1.0) * t;
-            return c * cur_attenuation;
+            break;
         }
     }
-    return vec3(0.0, 0.0, 0.0); // exceeded recursion
+    vec3 unit_direction = unit_vector(cur_ray.direction());
+    float t = 0.5f * (unit_direction.y() + 1.0f);
+    vec3 c = vec3(1.0, 1.0, 1.0) * (1.0f - t) + vec3(0.5, 0.7, 1.0) * t;
+    return c * cur_attenuation;
 }
 
 __global__ void
@@ -81,7 +81,7 @@ render(vec3* image_matrix, int max_x, int max_y, int samples, camera** camera, h
         float u = float(col + curand_uniform(&local_rand_state)) / float(max_x);
         float v = float(max_y - row + curand_uniform(&local_rand_state)) / float(max_y);
         ray r = (*camera)->get_ray(u, v);
-        pix += color(r, world, rand_state);
+        pix += color(r, world, &local_rand_state);
     }
     pix = (pix / float(samples)).v_sqrt();
     image_matrix[pixel_index] = pix;
@@ -96,7 +96,7 @@ __global__ void render_init(int max_x, int max_y, curandState* rand_state)
 
     int pixel_index = RM(row, col, max_x);
     // Each thread gets same seed, a different sequence number, no offset
-    curand_init(1984, pixel_index, 0, &rand_state[pixel_index]);
+    curand_init(row, col, 0, &rand_state[pixel_index]);
 }
 
 __global__ void create_world(hitable** d_list, hitable** d_world, camera** d_camera)
@@ -106,8 +106,8 @@ __global__ void create_world(hitable** d_list, hitable** d_world, camera** d_cam
         d_list[0] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.1, 0.2, 0.5)));
         d_list[1] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.8, 0.8, 0.0)));
         d_list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2), 0.0));
-        d_list[3] = new sphere(vec3(-1, 0.1, -1), 0.5, new dielectric(1.5f));
-        d_list[4] = new sphere(vec3(-1, 0.1, -1), -0.45, new dielectric(1.5f));
+        d_list[3] = new sphere(vec3(-1, 0.0, -1), 0.5, new dielectric(1.5f));
+        d_list[4] = new sphere(vec3(-1, 0.0, -1), -0.45, new dielectric(1.5f));
         *d_world = new hitable_list(d_list, 5);
         *d_camera = new camera();
     }
@@ -146,10 +146,9 @@ std::vector<rgb> cuda_ray_render(int w, int h, int samples)
 
     size_t render_image_bytes = w * h * sizeof(vec3);
     vec3* d_image_matrix;
-    vec3* h_image_matrix = new vec3[w * h];
-    checkCudaErrors(cudaMalloc((void**)&d_image_matrix, render_image_bytes));
+    checkCudaErrors(cudaMallocManaged((void**)&d_image_matrix, render_image_bytes));
 
-    int tx = 8, ty = 8;
+    int tx = 32, ty = 32;
     dim3 blocks(h / ty + 1, w / tx + 1);
     dim3 threads(tx, ty);
 
@@ -160,7 +159,6 @@ std::vector<rgb> cuda_ray_render(int w, int h, int samples)
     render<<<blocks, threads>>>(d_image_matrix, w, h, samples, d_camera, d_world, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
-    checkCudaErrors(cudaMemcpy(h_image_matrix, d_image_matrix, render_image_bytes, cudaMemcpyDeviceToHost));
 
     auto colors = std::vector<rgb>(w * h);
 
@@ -169,7 +167,7 @@ std::vector<rgb> cuda_ray_render(int w, int h, int samples)
         for (int j = 0; j < w; j++)
         {
             const size_t pixel_index = RM(i, j, w);
-            colors[pixel_index] = h_image_matrix[pixel_index];
+            colors[pixel_index] = d_image_matrix[pixel_index];
         }
     }
 
@@ -181,7 +179,6 @@ std::vector<rgb> cuda_ray_render(int w, int h, int samples)
     checkCudaErrors(cudaFree(d_list));
     checkCudaErrors(cudaFree(d_world));
     checkCudaErrors(cudaFree(d_image_matrix));
-    free(h_image_matrix);
 
     return colors;
 }

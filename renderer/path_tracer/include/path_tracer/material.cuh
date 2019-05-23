@@ -37,19 +37,11 @@ struct lambertian : public material
 
 struct metal : public material
 {
-    rgb albedo;
-    float fuzz;
+    const rgb albedo;
+    const float fuzz;
 
-    __device__ metal(const vec3& a, float f) : albedo(a)
+    __device__ metal(const vec3& a, float f) : albedo(a), fuzz(f < 1 ? f : 1)
     {
-        if (f < 1)
-        {
-            fuzz = f;
-        }
-        else
-        {
-            fuzz = 1;
-        }
     }
 
     __device__ bool
@@ -64,7 +56,7 @@ struct metal : public material
 
 struct dielectric : public material
 {
-    float _ref_idx;
+    const float _ref_idx;
     __device__ dielectric(float ri) : _ref_idx(ri)
     {
     }
