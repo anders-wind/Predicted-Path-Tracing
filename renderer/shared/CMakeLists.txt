@@ -16,7 +16,7 @@ add_library(${MODULE_NAME}
     SHARED ${SOURCES} ${HEADERS})
 
 target_compile_features(${MODULE_NAME} 
-    PUBLIC cxx_std_11)
+    PUBLIC cxx_std_14)
 
 target_include_directories(${MODULE_NAME}
     PUBLIC
