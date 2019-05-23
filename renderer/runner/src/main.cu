@@ -8,7 +8,7 @@ int main()
     using namespace ppt::path_tracer;
     int w = 1280;
     int h = 720;
-    int s = 256;
+    int s = 32;
     try
     {
         auto colors = cuda_renderer::cuda_ray_render(w, h, s);
