@@ -7,3 +7,4 @@
 **/cmake_install.cmake
 **/Makefile
 **/*.so
+**/compile_commands.json

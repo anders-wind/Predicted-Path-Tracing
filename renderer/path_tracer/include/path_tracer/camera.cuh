@@ -1,9 +1,11 @@
 #pragma once
 #include <random>
-#include "vec3.cuh"
+#include <shared/vec3.cuh>
 #include "ray.cuh"
 
-namespace ppt::path_tracer
+namespace ppt
+{
+namespace path_tracer
 {
 
 struct camera
@@ -26,4 +28,6 @@ struct camera
 		return ray(_origin, _lower_left_corner + (_horizontal * u) + (_vertical * v) - _origin);
 	}
 };
-} // namespace ppt::path_tracer
+
+} // namespace path_tracer
+} // namespace ppt

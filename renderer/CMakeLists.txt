@@ -1,6 +1,4 @@
 cmake_minimum_required(VERSION 3.12)
-project(renderer LANGUAGES CXX C)
-set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_program(CCACHE_PROGRAM ccache)
@@ -14,6 +12,7 @@ else()
 endif()
 
 add_subdirectory(shared)
-add_subdirectory(model-loader)
-add_subdirectory(dataset-creator)
-add_subdirectory(runner)
+add_subdirectory(path_tracer)
+# add_subdirectory(model_loader)
+# add_subdirectory(dataset_creator)
+# add_subdirectory(runner)

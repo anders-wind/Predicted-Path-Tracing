@@ -3,7 +3,9 @@
 #include <curand_kernel.h>
 #include "vec3.cuh"
 
-namespace ppt::shared
+namespace ppt
+{
+namespace shared
 {
 // std::random_device rd;	// Will be used to obtain a seed for the random number engine
 //std::mt19937 gen(42);		// Standard mersenne_twister_engine seeded with rd()
@@ -32,4 +34,6 @@ __device__ vec3 random_in_unit_sphere(curandState *local_rand_state)
 	} while (p.squared_length() >= 1.0f);
 	return p;
 }
-} // namespace ppt::shared
+
+} // namespace shared
+} // namespace ppt

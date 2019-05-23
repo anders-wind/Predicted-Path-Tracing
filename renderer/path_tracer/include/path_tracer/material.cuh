@@ -1,11 +1,14 @@
 #pragma once
-#include "vec3.cuh"
+#include <shared/vec3.cuh>
+#include <shared/random_helpers.cuh>
 #include "ray.cuh"
 #include "hitable.cuh"
-#include "random_helpers.cuh"
 
-namespace ppt::path_tracer
+namespace ppt
 {
+namespace path_tracer
+{
+
 struct material
 {
 	__device__ virtual bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const = 0;
@@ -69,7 +72,8 @@ struct dielectric : public material
 
 	__device__ bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const override
 	{
-		vec3 outward_normal, refracted;
+		vec3 outward_normal;
+		vec3 refracted;
 		vec3 reflected = reflect(r_in.direction(), rec.normal);
 		attenuation = vec3(1.0, 1.0, 1.0);
 		float reflect_prob, ni_over_nt, cosine;
@@ -107,4 +111,5 @@ struct dielectric : public material
 		return true;
 	}
 };
-} // namespace ppt::path_tracer
+} // namespace path_tracer
+} // namespace ppt

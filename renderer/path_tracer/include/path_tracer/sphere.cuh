@@ -2,12 +2,15 @@
 
 #include <math.h>
 #include <memory>
-#include "vec3.cuh"
+#include <shared/vec3.cuh>
 #include "ray.cuh"
 #include "hitable.cuh"
 
-namespace ppt::path_tracer
+namespace ppt
 {
+namespace path_tracer
+{
+
 struct sphere : public hitable
 {
 	vec3 _center;
@@ -57,4 +60,6 @@ struct sphere : public hitable
 		return _center - position;
 	}
 };
-} // namespace ppt::path_tracer
+
+} // namespace path_tracer
+} // namespace ppt

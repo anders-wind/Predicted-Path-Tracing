@@ -2,8 +2,12 @@
 #include <vector>
 #include <memory>
 #include "hitable.cuh"
-namespace ppt::path_tracer
+
+namespace ppt
 {
+namespace path_tracer
+{
+
 struct hitable_list : public hitable
 {
 	hitable **_hitables;
@@ -34,4 +38,6 @@ struct hitable_list : public hitable
 		return hit_anything;
 	}
 };
-} // namespace ppt::path_tracer
+
+} // namespace path_tracer
+} // namespace ppt

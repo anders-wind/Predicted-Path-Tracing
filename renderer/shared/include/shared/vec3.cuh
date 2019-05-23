@@ -2,8 +2,11 @@
 #include <math.h>
 #include <cuda_runtime.h>
 
-namespace ppt::shared
+namespace ppt
 {
+namespace shared
+{
+
 struct vec3
 {
 	float e[3];
@@ -217,4 +220,6 @@ struct rgb : public vec3
 	__host__ __device__ inline float b() { return e[2]; }
 	__host__ __device__ inline void b(float v) { e[2] = v; }
 };
-} // namespace ppt::shared
+
+} // namespace shared
+} // namespace ppt

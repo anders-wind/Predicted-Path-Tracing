@@ -1,8 +1,11 @@
 #pragma once
 #include "ray.cuh"
 
-namespace ppt::path_tracer
+namespace ppt
 {
+namespace path_tracer
+{
+
 // forward decleration
 struct material;
 
@@ -18,4 +21,6 @@ struct hitable
 {
 	__device__ virtual bool hit(const ray &r, float t_min, float t_max, hit_record &out) const = 0;
 };
-} // namespace ppt::path_tracer
+
+} // namespace path_tracer
+} // namespace ppt

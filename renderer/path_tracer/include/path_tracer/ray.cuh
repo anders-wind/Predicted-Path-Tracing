@@ -1,8 +1,13 @@
 #pragma once
 
-#include "vec3.cuh"
-namespace ppt::path_tracer
+#include <shared/vec3.cuh>
+
+namespace ppt
 {
+namespace path_tracer
+{
+using namespace ppt::shared;
+
 struct ray
 {
 	vec3 _origin;	// origin
@@ -16,4 +21,5 @@ struct ray
 	__device__ vec3 direction() const { return _direction; }
 	__device__ vec3 point_at_parameter(float t) const { return _origin + (_direction * t); }
 };
-} // namespace ppt::path_tracer
+} // namespace path_tracer
+} // namespace ppt
