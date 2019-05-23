@@ -4,18 +4,21 @@
 #include <memory>
 #include <limits>
 #include <random>
-#include "include/vec3.cuh"
-#include "include/ray.cuh"
-#include "include/sphere.cuh"
-#include "include/hitable.cuh"
-#include "include/hitable_list.cuh"
-#include "include/camera.cuh"
-#include "include/material.cuh"
-#include "include/random_helpers.cuh"
-#include "include/cuda_renderer.cuh"
+#include <shared/vec3.cuh>
+#include <shared/random_helpers.cuh>
+#include <path_tracer/ray.cuh>
+#include <path_tracer/sphere.cuh>
+#include <path_tracer/hitable.cuh>
+#include <path_tracer/hitable_list.cuh>
+#include <path_tracer/camera.cuh>
+#include <path_tracer/material.cuh>
+#include <path_tracer/cuda_renderer.cuh>
 
 #define RM(row, col, w) row *w + col
 #define CM(row, col, h) col *h + row
+
+using namespace ppt::shared;
+using namespace ppt::path_tracer;
 //
 //void write_ppm_image(std::vector<rgb> colors, int h, int w, std::string filename) {
 //	std::ofstream myfile;
