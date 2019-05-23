@@ -14,7 +14,7 @@ file(GLOB_RECURSE HEADERS "include/*.cuh" "include/*.hpp")
 
 add_executable(${MODULE_NAME} ${SOURCES})
 
-target_link_libraries (${MODULE_NAME} PUBLIC ppt-shared ppt-path-tracer)
+target_link_libraries (${MODULE_NAME} PUBLIC ppt-shared ppt-path-tracer glut GLU GL)
 
 target_compile_features(${MODULE_NAME} 
     PUBLIC cxx_std_14)

@@ -11,6 +11,8 @@ else()
     message("Cannot find ccache")
 endif()
 
+find_program(OpenGl REQUIRED)
+
 add_subdirectory(shared)
 add_subdirectory(path_tracer)
 # add_subdirectory(model_loader)
