@@ -1,7 +1,6 @@
 #include "path_tracer/render.cuh"
 #include <shared/scoped_timer.cuh>
 #include <sstream>
-
 namespace ppt
 {
 namespace path_tracer
