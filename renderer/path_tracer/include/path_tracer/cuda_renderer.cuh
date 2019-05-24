@@ -78,16 +78,18 @@ render_image(vec3* image_matrix, int max_x, int max_y, int samples, camera** cam
         return;
 
     int pixel_index = RM(row, col, max_x);
-    curandState* local_rand_state = &rand_state[pixel_index];
+    curandState local_rand_state = rand_state[pixel_index];
 
     rgb pix = image_matrix[pixel_index];
     for (int s = 0; s < samples; s++)
     {
-        float u = float(col + curand_normal(local_rand_state)) / float(max_x);
-        float v = float(max_y - row + curand_normal(local_rand_state)) / float(max_y);
+        float u = float(col + curand_normal(&local_rand_state)) / float(max_x);
+        float v = float(max_y - row + curand_normal(&local_rand_state)) / float(max_y);
         ray r = (*camera)->get_ray(u, v);
-        pix += color(r, world, local_rand_state);
+        pix += color(r, world, &local_rand_state);
     }
+
+    rand_state[pixel_index] = local_rand_state;
     image_matrix[pixel_index] = pix;
 }
 
