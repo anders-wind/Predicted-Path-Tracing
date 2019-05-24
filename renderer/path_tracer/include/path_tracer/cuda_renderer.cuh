@@ -8,6 +8,7 @@
 #include "hitable_list.cuh"
 #include "material.cuh"
 #include "ray.cuh"
+#include "render.cuh"
 #include "sphere.cuh"
 #include <cuda.h>
 #include <curand_kernel.h>
@@ -21,11 +22,15 @@
 #include <time.h>
 #include <vector>
 
+/**
+ *
+ * Goto the botton for the definition of the cuda_renderer class
+ *
+ */
+
 namespace ppt
 {
 namespace path_tracer
-{
-namespace cuda_renderer
 {
 #define RM(row, col, w) row* w + col
 #define CM(row, col, h) col* h + row
@@ -34,7 +39,9 @@ namespace cuda_renderer
 #define CM3(row, col, h) 3 * col* h + 3 * row
 #define FLT_MAX 1000000000.0f
 
-void write_ppm_image(std::vector<rgb> colors, int w, int h, std::string filename);
+
+namespace cuda_methods
+{
 
 __device__ vec3 color(const ray& r, hitable** world, curandState* local_rand_state)
 {
@@ -63,7 +70,7 @@ __device__ vec3 color(const ray& r, hitable** world, curandState* local_rand_sta
 }
 
 __global__ void
-render(vec3* image_matrix, int max_x, int max_y, int samples, camera** camera, hitable** world, curandState* rand_state)
+render_image(vec3* image_matrix, int max_x, int max_y, int samples, camera** camera, hitable** world, curandState* rand_state)
 {
     int row = threadIdx.x + blockIdx.x * blockDim.x;
     int col = threadIdx.y + blockIdx.y * blockDim.y;
@@ -84,6 +91,7 @@ render(vec3* image_matrix, int max_x, int max_y, int samples, camera** camera, h
     pix = (pix / float(samples)).v_sqrt();
     image_matrix[pixel_index] = pix;
 }
+
 
 __global__ void render_init(int max_x, int max_y, curandState* rand_state)
 {
@@ -121,66 +129,63 @@ __global__ void free_world(hitable** d_list, hitable** d_world, camera** d_camer
     delete *d_world;
     delete *d_camera;
 }
+} // namespace cuda_methods
 
-std::vector<rgb> cuda_ray_render(int w, int h, int samples)
+class cuda_renderer
 {
-    const auto timer = scoped_timer("cuda_ray_render");
-
     curandState* d_rand_state;
-    checkCudaErrors(cudaMalloc((void**)&d_rand_state, w * h * sizeof(curandState)));
-
     hitable** d_list;
-    checkCudaErrors(cudaMalloc((void**)&d_list, 5 * sizeof(hitable*)));
-
     hitable** d_world;
-    checkCudaErrors(cudaMalloc((void**)&d_world, sizeof(hitable*)));
-
     camera** d_camera;
-    checkCudaErrors(cudaMalloc((void**)&d_camera, sizeof(camera*)));
 
-    create_world<<<1, 1>>>(d_list, d_world, d_camera);
-    checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
+    public:
+    int num_threads_x = 32;
+    int num_threads_y = 32;
+    dim3 blocks;
+    dim3 threads;
+    const size_t w;
+    const size_t h;
 
-    size_t render_image_bytes = w * h * sizeof(vec3);
-    vec3* d_image_matrix;
-    checkCudaErrors(cudaMallocManaged((void**)&d_image_matrix, render_image_bytes));
-
-    int tx = 32, ty = 32;
-    dim3 blocks(h / ty + 1, w / tx + 1);
-    dim3 threads(tx, ty);
-
-    render_init<<<blocks, threads>>>(w, h, d_rand_state);
-    checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
-
-    render<<<blocks, threads>>>(d_image_matrix, w, h, samples, d_camera, d_world, d_rand_state);
-    checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
-
-    auto colors = std::vector<rgb>(w * h);
-
-    for (int i = 0; i < h; i++)
+    cuda_renderer(int w, int h)
+      : blocks(h / num_threads_y + 1, w / num_threads_x + 1), threads(num_threads_x, num_threads_y), w(w), h(h)
     {
-        for (int j = 0; j < w; j++)
-        {
-            const size_t pixel_index = RM(i, j, w);
-            colors[pixel_index] = d_image_matrix[pixel_index];
-        }
+        checkCudaErrors(cudaMalloc((void**)&d_rand_state, w * h * sizeof(curandState)));
+        checkCudaErrors(cudaMalloc((void**)&d_list, 5 * sizeof(hitable*)));
+        checkCudaErrors(cudaMalloc((void**)&d_world, sizeof(hitable*)));
+        checkCudaErrors(cudaMalloc((void**)&d_camera, sizeof(camera*)));
+
+        checkCudaErrors(cudaGetLastError());
+        checkCudaErrors(cudaDeviceSynchronize());
+
+        // init random
+        cuda_methods::render_init<<<blocks, threads>>>(w, h, d_rand_state);
+        checkCudaErrors(cudaGetLastError());
+        checkCudaErrors(cudaDeviceSynchronize());
+        cuda_methods::create_world<<<1, 1>>>(d_list, d_world, d_camera);
+        checkCudaErrors(cudaGetLastError());
+        checkCudaErrors(cudaDeviceSynchronize());
     }
 
+    ~cuda_renderer()
+    {
+        checkCudaErrors(cudaDeviceSynchronize());
+        cuda_methods::free_world<<<1, 1>>>(d_list, d_world, d_camera);
+        checkCudaErrors(cudaGetLastError());
+        checkCudaErrors(cudaFree(d_list));
+        checkCudaErrors(cudaFree(d_world));
+    }
 
-    // free up the memory
-    checkCudaErrors(cudaDeviceSynchronize());
-    free_world<<<1, 1>>>(d_list, d_world, d_camera);
-    checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaFree(d_list));
-    checkCudaErrors(cudaFree(d_world));
-    checkCudaErrors(cudaFree(d_image_matrix));
+    public: // Methods
+    __host__ render ray_trace(int samples)
+    {
+        auto ray_traced_image = render(w, h);
+        auto image_matrix = ray_traced_image.get_image_matrix();
+        cuda_methods::render_image<<<blocks, threads>>>(image_matrix, w, h, samples, d_camera, d_world, d_rand_state);
+        checkCudaErrors(cudaGetLastError());
+        checkCudaErrors(cudaDeviceSynchronize());
+        return ray_traced_image;
+    }
+};
 
-    return colors;
-}
-
-} // namespace cuda_renderer
 } // namespace path_tracer
 } // namespace ppt
