@@ -7,9 +7,9 @@ int main()
 {
     using namespace ppt::shared;
     using namespace ppt::path_tracer;
-    int w = 1280;
-    int h = 720;
-    int s = 32;
+    int w = 640;
+    int h = 360;
+    int s = 1;
     std::string filename = "render";
 
     try

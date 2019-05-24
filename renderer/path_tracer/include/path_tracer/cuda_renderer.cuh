@@ -196,8 +196,8 @@ class cuda_renderer
 
         auto ray_traced_image = render(w, h);
         auto* image_matrix = ray_traced_image.get_image_matrix();
-        cuda_methods::render_image<<<blocks, threads>>>(image_matrix, w, h, samples / 2, d_camera, d_world, d_rand_state);
-        cuda_methods::render_image<<<blocks, threads>>>(image_matrix, w, h, samples / 2, d_camera, d_world, d_rand_state);
+        cuda_methods::render_image<<<blocks, threads>>>(image_matrix, w, h, samples, d_camera, d_world, d_rand_state);
+        // cuda_methods::render_image<<<blocks, threads>>>(image_matrix, w, h, samples / 2, d_camera, d_world, d_rand_state);
         cuda_methods::normalize<<<blocks, threads>>>(image_matrix, w, h, samples);
         checkCudaErrors(cudaGetLastError());
         checkCudaErrors(cudaDeviceSynchronize());
