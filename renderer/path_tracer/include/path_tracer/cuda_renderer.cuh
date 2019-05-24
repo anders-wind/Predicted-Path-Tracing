@@ -78,22 +78,32 @@ render_image(vec3* image_matrix, int max_x, int max_y, int samples, camera** cam
         return;
 
     int pixel_index = RM(row, col, max_x);
-    curandState local_rand_state = rand_state[pixel_index];
-    rgb pix(0.0f, 0.0f, 0.0f);
+    curandState* local_rand_state = &rand_state[pixel_index];
 
+    rgb pix = image_matrix[pixel_index];
     for (int s = 0; s < samples; s++)
     {
-        float u = float(col + curand_uniform(&local_rand_state)) / float(max_x);
-        float v = float(max_y - row + curand_uniform(&local_rand_state)) / float(max_y);
+        float u = float(col + curand_normal(local_rand_state)) / float(max_x);
+        float v = float(max_y - row + curand_normal(local_rand_state)) / float(max_y);
         ray r = (*camera)->get_ray(u, v);
-        pix += color(r, world, &local_rand_state);
+        pix += color(r, world, local_rand_state);
     }
-    pix = (pix / float(samples)).v_sqrt();
     image_matrix[pixel_index] = pix;
 }
 
+__global__ void normalize(vec3* image_matrix, int max_x, int max_y, int samples)
+{
+    int row = threadIdx.x + blockIdx.x * blockDim.x;
+    int col = threadIdx.y + blockIdx.y * blockDim.y;
+    if ((col >= max_x) || (row >= max_y))
+        return;
 
-__global__ void render_init(int max_x, int max_y, curandState* rand_state)
+    int pixel_index = RM(row, col, max_x);
+    image_matrix[pixel_index] = (image_matrix[pixel_index] / float(samples)).v_sqrt();
+}
+
+
+__global__ void render_init(int max_x, int max_y, int offset, curandState* rand_state)
 {
     int row = threadIdx.x + blockIdx.x * blockDim.x;
     int col = threadIdx.y + blockIdx.y * blockDim.y;
@@ -102,7 +112,7 @@ __global__ void render_init(int max_x, int max_y, curandState* rand_state)
 
     int pixel_index = RM(row, col, max_x);
     // Each thread gets same seed, a different sequence number, no offset
-    curand_init(row, col, 0, &rand_state[pixel_index]);
+    curand_init(row, col, offset, &rand_state[pixel_index]);
 }
 
 __global__ void create_world(hitable** d_list, hitable** d_world, camera** d_camera)
@@ -158,7 +168,7 @@ class cuda_renderer
         checkCudaErrors(cudaDeviceSynchronize());
 
         // init random
-        cuda_methods::render_init<<<blocks, threads>>>(w, h, d_rand_state);
+        cuda_methods::render_init<<<blocks, threads>>>(w, h, 0, d_rand_state);
         checkCudaErrors(cudaGetLastError());
         checkCudaErrors(cudaDeviceSynchronize());
         cuda_methods::create_world<<<1, 1>>>(d_list, d_world, d_camera);
@@ -182,7 +192,9 @@ class cuda_renderer
 
         auto ray_traced_image = render(w, h);
         auto image_matrix = ray_traced_image.get_image_matrix();
-        cuda_methods::render_image<<<blocks, threads>>>(image_matrix, w, h, samples, d_camera, d_world, d_rand_state);
+        cuda_methods::render_image<<<blocks, threads>>>(image_matrix, w, h, samples / 2, d_camera, d_world, d_rand_state);
+        cuda_methods::render_image<<<blocks, threads>>>(image_matrix, w, h, samples / 2, d_camera, d_world, d_rand_state);
+        cuda_methods::normalize<<<blocks, threads>>>(image_matrix, w, h, samples);
         checkCudaErrors(cudaGetLastError());
         checkCudaErrors(cudaDeviceSynchronize());
         return ray_traced_image;
