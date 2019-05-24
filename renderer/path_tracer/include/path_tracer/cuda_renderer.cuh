@@ -127,7 +127,7 @@ __global__ void create_world(hitable** d_list, hitable** d_world, camera** d_cam
         d_list[3] = new sphere(vec3(-1, 0.0, -1), 0.5, new dielectric(1.5f));
         d_list[4] = new sphere(vec3(-1, 0.0, -1), -0.45, new dielectric(1.5f));
         *d_world = new hitable_list(d_list, 5);
-        *d_camera = new camera();
+        *d_camera = camera_factory().make_16_9_camera();
     }
 }
 
