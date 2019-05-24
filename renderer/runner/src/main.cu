@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <path_tracer/cuda_renderer.cuh>
 #include <string>
@@ -9,10 +10,18 @@ int main()
     int w = 1280;
     int h = 720;
     int s = 32;
+    std::string filename = "render";
+
     try
     {
-        auto colors = cuda_renderer::cuda_ray_render(w, h, s);
-        cuda_renderer::write_ppm_image(colors, w, h, "render");
+        auto renderer = cuda_renderer(w, h);
+        auto render = renderer.ray_trace(s);
+        auto ppm = render.get_ppm_representation();
+
+        std::ofstream myfile;
+        myfile.open(filename + ".ppm");
+        myfile << ppm;
+        myfile.close();
     }
     catch (...)
     {
