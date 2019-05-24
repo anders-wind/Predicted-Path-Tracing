@@ -132,6 +132,14 @@ struct vec3
         return sqrt(e[0] * e[0] + e[1] * e[1] + e[2] * e[2]);
     }
 
+    __host__ __device__ inline vec3& v_square()
+    {
+        e[0] *= e[0];
+        e[1] *= e[1];
+        e[2] *= e[2];
+        return *this;
+    }
+
     __host__ __device__ inline vec3& v_sqrt()
     {
         e[0] = sqrt(e[0]);
