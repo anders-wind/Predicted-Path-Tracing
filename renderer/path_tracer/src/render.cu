@@ -19,7 +19,7 @@ std::string render::get_ppm_representation() const
 
 std::string render::get_ppm_representation(const std::vector<rgb>& colors) const
 {
-    const auto timer = scoped_timer("write_ppm_image");
+    const auto timer = scoped_timer("get_ppm_representation");
 
     std::stringstream ss;
     ss << "P3\n" << w << " " << h << "\n255\n";

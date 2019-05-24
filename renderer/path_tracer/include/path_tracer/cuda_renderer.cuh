@@ -176,8 +176,10 @@ class cuda_renderer
     }
 
     public: // Methods
-    __host__ render ray_trace(int samples)
+    render ray_trace(int samples)
     {
+        const auto timer = scoped_timer("ray_trace");
+
         auto ray_traced_image = render(w, h);
         auto image_matrix = ray_traced_image.get_image_matrix();
         cuda_methods::render_image<<<blocks, threads>>>(image_matrix, w, h, samples, d_camera, d_world, d_rand_state);
