@@ -22,8 +22,8 @@ struct scoped_timer
 
     ~scoped_timer()
     {
-        std::clog << std::setw(25) << std::left << name << " took "
-                  << ((double)(clock() - start)) / CLOCKS_PER_SEC << " seconds.\n";
+        std::clog << std::setw(25) << std::left << name << std::setw(12)
+                  << ((double)(clock() - start)) / CLOCKS_PER_SEC << " seconds\n";
     }
 };
 

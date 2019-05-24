@@ -161,6 +161,8 @@ class cuda_renderer
     cuda_renderer(int w, int h)
       : blocks(h / num_threads_y + 1, w / num_threads_x + 1), threads(num_threads_x, num_threads_y), w(w), h(h)
     {
+        const auto timer = scoped_timer("cuda_renderer");
+
         checkCudaErrors(cudaMalloc((void**)&d_rand_state, w * h * sizeof(curandState)));
         checkCudaErrors(cudaMalloc((void**)&d_list, 5 * sizeof(hitable*)));
         checkCudaErrors(cudaMalloc((void**)&d_world, sizeof(hitable*)));
@@ -193,7 +195,7 @@ class cuda_renderer
         const auto timer = scoped_timer("ray_trace");
 
         auto ray_traced_image = render(w, h);
-        auto image_matrix = ray_traced_image.get_image_matrix();
+        auto* image_matrix = ray_traced_image.get_image_matrix();
         cuda_methods::render_image<<<blocks, threads>>>(image_matrix, w, h, samples / 2, d_camera, d_world, d_rand_state);
         cuda_methods::render_image<<<blocks, threads>>>(image_matrix, w, h, samples / 2, d_camera, d_world, d_rand_state);
         cuda_methods::normalize<<<blocks, threads>>>(image_matrix, w, h, samples);
