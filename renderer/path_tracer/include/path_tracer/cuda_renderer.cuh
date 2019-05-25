@@ -37,7 +37,7 @@ namespace path_tracer
 
 #define RM3(row, col, w) 3 * row* w + 3 * col
 #define CM3(row, col, h) 3 * col* h + 3 * row
-#define FLT_MAX 1000000000.0f
+constexpr auto FLOAT_MAX = 1000000000.0f;
 
 
 namespace cuda_methods
@@ -50,7 +50,7 @@ __device__ vec3 color(const ray& r, hitable** world, curandState* local_rand_sta
     for (int i = 0; i < 10; i++)
     {
         hit_record rec;
-        if (!(*world)->hit(cur_ray, 0.001f, FLT_MAX, rec))
+        if (!(*world)->hit(cur_ray, 0.001f, FLOAT_MAX, rec))
         {
             break;
         }

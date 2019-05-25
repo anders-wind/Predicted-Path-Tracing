@@ -11,7 +11,11 @@ else()
     message("Cannot find ccache")
 endif()
 
-add_subdirectory(shared)
+if (WIN32)
+	set(CMAKE_CUDA_COMPILER "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.1/bin/nvcc.exe")
+endif (WIN32)
+
+add_subdirectory(shared) 
 add_subdirectory(path_tracer)
 # add_subdirectory(model_loader)
 # add_subdirectory(dataset_creator)
