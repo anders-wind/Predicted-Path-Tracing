@@ -1,0 +1,53 @@
+#include <dataset_creator/dataset_repository.hpp>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
+
+
+namespace ppt
+{
+namespace dataset_creator
+{
+
+std::string dataset_repository::get_file_name(const std::string& file_name, bool is_target, int render_number) const
+{
+    std::stringstream ss;
+    ss << datastore_path << "_" << run_name << "_" << file_name << is_target ? "_target" : "_input_";
+    if (!is_target)
+    {
+        ss << std::setfill('0') << std::setw(4) << render_number;
+    }
+    return ss.str();
+}
+
+void dataset_repository::save_datapoint(const shared::render_datapoint& render_datapoint, const std::string& file_name)
+{
+
+    std::ofstream target_file;
+    target_file.open(get_file_name(file_name, true, 0));
+    target_file << render_datapoint.get_target_string();
+    target_file.close();
+
+    for (size_t i = 0; i < render_datapoint.renders_size(); i++)
+    {
+        std::ofstream render_file;
+        render_file.open(get_file_name(file_name, false, i));
+        render_file << render_datapoint.get_render_string(i);
+        render_file.close();
+    }
+}
+
+void dataset_repository::save_dataset(const std::vector<shared::render_datapoint>& render_dataset)
+{
+    auto i = 0;
+    std::stringstream ss;
+    for (const auto& datapoint : render_dataset)
+    {
+        ss << std::setfill('0') << std::setw(4) << i;
+        save_datapoint(datapoint, ss.str());
+        ss.clear();
+        i++;
+    }
+}
+} // namespace dataset_creator
+} // namespace ppt
