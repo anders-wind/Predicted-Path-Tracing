@@ -15,7 +15,7 @@ std::string dataset_repository::get_file_name(const std::string& file_name, bool
     ss << datastore_path << run_name << "/" << file_name << (is_target ? "_target" : "_input_");
     if (!is_target)
     {
-        ss << std::setfill('0') << std::setw(3) << render_number;
+        ss << std::setfill('0') << std::setw(2) << render_number;
     }
     return ss.str();
 }
