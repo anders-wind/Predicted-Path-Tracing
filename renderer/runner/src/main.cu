@@ -13,13 +13,13 @@ int main()
     int h = 360;
     int samples[4] = { 1, 10, 100, 1000 };
     std::string filename = "render";
-    auto repository = dataset_repository("/home/anders/Documents/datasets/ppt/", "640x360_run01");
+    auto repository = dataset_repository("/home/anders/Documents/datasets/ppt", "640x360_run01");
 
     try
     {
         auto renderer = cuda_renderer(w, h);
         auto render_datapoint = renderer.ray_trace_datapoint(samples);
-        repository.save_datapoint(render_datapoint, "lol");
+        repository.save_datapoint(render_datapoint, "heyo");
     }
     catch (...)
     {

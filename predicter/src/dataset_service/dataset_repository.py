@@ -4,6 +4,7 @@ Module for DataRepositories which can get datasets
 from abc import ABC, abstractmethod
 from pathlib import Path
 import numpy as np
+import pandas as pd
 from .dataset import CombinedDataset
 
 
@@ -19,6 +20,18 @@ class DatasetRepositoryBase(ABC):
         """
 
 
+class DatasetRepository:
+    def __init__(self, datastore_root: str, run_name: str, width: int, height: int):
+        self.datastore_root = datastore_root
+        self.run_name = run_name
+        self.width = width
+        self.height = height
+
+    def load_dataset(self) -> CombinedDataset:
+        result = pd.read_csv(self.datastore_root + self.run_name)
+        return result
+
+
 class DummyDatasetRepository(DatasetRepositoryBase):
     """
     Returns dummy data
@@ -32,14 +45,20 @@ class DummyDatasetRepository(DatasetRepositoryBase):
 
     def load_dataset(self) -> CombinedDataset:
         names = [f"{i}" for i in range(self.samples)]
-        renders = [np.random.rand(self.width, self.height, 5) for _ in range(self.samples)]
-        images = [(renders[i][:, :, :3] * 0.8 + (np.random.rand(self.width, self.height, 3) * 0.2)) * 0.8 + 0.2
-                  for i in range(self.samples)]
+        renders = [
+            np.random.rand(self.width, self.height, 5) for _ in range(self.samples)
+        ]
+        images = [
+            (
+                renders[i][:, :, :3] * 0.8
+                + (np.random.rand(self.width, self.height, 3) * 0.2)
+            )
+            * 0.8
+            + 0.2
+            for i in range(self.samples)
+        ]
 
         dataset = CombinedDataset(
-            dataset_path=Path(),
-            names=names,
-            images=images,
-            renders=renders,
+            dataset_path=Path(), names=names, images=images, renders=renders
         )
         return dataset
