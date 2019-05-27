@@ -17,6 +17,7 @@
 #include <random>
 #include <shared/cuda_helpers.cuh>
 #include <shared/random_helpers.cuh>
+#include <shared/render_datapoint.cuh>
 #include <shared/scoped_timer.cuh>
 #include <shared/vec3.cuh>
 #include <time.h>
@@ -80,7 +81,7 @@ render_image(vec3* image_matrix, int max_x, int max_y, int samples, camera** cam
     int pixel_index = RM(row, col, max_x);
     curandState local_rand_state = rand_state[pixel_index];
 
-    rgb pix = image_matrix[pixel_index];
+    vec3 pix = image_matrix[pixel_index];
     for (int s = 0; s < samples; s++)
     {
         float u = float(col + curand_normal(&local_rand_state)) / float(max_x);
@@ -102,6 +103,17 @@ __global__ void normalize(vec3* image_matrix, int max_x, int max_y, int samples)
 
     int pixel_index = RM(row, col, max_x);
     image_matrix[pixel_index] = (image_matrix[pixel_index] / float(samples)).v_sqrt();
+}
+
+__global__ void normalize_out(vec3* image_matrix, vec3* out_image_matrix, int max_x, int max_y, int samples)
+{
+    int row = threadIdx.x + blockIdx.x * blockDim.x;
+    int col = threadIdx.y + blockIdx.y * blockDim.y;
+    if ((col >= max_x) || (row >= max_y))
+        return;
+
+    int pixel_index = RM(row, col, max_x);
+    out_image_matrix[pixel_index] = (image_matrix[pixel_index] / float(samples)).v_sqrt();
 }
 
 
@@ -161,7 +173,7 @@ class cuda_renderer
     cuda_renderer(int w, int h)
       : blocks(h / num_threads_y + 1, w / num_threads_x + 1), threads(num_threads_x, num_threads_y), w(w), h(h)
     {
-        const auto timer = scoped_timer("cuda_renderer");
+        const auto timer = shared::scoped_timer("cuda_renderer");
 
         checkCudaErrors(cudaMalloc((void**)&d_rand_state, w * h * sizeof(curandState)));
         checkCudaErrors(cudaMalloc((void**)&d_list, 5 * sizeof(hitable*)));
@@ -192,16 +204,56 @@ class cuda_renderer
     public: // Methods
     render ray_trace(int samples)
     {
-        const auto timer = scoped_timer("ray_trace");
+        const auto timer = shared::scoped_timer("ray_trace");
 
         auto ray_traced_image = render(w, h);
         auto* image_matrix = ray_traced_image.get_image_matrix();
+
         cuda_methods::render_image<<<blocks, threads>>>(image_matrix, w, h, samples, d_camera, d_world, d_rand_state);
         // cuda_methods::render_image<<<blocks, threads>>>(image_matrix, w, h, samples / 2, d_camera, d_world, d_rand_state);
+
+        checkCudaErrors(cudaDeviceSynchronize());
         cuda_methods::normalize<<<blocks, threads>>>(image_matrix, w, h, samples);
         checkCudaErrors(cudaGetLastError());
         checkCudaErrors(cudaDeviceSynchronize());
         return ray_traced_image;
+    }
+
+    shared::render_datapoint ray_trace_datapoint(int samples[4])
+    {
+        const auto timer = shared::scoped_timer("ray_trace_datapoint");
+        auto result = shared::render_datapoint(w, h);
+
+        auto ray_traced_image = render(w, h);
+        auto* image_matrix = ray_traced_image.get_image_matrix();
+
+        auto out_ray_traced_image = render(w, h);
+        auto* out_image_matrix = out_ray_traced_image.get_image_matrix();
+        auto sample_sum = 0;
+        for (auto i = 0; i < 4; i++)
+        {
+            const auto timer_intern = shared::scoped_timer("   _iteration");
+
+            int sample = samples[i];
+            sample_sum += sample;
+
+            cuda_methods::render_image<<<blocks, threads>>>(image_matrix, w, h, sample, d_camera, d_world, d_rand_state);
+            checkCudaErrors(cudaDeviceSynchronize());
+
+            cuda_methods::normalize_out<<<blocks, threads>>>(image_matrix, out_image_matrix, w, h, sample_sum);
+            checkCudaErrors(cudaGetLastError());
+            checkCudaErrors(cudaDeviceSynchronize());
+
+            if (i == 3)
+            {
+                result.target = out_ray_traced_image.get_vector3_representation();
+            }
+            else
+            {
+                result.renders[i] = out_ray_traced_image.get_vector5_representation();
+            }
+        }
+        return result;
     }
 };
 

@@ -2,6 +2,7 @@
 #include <cuda.h>
 #include <shared/cuda_helpers.cuh>
 #include <shared/vec3.cuh>
+#include <shared/vec5.cuh>
 #include <string>
 #include <vector>
 
@@ -61,9 +62,13 @@ class render
     }
 
     std::string get_ppm_representation() const;
-    std::string get_ppm_representation(const std::vector<rgb>& colors) const;
+    std::string get_ppm_representation(const std::vector<vec3>& colors) const;
 
-    std::vector<rgb> get_vector_representation() const;
+    std::vector<vec3> get_vector3_representation() const;
+    void get_vector3_representation(std::vector<vec3>& colors) const;
+
+    std::vector<vec5> get_vector5_representation() const;
+    void get_vector5_representation(std::vector<vec5>& colors) const;
 };
 
 } // namespace path_tracer

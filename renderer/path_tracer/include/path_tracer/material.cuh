@@ -20,8 +20,8 @@ struct material
 
 struct lambertian : public material
 {
-    rgb albedo;
-    __device__ lambertian(const rgb& a) : albedo(a)
+    vec3 albedo;
+    __device__ lambertian(const vec3& a) : albedo(a)
     {
     }
 
@@ -37,7 +37,7 @@ struct lambertian : public material
 
 struct metal : public material
 {
-    const rgb albedo;
+    const vec3 albedo;
     const float fuzz;
 
     __device__ metal(const vec3& a, float f) : albedo(a), fuzz(f < 1 ? f : 1)

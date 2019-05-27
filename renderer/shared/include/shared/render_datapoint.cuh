@@ -1,4 +1,5 @@
 #pragma once
+#include "scoped_timer.cuh"
 #include "vec3.cuh"
 #include "vec5.cuh"
 #include <sstream>
@@ -8,13 +9,19 @@ namespace ppt
 {
 namespace shared
 {
+
+#define RM(row, col, w) row* w + col
+#define CM(row, col, h) col* h + row
 class render_datapoint
 {
     public:
     std::vector<vec5> renders[3];
     std::vector<vec3> target;
 
-    render_datapoint()
+    const size_t w;
+    const size_t h;
+
+    render_datapoint(int w, int h) : w(w), h(h)
     {
     }
 
@@ -53,6 +60,24 @@ class render_datapoint
         {
             ss << vec[0] << ", " << vec[1] << ", " << vec[2] << ", " << std::endl;
         }
+        return ss.str();
+    }
+
+    std::string get_ppm_representation(const std::vector<vec3>& colors) const
+    {
+        auto timer = shared::scoped_timer("get_ppm_representation");
+
+        std::stringstream ss;
+        ss << "P3\n" << w << " " << h << "\n255\n";
+
+        for (int i = 0; i < h; i++)
+        {
+            for (int j = 0; j < w; j++)
+            {
+                ss << colors[RM(i, j, w)] << std::endl;
+            }
+        }
+
         return ss.str();
     }
 };

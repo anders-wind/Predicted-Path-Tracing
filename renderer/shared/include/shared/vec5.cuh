@@ -21,6 +21,15 @@ struct vec5
         e[4] = e4;
     }
 
+    __host__ __device__ vec5(const vec3& v)
+    {
+        e[0] = v[0];
+        e[1] = v[1];
+        e[2] = v[2];
+        e[3] = 0;
+        e[4] = 0;
+    }
+
     // unary operators
     __host__ __device__ inline const vec5& operator+() const
     {

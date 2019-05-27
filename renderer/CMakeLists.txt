@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.12)
+project(ppt
+    VERSION 0.0.1
+    LANGUAGES C CXX CUDA)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
