@@ -1,8 +1,8 @@
 #include <dataset_creator/dataset_repository.hpp>
 #include <fstream>
 #include <iomanip>
+#include <shared/scoped_timer.cuh>
 #include <sstream>
-
 
 namespace ppt
 {
@@ -12,17 +12,17 @@ namespace dataset_creator
 std::string dataset_repository::get_file_name(const std::string& file_name, bool is_target, int render_number) const
 {
     std::stringstream ss;
-    ss << datastore_path << "_" << run_name << "_" << file_name << is_target ? "_target" : "_input_";
+    ss << datastore_path << run_name << "/" << file_name << (is_target ? "_target" : "_input_");
     if (!is_target)
     {
-        ss << std::setfill('0') << std::setw(4) << render_number;
+        ss << std::setfill('0') << std::setw(3) << render_number;
     }
     return ss.str();
 }
 
 void dataset_repository::save_datapoint(const shared::render_datapoint& render_datapoint, const std::string& file_name)
 {
-
+    const auto timer = shared::scoped_timer("save_datapoint");
     std::ofstream target_file;
     target_file.open(get_file_name(file_name, true, 0));
     target_file << render_datapoint.get_target_string();
