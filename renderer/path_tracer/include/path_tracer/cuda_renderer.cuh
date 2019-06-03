@@ -46,6 +46,7 @@ constexpr auto FLOAT_MAX = 1000000000.0f;
 namespace cuda_methods
 {
 
+
 __device__ vec3 color(const ray& r, hitable** world, curandState* local_rand_state)
 {
     ray cur_ray = r;
@@ -67,6 +68,7 @@ __device__ vec3 color(const ray& r, hitable** world, curandState* local_rand_sta
             cur_ray = scattered;
         }
     }
+
     vec3 unit_direction = unit_vector(cur_ray.direction());
     float t = 0.5f * (unit_direction.y() + 1.0f);
     vec3 c = vec3(1.0, 1.0, 1.0) * (1.0f - t) + vec3(0.5, 0.7, 1.0) * t;
@@ -74,7 +76,7 @@ __device__ vec3 color(const ray& r, hitable** world, curandState* local_rand_sta
 }
 
 __global__ void
-render_image(vec5* image_matrix, int max_x, int max_y, int samples, camera* camera, hitable** world, curandState* rand_state)
+render_image(vec3* image_matrix, int max_x, int max_y, int samples, camera* camera, hitable** world, curandState* rand_state)
 {
     int row = threadIdx.x + blockIdx.x * blockDim.x;
     int col = threadIdx.y + blockIdx.y * blockDim.y;
@@ -93,13 +95,22 @@ render_image(vec5* image_matrix, int max_x, int max_y, int samples, camera* came
         pix += color(r, world, &local_rand_state);
     }
 
-    auto sample_precision = 1.0 - 1.0 / ((float)samples);
-
     rand_state[pixel_index] = local_rand_state;
-    image_matrix[pixel_index] = vec5(pix[0], pix[1], pix[2], sample_precision, 0.2f);
+    image_matrix[pixel_index] = pix;
 }
 
-__global__ void normalize(vec5* image_matrix, vec5* out_image_matrix, int max_x, int max_y, int samples)
+__device__ float calc_depth(hitable** world, camera* camera, int col, int row, int max_x, int max_y)
+{
+    hit_record rec;
+    float u = float(col) / float(max_x);
+    float v = float(max_y - row) / float(max_y);
+    ray r = camera->get_ray(u, v);
+    (*world)->hit(r, FLOAT_MIN, FLOAT_MAX, rec);
+    return rec.t;
+}
+
+__global__ void
+post_process(vec3* image_matrix, vec5* out_image_matrix, hitable** world, camera* camera, int max_x, int max_y, int samples, int total)
 {
     int row = threadIdx.x + blockIdx.x * blockDim.x;
     int col = threadIdx.y + blockIdx.y * blockDim.y;
@@ -109,7 +120,11 @@ __global__ void normalize(vec5* image_matrix, vec5* out_image_matrix, int max_x,
     int pixel_index = RM(row, col, max_x);
     auto in_pixel = image_matrix[pixel_index];
     auto norm_rgb = (vec3(in_pixel.e) / float(samples)).v_sqrt();
-    out_image_matrix[pixel_index] = vec5(norm_rgb[0], norm_rgb[1], norm_rgb[2], in_pixel[3], in_pixel[4]);
+
+    auto sample_precision = ((float)samples) / (float)total;
+    auto depth = calc_depth(world, camera, col, row, max_x, max_y);
+
+    out_image_matrix[pixel_index] = vec5(norm_rgb, sample_precision, depth);
 }
 
 
@@ -264,12 +279,13 @@ class cuda_renderer
         const auto timer = shared::scoped_timer("ray_trace");
 
         auto ray_traced_image = render(w, h);
+        auto* color_matrix = ray_traced_image.get_color_matrix();
         auto* image_matrix = ray_traced_image.get_image_matrix();
 
-        cuda_methods::render_image<<<blocks, threads>>>(image_matrix, w, h, samples, d_camera, d_world, d_rand_state);
+        cuda_methods::render_image<<<blocks, threads>>>(color_matrix, w, h, samples, d_camera, d_world, d_rand_state);
         checkCudaErrors(cudaGetLastError());
         checkCudaErrors(cudaDeviceSynchronize());
-        cuda_methods::normalize<<<blocks, threads>>>(image_matrix, image_matrix, w, h, samples);
+        cuda_methods::post_process<<<blocks, threads>>>(color_matrix, image_matrix, d_world, d_camera, w, h, samples, samples);
         checkCudaErrors(cudaGetLastError());
         checkCudaErrors(cudaDeviceSynchronize());
         return ray_traced_image;
@@ -288,13 +304,12 @@ class cuda_renderer
     {
         const auto timer = shared::scoped_timer("ray_trace_datapoint");
         auto ray_traced_image = render(w, h);
-        auto out_ray_traced_image = render(w, h);
         auto results = std::vector<shared::render_datapoint>();
         results.reserve(number_of_images);
         for (auto i = 0; i < number_of_images; i++)
         {
             update_world();
-            results.push_back(ray_trace_datapoint(samples, ray_traced_image, out_ray_traced_image));
+            results.push_back(ray_trace_datapoint(samples, ray_traced_image));
             cuda_methods::reset_image<<<blocks, threads>>>(ray_traced_image.get_image_matrix(), w, h);
         }
 
@@ -305,19 +320,19 @@ class cuda_renderer
     {
         const auto timer = shared::scoped_timer("ray_trace_datapoint");
         auto ray_traced_image = render(w, h);
-        auto out_ray_traced_image = render(w, h);
-        auto result = ray_trace_datapoint(samples, ray_traced_image, out_ray_traced_image);
+        auto result = ray_trace_datapoint(samples, ray_traced_image);
 
         return result;
     }
 
-    shared::render_datapoint ray_trace_datapoint(int samples[4], render& ray_traced_image, render& out_ray_traced_image)
+    shared::render_datapoint ray_trace_datapoint(int samples[4], render& ray_traced_image)
     {
         auto result = shared::render_datapoint(w, h);
+        auto* color_matrix = ray_traced_image.get_color_matrix();
         auto* image_matrix = ray_traced_image.get_image_matrix();
-        auto* out_image_matrix = out_ray_traced_image.get_image_matrix();
 
         auto sample_sum = 0;
+        auto total_sample = samples[0] + samples[1] + samples[2] + samples[3];
         for (auto i = 0; i < 4; i++)
         {
             const auto timer_intern = shared::scoped_timer("   _iteration");
@@ -325,21 +340,22 @@ class cuda_renderer
             int sample = samples[i];
             sample_sum += sample;
 
-            cuda_methods::render_image<<<blocks, threads>>>(image_matrix, w, h, sample, d_camera, d_world, d_rand_state);
+            cuda_methods::render_image<<<blocks, threads>>>(color_matrix, w, h, sample, d_camera, d_world, d_rand_state);
             checkCudaErrors(cudaGetLastError());
             checkCudaErrors(cudaDeviceSynchronize());
 
-            cuda_methods::normalize<<<blocks, threads>>>(image_matrix, out_image_matrix, w, h, sample_sum);
+            cuda_methods::post_process<<<blocks, threads>>>(
+                color_matrix, image_matrix, d_world, d_camera, w, h, sample_sum, total_sample);
             checkCudaErrors(cudaGetLastError());
             checkCudaErrors(cudaDeviceSynchronize());
 
             if (i == 3)
             {
-                result.target = out_ray_traced_image.get_vector3_representation();
+                result.target = ray_traced_image.get_vector3_representation();
             }
             else
             {
-                result.renders[i] = out_ray_traced_image.get_vector5_representation();
+                result.renders[i] = ray_traced_image.get_vector5_representation();
             }
         }
         return result;

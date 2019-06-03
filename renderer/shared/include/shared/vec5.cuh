@@ -13,6 +13,16 @@ struct vec5
 {
     float e[5];
     __host__ __device__ vec5(){};
+
+    __host__ __device__ vec5(float v)
+    {
+        e[0] = v;
+        e[1] = v;
+        e[2] = v;
+        e[3] = v;
+        e[4] = v;
+    }
+
     __host__ __device__ vec5(float e0, float e1, float e2, float e3, float e4)
     {
         e[0] = e0;
@@ -29,6 +39,14 @@ struct vec5
         e[2] = o[2];
         e[3] = 0;
         e[4] = 0;
+    }
+    __host__ __device__ explicit vec5(vec3 o, float e3, float e4)
+    {
+        e[0] = o[0];
+        e[1] = o[1];
+        e[2] = o[2];
+        e[3] = e3;
+        e[4] = e4;
     }
 
     __host__ __device__ explicit vec5(float o[5])
