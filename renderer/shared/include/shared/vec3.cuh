@@ -1,4 +1,5 @@
 #pragma once
+#include "vec5.cuh"
 #include <cuda_runtime.h>
 #include <iostream>
 #include <math.h>
@@ -17,6 +18,13 @@ struct vec3
         e[0] = e0;
         e[1] = e1;
         e[2] = e2;
+    }
+
+    __host__ __device__ explicit vec3(float o[5])
+    {
+        e[0] = o[0];
+        e[1] = o[1];
+        e[2] = o[2];
     }
 
     __host__ __device__ inline float x() const

@@ -1,4 +1,5 @@
 #pragma once
+#include "vec3.cuh"
 #include <cuda_runtime.h>
 #include <iostream>
 #include <math.h>
@@ -12,7 +13,7 @@ struct vec5
 {
     float e[5];
     __host__ __device__ vec5(){};
-    __host__ __device__ vec5(float e0, float e1, float e2, float e3, float e4)
+    __host__ __device__ explicit vec5(float e0, float e1, float e2, float e3, float e4)
     {
         e[0] = e0;
         e[1] = e1;
@@ -21,11 +22,11 @@ struct vec5
         e[4] = e4;
     }
 
-    __host__ __device__ vec5(const vec3& v)
+    __host__ __device__ explicit vec5(float o[3])
     {
-        e[0] = v[0];
-        e[1] = v[1];
-        e[2] = v[2];
+        e[0] = o[0];
+        e[1] = o[1];
+        e[2] = o[2];
         e[3] = 0;
         e[4] = 0;
     }
@@ -225,6 +226,7 @@ inline std::ostream& operator<<(std::ostream& os, vec5& t)
     os << t.e[0] << " " << t.e[1] << " " << t.e[2] << " " << t.e[3] << " " << t.e[4];
     return os;
 }
+
 
 } // namespace shared
 } // namespace ppt

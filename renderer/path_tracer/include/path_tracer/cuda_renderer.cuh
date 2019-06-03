@@ -78,7 +78,7 @@ __device__ vec3 color(const ray& r, hitable** world, curandState* local_rand_sta
 }
 
 __global__ void
-render_image(vec3* image_matrix, int max_x, int max_y, int samples, camera* camera, hitable** world, curandState* rand_state)
+render_image(vec5* image_matrix, int max_x, int max_y, int samples, camera* camera, hitable** world, curandState* rand_state)
 {
     int row = threadIdx.x + blockIdx.x * blockDim.x;
     int col = threadIdx.y + blockIdx.y * blockDim.y;
@@ -88,7 +88,7 @@ render_image(vec3* image_matrix, int max_x, int max_y, int samples, camera* came
     int pixel_index = RM(row, col, max_x);
     curandState local_rand_state = rand_state[pixel_index];
 
-    vec3 pix = image_matrix[pixel_index];
+    vec3 pix = vec3(image_matrix[pixel_index].e);
     for (int s = 0; s < samples; s++)
     {
         float u = float(col + curand_normal(&local_rand_state)) / float(max_x);
@@ -98,10 +98,10 @@ render_image(vec3* image_matrix, int max_x, int max_y, int samples, camera* came
     }
 
     rand_state[pixel_index] = local_rand_state;
-    image_matrix[pixel_index] = pix;
+    image_matrix[pixel_index] = vec5(pix[0], pix[1], pix[2], 1.0 - 1.0 / samples, 0);
 }
 
-__global__ void normalize(vec3* image_matrix, vec3* out_image_matrix, int max_x, int max_y, int samples)
+__global__ void normalize(vec5* image_matrix, vec5* out_image_matrix, int max_x, int max_y, int samples)
 {
     int row = threadIdx.x + blockIdx.x * blockDim.x;
     int col = threadIdx.y + blockIdx.y * blockDim.y;
@@ -125,7 +125,7 @@ __global__ void render_init(int max_x, int max_y, int offset, curandState* rand_
     curand_init(row, col, offset, &rand_state[pixel_index]);
 }
 
-__global__ void reset_image(vec3* image_matrix, int max_x, int max_y)
+__global__ void reset_image(vec5* image_matrix, int max_x, int max_y)
 {
     int row = threadIdx.x + blockIdx.x * blockDim.x;
     int col = threadIdx.y + blockIdx.y * blockDim.y;
@@ -133,7 +133,7 @@ __global__ void reset_image(vec3* image_matrix, int max_x, int max_y)
         return;
 
     int pixel_index = RM(row, col, max_x);
-    image_matrix[pixel_index] = vec3(0, 0, 0);
+    image_matrix[pixel_index] = vec5(0, 0, 0, 0, 0);
 }
 
 __global__ void create_world(hitable** d_list, hitable** d_world, camera* d_camera, int hitables_size)
@@ -228,11 +228,12 @@ class cuda_renderer
     const size_t w;
     const size_t h;
 
-    cuda_renderer(int w, int h, int hitables_size)
+    cuda_renderer(int w, int h)
       : blocks(h / num_threads_y + 1, w / num_threads_x + 1), threads(num_threads_x, num_threads_y), w(w), h(h)
     {
         const auto timer = shared::scoped_timer("cuda_renderer");
 
+        int hitables_size = 5;
         checkCudaErrors(cudaMalloc((void**)&d_rand_state, w * h * sizeof(curandState)));
         checkCudaErrors(cudaMalloc((void**)&d_list, hitables_size * sizeof(hitable*)));
         checkCudaErrors(cudaMalloc((void**)&d_world, sizeof(hitable*)));

@@ -13,14 +13,14 @@ using namespace ppt::shared;
 
 
 template <typename T>
-void get_vector_representation(vec3* m_image_matrix, size_t w, size_t h, std::vector<T>& colors)
+void get_vector_representation(vec5* m_image_matrix, size_t w, size_t h, std::vector<T>& colors)
 {
     for (int i = 0; i < h; i++)
     {
         for (int j = 0; j < w; j++)
         {
             const size_t pixel_index = RM(i, j, w);
-            colors[pixel_index] = m_image_matrix[pixel_index];
+            colors[pixel_index] = T(m_image_matrix[pixel_index].e);
         }
     }
 }

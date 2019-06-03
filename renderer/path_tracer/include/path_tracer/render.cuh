@@ -19,14 +19,14 @@ using namespace ppt::shared;
 class render
 {
     private:
-    vec3* m_image_matrix; // m for managed
+    vec5* m_image_matrix; // m for managed
 
     public:
     const size_t w;
     const size_t h;
     const size_t render_image_bytes;
 
-    render(int w, int h) : w(w), h(h), render_image_bytes(w * h * sizeof(vec3))
+    render(int w, int h) : w(w), h(h), render_image_bytes(w * h * sizeof(vec5))
     {
         checkCudaErrors(cudaMallocManaged((void**)&m_image_matrix, render_image_bytes));
     }
@@ -56,7 +56,7 @@ class render
     }
 
     // todo think about how we can return as ref?
-    vec3* get_image_matrix()
+    vec5* get_image_matrix()
     {
         return m_image_matrix;
     }
