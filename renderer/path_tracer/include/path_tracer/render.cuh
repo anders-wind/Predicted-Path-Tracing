@@ -61,14 +61,9 @@ class render
         return m_image_matrix;
     }
 
-    std::string get_ppm_representation() const;
-    std::string get_ppm_representation(const std::vector<vec3>& colors) const;
-
     std::vector<vec3> get_vector3_representation() const;
-    void get_vector3_representation(std::vector<vec3>& colors) const;
 
     std::vector<vec5> get_vector5_representation() const;
-    void get_vector5_representation(std::vector<vec5>& colors) const;
 };
 
 } // namespace path_tracer

@@ -41,15 +41,6 @@ void dataset_repository::save_datapoint(const shared::render_datapoint& render_d
     }
 }
 
-void dataset_repository::save_ppm(const shared::render_datapoint& render_datapoint, const std::string& file_name)
-{
-    const auto timer = shared::scoped_timer("save_datapoint");
-    std::ofstream target_file;
-    target_file.open(get_file_name(file_name, true, 0, ".ppm"));
-    target_file << render_datapoint.get_ppm_representation(render_datapoint.target);
-    target_file.close();
-}
-
 void dataset_repository::save_datapoints(const std::vector<shared::render_datapoint>& render_dataset,
                                          const std::string& file_name)
 {
@@ -60,8 +51,26 @@ void dataset_repository::save_datapoints(const std::vector<shared::render_datapo
         ss << file_name;
         ss << std::setfill('0') << std::setw(2) << i << "_";
         save_datapoint(datapoint, ss.str());
+        ss.str("");
         ss.clear();
         i++;
+    }
+}
+
+void dataset_repository::save_ppm(const shared::render_datapoint& render_datapoint, const std::string& file_name)
+{
+    const auto timer = shared::scoped_timer("save_datapoint");
+    std::ofstream target_file;
+    target_file.open(get_file_name(file_name, true, 0, ".ppm"));
+    target_file << render_datapoint.get_ppm_representation(render_datapoint.target);
+    target_file.close();
+
+    for (size_t i = 0; i < render_datapoint.renders_size(); i++)
+    {
+        std::ofstream render_file;
+        render_file.open(get_file_name(file_name, false, i, ".ppm"));
+        render_file << render_datapoint.get_ppm_representation(render_datapoint.renders[i]);
+        render_file.close();
     }
 }
 
@@ -75,6 +84,7 @@ void dataset_repository::save_ppms(const std::vector<shared::render_datapoint>& 
         ss << file_name;
         ss << std::setfill('0') << std::setw(2) << i << "_";
         save_ppm(datapoint, ss.str());
+        ss.str("");
         ss.clear();
         i++;
     }

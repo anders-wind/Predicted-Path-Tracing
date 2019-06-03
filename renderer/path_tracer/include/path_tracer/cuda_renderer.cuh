@@ -7,10 +7,10 @@
 #include "hitable.cuh"
 #include "hitable_list.cuh"
 #include "material.cuh"
-#include "plane.cuh"
+#include "objects/plane.cuh"
+#include "objects/sphere.cuh"
 #include "ray.cuh"
 #include "render.cuh"
-#include "sphere.cuh"
 #include <cuda.h>
 #include <curand_kernel.h>
 #include <device_launch_parameters.h>
@@ -168,7 +168,11 @@ __global__ void create_random_world(hitable** d_list,
         {
             if (i == 0)
             {
-                d_list[i] = new plane(vec3(0, -3, 0), vec3(0, 1, 0), new lambertian(vec3(0.6, 0.8, 0.6)));
+                d_list[i] = new plane(vec3(0, -3, 0),
+                                      vec3(0, 1, 0),
+                                      new lambertian(vec3(curand_uniform(local_rand),
+                                                          curand_uniform(local_rand),
+                                                          curand_uniform(local_rand))));
                 continue;
             }
 
@@ -189,9 +193,9 @@ __global__ void create_random_world(hitable** d_list,
                 mat = new lambertian(
                     vec3(curand_uniform(local_rand), curand_uniform(local_rand), curand_uniform(local_rand)));
             }
-            d_list[i] = new sphere(vec3((curand_uniform(local_rand) - 1) * 8,
-                                        (curand_uniform(local_rand) - 1) * 3,
-                                        curand_uniform(local_rand) * 0.25 - 3),
+            d_list[i] = new sphere(vec3((curand_uniform(local_rand) - 0.5) * 14,
+                                        (curand_uniform(local_rand) - 0.5) * 8,
+                                        curand_uniform(local_rand) * -3 - 2),
                                    curand_uniform(local_rand) * curand_uniform(local_rand) * 1.5 + 0.3,
                                    mat);
         }
@@ -275,7 +279,7 @@ class cuda_renderer
         checkCudaErrors(cudaDeviceSynchronize());
         cuda_methods::free_world<<<1, 1>>>(d_world, d_camera);
         checkCudaErrors(cudaGetLastError());
-        cuda_methods::create_random_world<<<1, 1>>>(d_list, d_world, d_camera, 7, 1, 1, d_rand_state);
+        cuda_methods::create_random_world<<<1, 1>>>(d_list, d_world, d_camera, 13, 2, 2, d_rand_state);
         checkCudaErrors(cudaGetLastError());
     }
 
@@ -299,11 +303,6 @@ class cuda_renderer
     shared::render_datapoint ray_trace_datapoint(int samples[4])
     {
         const auto timer = shared::scoped_timer("ray_trace_datapoint");
-        for (auto i = 0; i < 3; i++)
-        {
-            update_world();
-        }
-
         auto ray_traced_image = render(w, h);
         auto out_ray_traced_image = render(w, h);
         auto result = ray_trace_datapoint(samples, ray_traced_image, out_ray_traced_image);

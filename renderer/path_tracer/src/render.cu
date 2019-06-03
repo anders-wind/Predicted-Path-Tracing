@@ -11,67 +11,34 @@ using namespace ppt::shared;
 #define RM(row, col, w) row* w + col
 #define CM(row, col, h) col* h + row
 
-std::string render::get_ppm_representation() const
+
+template <typename T>
+void get_vector_representation(vec3* m_image_matrix, size_t w, size_t h, std::vector<T>& colors)
 {
-    const auto colors = get_vector3_representation();
-    return get_ppm_representation(colors);
-}
-
-std::string render::get_ppm_representation(const std::vector<vec3>& colors) const
-{
-    const auto timer = shared::scoped_timer("get_ppm_representation");
-
-    std::stringstream ss;
-    ss << "P3\n" << w << " " << h << "\n255\n";
-
     for (int i = 0; i < h; i++)
     {
         for (int j = 0; j < w; j++)
         {
-            ss << colors[RM(i, j, w)] << std::endl;
+            const size_t pixel_index = RM(i, j, w);
+            colors[pixel_index] = m_image_matrix[pixel_index];
         }
     }
-
-    return ss.str();
 }
 
 std::vector<vec3> render::get_vector3_representation() const
 {
     auto colors = std::vector<vec3>(w * h);
-    get_vector3_representation(colors);
+    get_vector_representation(m_image_matrix, w, h, colors);
     return colors;
-}
-
-void render::get_vector3_representation(std::vector<vec3>& colors) const
-{
-    for (int i = 0; i < h; i++)
-    {
-        for (int j = 0; j < w; j++)
-        {
-            const size_t pixel_index = RM(i, j, w);
-            colors[pixel_index] = m_image_matrix[pixel_index];
-        }
-    }
 }
 
 std::vector<vec5> render::get_vector5_representation() const
 {
     auto colors = std::vector<vec5>(w * h);
-    get_vector5_representation(colors);
+    get_vector_representation(m_image_matrix, w, h, colors);
     return colors;
 }
 
-void render::get_vector5_representation(std::vector<vec5>& colors) const
-{
-    for (int i = 0; i < h; i++)
-    {
-        for (int j = 0; j < w; j++)
-        {
-            const size_t pixel_index = RM(i, j, w);
-            colors[pixel_index] = m_image_matrix[pixel_index];
-        }
-    }
-}
 
 } // namespace path_tracer
 } // namespace ppt

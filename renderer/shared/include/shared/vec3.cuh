@@ -291,12 +291,5 @@ struct rgb : public vec3
     }
 };
 
-inline std::ostream& operator<<(std::ostream& is, const rgb& t)
-{
-    is << static_cast<unsigned int>(t.e[0] * 255.99) << " " << static_cast<unsigned int>(t.e[1] * 255.99)
-       << " " << static_cast<unsigned int>(t.e[2] * 255.99);
-    return is;
-}
-
 } // namespace shared
 } // namespace ppt

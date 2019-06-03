@@ -1,7 +1,7 @@
 #pragma once
 
-#include "hitable.cuh"
-#include "ray.cuh"
+#include "path_tracer/hitable.cuh"
+#include "path_tracer/ray.cuh"
 #include <math.h>
 #include <memory>
 #include <shared/vec3.cuh>

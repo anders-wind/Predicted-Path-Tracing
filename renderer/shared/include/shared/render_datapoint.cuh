@@ -62,7 +62,7 @@ class render_datapoint
         return ss.str();
     }
 
-    std::string get_ppm_representation(const std::vector<vec3>& colors) const
+    template <typename T> std::string get_ppm_representation(const std::vector<T>& colors) const
     {
         auto timer = shared::scoped_timer("get_ppm_representation");
 
@@ -73,7 +73,10 @@ class render_datapoint
         {
             for (int j = 0; j < w; j++)
             {
-                ss << colors[RM(i, j, w)] << std::endl;
+                auto color = colors[RM(i, j, w)];
+                ss << static_cast<unsigned int>(color.e[0] * 255.99) << " "
+                   << static_cast<unsigned int>(color.e[1] * 255.99) << " "
+                   << static_cast<unsigned int>(color.e[2] * 255.99) << std::endl;
             }
         }
 
