@@ -15,11 +15,11 @@ namespace shared
 class render_datapoint
 {
     public:
-    std::vector<vec5> renders[3];
+    std::array<std::vector<vec5>, 3> renders;
     std::vector<vec3> target;
 
-    const size_t w;
-    const size_t h;
+    size_t w;
+    size_t h;
 
     render_datapoint(int w, int h) : w(w), h(h)
     {
@@ -29,7 +29,6 @@ class render_datapoint
     {
         return 3;
     }
-
 
     std::string get_render_string(std::vector<vec5> render) const
     {

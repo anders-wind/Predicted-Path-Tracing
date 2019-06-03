@@ -50,14 +50,31 @@ void dataset_repository::save_ppm(const shared::render_datapoint& render_datapoi
     target_file.close();
 }
 
-void dataset_repository::save_dataset(const std::vector<shared::render_datapoint>& render_dataset)
+void dataset_repository::save_datapoints(const std::vector<shared::render_datapoint>& render_dataset,
+                                         const std::string& file_name)
 {
     auto i = 0;
     std::stringstream ss;
     for (const auto& datapoint : render_dataset)
     {
-        ss << std::setfill('0') << std::setw(4) << i;
+        ss << file_name;
+        ss << std::setfill('0') << std::setw(2) << i << "_";
         save_datapoint(datapoint, ss.str());
+        ss.clear();
+        i++;
+    }
+}
+
+void dataset_repository::save_ppms(const std::vector<shared::render_datapoint>& render_dataset,
+                                   const std::string& file_name)
+{
+    auto i = 0;
+    std::stringstream ss;
+    for (const auto& datapoint : render_dataset)
+    {
+        ss << file_name;
+        ss << std::setfill('0') << std::setw(2) << i << "_";
+        save_ppm(datapoint, ss.str());
         ss.clear();
         i++;
     }

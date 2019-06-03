@@ -125,6 +125,17 @@ __global__ void render_init(int max_x, int max_y, int offset, curandState* rand_
     curand_init(row, col, offset, &rand_state[pixel_index]);
 }
 
+__global__ void reset_image(vec3* image_matrix, int max_x, int max_y)
+{
+    int row = threadIdx.x + blockIdx.x * blockDim.x;
+    int col = threadIdx.y + blockIdx.y * blockDim.y;
+    if ((col >= max_x) || (row >= max_y))
+        return;
+
+    int pixel_index = RM(row, col, max_x);
+    image_matrix[pixel_index] = vec3(0, 0, 0);
+}
+
 __global__ void create_world(hitable** d_list, hitable** d_world, camera* d_camera, int hitables_size)
 {
     if (threadIdx.x == 0 && blockIdx.x == 0)
@@ -155,6 +166,12 @@ __global__ void create_random_world(hitable** d_list,
         auto number_of_refraction = 0;
         for (auto i = 0; i < hitables_size; i++)
         {
+            if (i == 0)
+            {
+                d_list[i] = new plane(vec3(0, -3, 0), vec3(0, 1, 0), new lambertian(vec3(0.6, 0.8, 0.6)));
+                continue;
+            }
+
             material* mat;
             if (number_of_reflection < reflection)
             {
@@ -172,10 +189,10 @@ __global__ void create_random_world(hitable** d_list,
                 mat = new lambertian(
                     vec3(curand_uniform(local_rand), curand_uniform(local_rand), curand_uniform(local_rand)));
             }
-            d_list[i] = new sphere(vec3(curand_uniform(local_rand) * 4 - 2,
-                                        curand_uniform(local_rand) * 4 - 2,
-                                        curand_uniform(local_rand) - 2),
-                                   curand_uniform(local_rand) * curand_uniform(local_rand) * 1.5,
+            d_list[i] = new sphere(vec3((curand_uniform(local_rand) - 1) * 8,
+                                        (curand_uniform(local_rand) - 1) * 3,
+                                        curand_uniform(local_rand) * 0.25 - 3),
+                                   curand_uniform(local_rand) * curand_uniform(local_rand) * 1.5 + 0.3,
                                    mat);
         }
 
@@ -258,21 +275,48 @@ class cuda_renderer
         checkCudaErrors(cudaDeviceSynchronize());
         cuda_methods::free_world<<<1, 1>>>(d_world, d_camera);
         checkCudaErrors(cudaGetLastError());
-        cuda_methods::create_random_world<<<1, 1>>>(d_list, d_world, d_camera, 7, 1, 2, d_rand_state);
+        cuda_methods::create_random_world<<<1, 1>>>(d_list, d_world, d_camera, 7, 1, 1, d_rand_state);
         checkCudaErrors(cudaGetLastError());
+    }
+
+    std::vector<shared::render_datapoint> ray_trace_datapoints(int samples[4], size_t number_of_images)
+    {
+        const auto timer = shared::scoped_timer("ray_trace_datapoint");
+        auto ray_traced_image = render(w, h);
+        auto out_ray_traced_image = render(w, h);
+        auto results = std::vector<shared::render_datapoint>();
+        results.reserve(number_of_images);
+        for (auto i = 0; i < number_of_images; i++)
+        {
+            update_world();
+            results.push_back(ray_trace_datapoint(samples, ray_traced_image, out_ray_traced_image));
+            cuda_methods::reset_image<<<blocks, threads>>>(ray_traced_image.get_image_matrix(), w, h);
+        }
+
+        return results;
     }
 
     shared::render_datapoint ray_trace_datapoint(int samples[4])
     {
-        // update_world();
         const auto timer = shared::scoped_timer("ray_trace_datapoint");
-        auto result = shared::render_datapoint(w, h);
+        for (auto i = 0; i < 3; i++)
+        {
+            update_world();
+        }
 
         auto ray_traced_image = render(w, h);
-        auto* image_matrix = ray_traced_image.get_image_matrix();
-
         auto out_ray_traced_image = render(w, h);
+        auto result = ray_trace_datapoint(samples, ray_traced_image, out_ray_traced_image);
+
+        return result;
+    }
+
+    shared::render_datapoint ray_trace_datapoint(int samples[4], render& ray_traced_image, render& out_ray_traced_image)
+    {
+        auto result = shared::render_datapoint(w, h);
+        auto* image_matrix = ray_traced_image.get_image_matrix();
         auto* out_image_matrix = out_ray_traced_image.get_image_matrix();
+
         auto sample_sum = 0;
         for (auto i = 0; i < 4; i++)
         {
