@@ -21,6 +21,7 @@ int main()
         auto renderer = cuda_renderer(w, h, 5);
         auto render_datapoint = renderer.ray_trace_datapoint(samples);
         repository.save_datapoint(render_datapoint, "heyo");
+        repository.save_ppm(render_datapoint, "heyo");
     }
     catch (...)
     {

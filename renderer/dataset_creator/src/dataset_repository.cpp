@@ -9,7 +9,10 @@ namespace ppt
 namespace dataset_creator
 {
 
-std::string dataset_repository::get_file_name(const std::string& file_name, bool is_target, int render_number) const
+std::string dataset_repository::get_file_name(const std::string& file_name,
+                                              bool is_target,
+                                              int render_number,
+                                              std::string file_extension) const
 {
     std::stringstream ss;
     ss << datastore_path << "/" << file_name << (is_target ? "_target" : "_input_");
@@ -17,7 +20,7 @@ std::string dataset_repository::get_file_name(const std::string& file_name, bool
     {
         ss << std::setfill('0') << std::setw(2) << render_number;
     }
-    ss << ".csv";
+    ss << file_extension;
     return ss.str();
 }
 
@@ -25,17 +28,26 @@ void dataset_repository::save_datapoint(const shared::render_datapoint& render_d
 {
     const auto timer = shared::scoped_timer("save_datapoint");
     std::ofstream target_file;
-    target_file.open(get_file_name(file_name, true, 0));
+    target_file.open(get_file_name(file_name, true, 0, ".csv"));
     target_file << render_datapoint.get_target_string();
     target_file.close();
 
     for (size_t i = 0; i < render_datapoint.renders_size(); i++)
     {
         std::ofstream render_file;
-        render_file.open(get_file_name(file_name, false, i));
+        render_file.open(get_file_name(file_name, false, i, ".csv"));
         render_file << render_datapoint.get_render_string(i);
         render_file.close();
     }
+}
+
+void dataset_repository::save_ppm(const shared::render_datapoint& render_datapoint, const std::string& file_name)
+{
+    const auto timer = shared::scoped_timer("save_datapoint");
+    std::ofstream target_file;
+    target_file.open(get_file_name(file_name, true, 0, ".ppm"));
+    target_file << render_datapoint.get_ppm_representation(render_datapoint.target);
+    target_file.close();
 }
 
 void dataset_repository::save_dataset(const std::vector<shared::render_datapoint>& render_dataset)

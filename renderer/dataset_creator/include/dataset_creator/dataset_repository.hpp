@@ -21,10 +21,12 @@ class dataset_repository
 
     void save_datapoint(const shared::render_datapoint& render_datapoint, const std::string& file_name);
 
+    void save_ppm(const shared::render_datapoint& render_datapoint, const std::string& file_name);
+
     void save_dataset(const std::vector<shared::render_datapoint>& render_dataset);
 
     private:
-    std::string get_file_name(const std::string& file_name, bool is_target, int render_number) const;
+    std::string get_file_name(const std::string& file_name, bool is_target, int render_number, std::string file_extension) const;
 };
 
 } // namespace dataset_creator
