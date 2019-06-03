@@ -12,7 +12,7 @@ int main()
 
     int w = 640;
     int h = 360;
-    int samples[4] = { 1, 10, 100, 1000 };
+    int samples[4] = { 1, 10, 100, 100 };
     std::string filename = "render";
     auto repository = dataset_repository("/home/anders/Documents/datasets/ppt/640x360_run01");
 

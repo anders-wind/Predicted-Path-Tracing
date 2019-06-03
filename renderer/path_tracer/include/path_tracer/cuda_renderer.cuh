@@ -7,6 +7,7 @@
 #include "hitable.cuh"
 #include "hitable_list.cuh"
 #include "material.cuh"
+#include "plane.cuh"
 #include "ray.cuh"
 #include "render.cuh"
 #include "sphere.cuh"
@@ -128,15 +129,55 @@ __global__ void create_world(hitable** d_list, hitable** d_world, camera* d_came
 {
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
-        for (auto i = 0; i < hitables_size; i++)
-        {
-        }
-
-        d_list[0] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.1, 0.2, 0.5)));
-        d_list[1] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.8, 0.8, 0.0)));
+        d_list[0] = new plane(vec3(0, -0.5, 0), vec3(0, 1, 0), new lambertian(vec3(0.6, 0.8, 0.6)));
+        d_list[1] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.1, 0.2, 0.5)));
         d_list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2), 0.0));
         d_list[3] = new sphere(vec3(-1, 0.0, -1), 0.5, new dielectric(1.5f));
         d_list[4] = new sphere(vec3(-1, 0.0, -1), -0.45, new dielectric(1.5f));
+
+        *d_world = new hitable_list(d_list, hitables_size);
+        *d_camera = camera_factory().make_16_9_camera();
+    }
+}
+
+__global__ void create_random_world(hitable** d_list,
+                                    hitable** d_world,
+                                    camera* d_camera,
+                                    int hitables_size,
+                                    int reflection,
+                                    int refraction,
+                                    curandState* curand_state)
+{
+    if (threadIdx.x == 0 && blockIdx.x == 0)
+    {
+        auto local_rand = &curand_state[0];
+        auto number_of_reflection = 0;
+        auto number_of_refraction = 0;
+        for (auto i = 0; i < hitables_size; i++)
+        {
+            material* mat;
+            if (number_of_reflection < reflection)
+            {
+                mat = new metal(vec3(curand_uniform(local_rand), curand_uniform(local_rand), curand_uniform(local_rand)),
+                                curand_uniform(local_rand));
+                number_of_reflection++;
+            }
+            else if (number_of_refraction < refraction)
+            {
+                mat = new dielectric(curand_uniform(local_rand));
+                number_of_refraction++;
+            }
+            else
+            {
+                mat = new lambertian(
+                    vec3(curand_uniform(local_rand), curand_uniform(local_rand), curand_uniform(local_rand)));
+            }
+            d_list[i] = new sphere(vec3(curand_uniform(local_rand) * 4 - 2,
+                                        curand_uniform(local_rand) * 4 - 2,
+                                        curand_uniform(local_rand) - 2),
+                                   curand_uniform(local_rand) * curand_uniform(local_rand) * 1.5,
+                                   mat);
+        }
 
         *d_world = new hitable_list(d_list, hitables_size);
         *d_camera = camera_factory().make_16_9_camera();
@@ -193,8 +234,6 @@ class cuda_renderer
         checkCudaErrors(cudaDeviceSynchronize());
         cuda_methods::free_world<<<1, 1>>>(d_world, d_camera);
         checkCudaErrors(cudaGetLastError());
-        checkCudaErrors(cudaFree(d_list));
-        checkCudaErrors(cudaFree(d_world));
     }
 
     public: // Methods
@@ -214,8 +253,18 @@ class cuda_renderer
         return ray_traced_image;
     }
 
+    void update_world()
+    {
+        checkCudaErrors(cudaDeviceSynchronize());
+        cuda_methods::free_world<<<1, 1>>>(d_world, d_camera);
+        checkCudaErrors(cudaGetLastError());
+        cuda_methods::create_random_world<<<1, 1>>>(d_list, d_world, d_camera, 7, 1, 2, d_rand_state);
+        checkCudaErrors(cudaGetLastError());
+    }
+
     shared::render_datapoint ray_trace_datapoint(int samples[4])
     {
+        // update_world();
         const auto timer = shared::scoped_timer("ray_trace_datapoint");
         auto result = shared::render_datapoint(w, h);
 
