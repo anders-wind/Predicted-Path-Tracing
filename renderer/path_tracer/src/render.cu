@@ -19,7 +19,7 @@ void get_vector_representation(vec5* m_image_matrix, size_t w, size_t h, std::ve
     {
         for (int j = 0; j < w; j++)
         {
-            const size_t pixel_index = RM(i, j, w);
+            const auto pixel_index = RM(i, j, w);
             colors[pixel_index] = T(m_image_matrix[pixel_index].e);
         }
     }
@@ -28,14 +28,14 @@ void get_vector_representation(vec5* m_image_matrix, size_t w, size_t h, std::ve
 std::vector<vec3> render::get_vector3_representation() const
 {
     auto colors = std::vector<vec3>(w * h);
-    get_vector_representation(m_image_matrix, w, h, colors);
+    get_vector_representation<vec3>(m_image_matrix, w, h, colors);
     return colors;
 }
 
 std::vector<vec5> render::get_vector5_representation() const
 {
     auto colors = std::vector<vec5>(w * h);
-    get_vector_representation(m_image_matrix, w, h, colors);
+    get_vector_representation<vec5>(m_image_matrix, w, h, colors);
     return colors;
 }
 

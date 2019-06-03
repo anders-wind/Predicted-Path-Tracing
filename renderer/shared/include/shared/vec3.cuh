@@ -1,5 +1,4 @@
 #pragma once
-#include "vec5.cuh"
 #include <cuda_runtime.h>
 #include <iostream>
 #include <math.h>

@@ -64,8 +64,6 @@ class render_datapoint
 
     template <typename T> std::string get_ppm_representation(const std::vector<T>& colors) const
     {
-        auto timer = shared::scoped_timer("get_ppm_representation");
-
         std::stringstream ss;
         ss << "P3\n" << w << " " << h << "\n255\n";
 

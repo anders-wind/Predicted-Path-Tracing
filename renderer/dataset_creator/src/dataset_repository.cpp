@@ -59,7 +59,7 @@ void dataset_repository::save_datapoints(const std::vector<shared::render_datapo
 
 void dataset_repository::save_ppm(const shared::render_datapoint& render_datapoint, const std::string& file_name)
 {
-    const auto timer = shared::scoped_timer("save_datapoint");
+    const auto timer = shared::scoped_timer("save_ppm");
     std::ofstream target_file;
     target_file.open(get_file_name(file_name, true, 0, ".ppm"));
     target_file << render_datapoint.get_ppm_representation(render_datapoint.target);

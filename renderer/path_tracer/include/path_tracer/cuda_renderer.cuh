@@ -50,18 +50,14 @@ __device__ vec3 color(const ray& r, hitable** world, curandState* local_rand_sta
 {
     ray cur_ray = r;
     vec3 cur_attenuation = vec3(1.0f, 1.0f, 1.0f);
+    hit_record rec;
+
     for (int i = 0; i < 10; i++)
     {
-        hit_record rec;
-
-        // printf("world has %d elems\n", world->get_num_elements());
-        // printf("world %p \n", (void*)world);
-
         if (!(*world)->hit(cur_ray, FLOAT_MIN, FLOAT_MAX, rec))
         {
             break;
         }
-
 
         ray scattered;
         vec3 attenuation;
@@ -97,8 +93,10 @@ render_image(vec5* image_matrix, int max_x, int max_y, int samples, camera* came
         pix += color(r, world, &local_rand_state);
     }
 
+    auto sample_precision = 1.0 - 1.0 / ((float)samples);
+
     rand_state[pixel_index] = local_rand_state;
-    image_matrix[pixel_index] = vec5(pix[0], pix[1], pix[2], 1.0 - 1.0 / samples, 0);
+    image_matrix[pixel_index] = vec5(pix[0], pix[1], pix[2], sample_precision, 0.2f);
 }
 
 __global__ void normalize(vec5* image_matrix, vec5* out_image_matrix, int max_x, int max_y, int samples)
@@ -109,7 +107,9 @@ __global__ void normalize(vec5* image_matrix, vec5* out_image_matrix, int max_x,
         return;
 
     int pixel_index = RM(row, col, max_x);
-    out_image_matrix[pixel_index] = (image_matrix[pixel_index] / float(samples)).v_sqrt();
+    auto in_pixel = image_matrix[pixel_index];
+    auto norm_rgb = (vec3(in_pixel.e) / float(samples)).v_sqrt();
+    out_image_matrix[pixel_index] = vec5(norm_rgb[0], norm_rgb[1], norm_rgb[2], in_pixel[3], in_pixel[4]);
 }
 
 

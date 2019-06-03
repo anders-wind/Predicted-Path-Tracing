@@ -40,15 +40,14 @@ struct hitable_list : public hitable
     __device__ __host__ bool hit(const ray& r, float t_min, float t_max, hit_record& out) const override
     {
         hit_record temp_closest;
-        bool hit_anything = false;
-        auto closest_so_far = t_max;
+        auto hit_anything = false;
+        out.t = t_max;
         for (auto i = 0; i < num_elements; i++)
         {
             const auto& hitable = _hitables[i];
-            if (hitable->hit(r, t_min, closest_so_far, temp_closest))
+            if (hitable->hit(r, t_min, out.t, temp_closest))
             {
                 hit_anything = true;
-                closest_so_far = temp_closest.t;
                 out = temp_closest;
             }
         }

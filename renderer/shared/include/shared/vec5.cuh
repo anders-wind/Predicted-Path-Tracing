@@ -13,7 +13,7 @@ struct vec5
 {
     float e[5];
     __host__ __device__ vec5(){};
-    __host__ __device__ explicit vec5(float e0, float e1, float e2, float e3, float e4)
+    __host__ __device__ vec5(float e0, float e1, float e2, float e3, float e4)
     {
         e[0] = e0;
         e[1] = e1;
@@ -22,7 +22,7 @@ struct vec5
         e[4] = e4;
     }
 
-    __host__ __device__ explicit vec5(float o[3])
+    __host__ __device__ explicit vec5(vec3 o)
     {
         e[0] = o[0];
         e[1] = o[1];
@@ -31,15 +31,26 @@ struct vec5
         e[4] = 0;
     }
 
+    __host__ __device__ explicit vec5(float o[5])
+    {
+        e[0] = o[0];
+        e[1] = o[1];
+        e[2] = o[2];
+        e[3] = o[3];
+        e[4] = o[4];
+    }
+
     // unary operators
     __host__ __device__ inline const vec5& operator+() const
     {
         return *this;
     }
+
     __host__ __device__ inline vec5 operator-() const
     {
         return vec5(-e[0], -e[1], -e[2], -e[3], -e[4]);
     }
+
     __host__ __device__ inline float operator[](int i) const
     {
         return e[i];
@@ -213,18 +224,6 @@ __host__ __device__ inline vec5 operator/(const vec5& v1, const float t)
 __host__ __device__ inline vec5 unit_vector(vec5 v)
 {
     return v / v.length();
-}
-
-inline std::istream& operator>>(std::istream& is, vec5& t)
-{
-    is >> t.e[0] >> t.e[1] >> t.e[2] >> t.e[3] >> t.e[4];
-    return is;
-}
-
-inline std::ostream& operator<<(std::ostream& os, vec5& t)
-{
-    os << t.e[0] << " " << t.e[1] << " " << t.e[2] << " " << t.e[3] << " " << t.e[4];
-    return os;
 }
 
 
