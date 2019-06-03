@@ -13,20 +13,20 @@ struct ray
     vec3 _origin; // origin
     vec3 _direction; // direction
 
-    __device__ ray(){};
-    __device__ ray(const vec3& origin, const vec3& direction)
+    __device__ __host__ ray(){};
+    __device__ __host__ ray(const vec3& origin, const vec3& direction)
       : _origin(origin), _direction(direction)
     {
     }
-    __device__ vec3 origin() const
+    __device__ __host__ vec3 origin() const
     {
         return _origin;
     }
-    __device__ vec3 direction() const
+    __device__ __host__ vec3 direction() const
     {
         return _direction;
     }
-    __device__ vec3 point_at_parameter(float t) const
+    __device__ __host__ vec3 point_at_parameter(float t) const
     {
         return _origin + (_direction * t);
     }

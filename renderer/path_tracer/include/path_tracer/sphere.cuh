@@ -23,7 +23,12 @@ struct sphere : public hitable
     {
     }
 
-    __device__ bool hit(const ray& r, float t_min, float t_max, hit_record& out) const override
+    __device__ ~sphere()
+    {
+        delete _material;
+    }
+
+    __device__ __host__ bool hit(const ray& r, float t_min, float t_max, hit_record& out) const override
     {
         vec3 oc = r.origin() - _center;
         float a = dot(r.direction(), r.direction());

@@ -11,10 +11,10 @@ namespace path_tracer
 struct camera
 {
     private:
-    const vec3 _origin;
-    const vec3 _lower_left_corner;
-    const vec3 _horizontal;
-    const vec3 _vertical;
+    vec3 _origin;
+    vec3 _lower_left_corner;
+    vec3 _horizontal;
+    vec3 _vertical;
 
     public:
     __host__ __device__ camera(const vec3& lower_left_corner, const vec3& horizontal, const vec3& vertical, const vec3& origin)
@@ -34,33 +34,33 @@ class camera_factory
     public:
     camera_factory() = default;
 
-    __host__ __device__ camera* make_16_9_camera() const
+    __host__ __device__ camera make_16_9_camera() const
     {
         const auto lower_left_corner = vec3(-8.0, -4.5, -2.5);
         const auto horizontal = vec3(16, 0.0, 0.0);
         const auto vertical = vec3(0.0, 9.0, 0.0);
         const auto origin = vec3(0.0, 0.0, 0.0);
-        return new camera(lower_left_corner, horizontal, vertical, origin);
-    } // namespace path_tracer
+        return camera(lower_left_corner, horizontal, vertical, origin);
+    }
 
-    __host__ __device__ camera* make_4_3_camera() const
+    __host__ __device__ camera make_4_3_camera() const
     {
         const auto lower_left_corner = vec3(-2.0, -1.5, -1.5);
         const auto horizontal = vec3(4, 0.0, 0.0);
         const auto vertical = vec3(0.0, 3.0, 0.0);
         const auto origin = vec3(0.0, 0.0, 0.0);
-        return new camera(lower_left_corner, horizontal, vertical, origin);
+        return camera(lower_left_corner, horizontal, vertical, origin);
     }
 
-    __host__ __device__ camera* make_square_camera() const
+    __host__ __device__ camera make_square_camera() const
     {
         const auto lower_left_corner = vec3(-2.0, -2.0, -1.5);
         const auto horizontal = vec3(4, 0.0, 0.0);
         const auto vertical = vec3(0.0, 4.0, 0.0);
         const auto origin = vec3(0.0, 0.0, 0.0);
-        return new camera(lower_left_corner, horizontal, vertical, origin);
+        return camera(lower_left_corner, horizontal, vertical, origin);
     }
-}; // namespace ppt
+};
 
 } // namespace path_tracer
 } // namespace ppt

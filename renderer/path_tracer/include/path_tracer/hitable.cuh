@@ -19,7 +19,7 @@ struct hit_record
 
 struct hitable
 {
-    __device__ virtual bool hit(const ray& r, float t_min, float t_max, hit_record& out) const = 0;
+    __device__ __host__ virtual bool hit(const ray& r, float t_min, float t_max, hit_record& out) const = 0;
 };
 
 } // namespace path_tracer

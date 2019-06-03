@@ -12,7 +12,7 @@ namespace dataset_creator
 std::string dataset_repository::get_file_name(const std::string& file_name, bool is_target, int render_number) const
 {
     std::stringstream ss;
-    ss << datastore_path << "/" << run_name << "/" << file_name << (is_target ? "_target" : "_input_");
+    ss << datastore_path << "/" << file_name << (is_target ? "_target" : "_input_");
     if (!is_target)
     {
         ss << std::setfill('0') << std::setw(2) << render_number;

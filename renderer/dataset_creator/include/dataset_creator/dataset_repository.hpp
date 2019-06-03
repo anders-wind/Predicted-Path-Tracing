@@ -1,4 +1,5 @@
 #pragma once
+#include <experimental/filesystem>
 #include <shared/render_datapoint.cuh>
 #include <string>
 
@@ -12,11 +13,10 @@ class dataset_repository
 
     public:
     const std::string datastore_path;
-    const std::string run_name;
 
-    dataset_repository(const std::string& datastore_path, const std::string& run_name)
-      : datastore_path(datastore_path), run_name(run_name)
+    dataset_repository(const std::string& datastore_path) : datastore_path(datastore_path)
     {
+        std::experimental::filesystem::create_directories({ datastore_path });
     }
 
     void save_datapoint(const shared::render_datapoint& render_datapoint, const std::string& file_name);
