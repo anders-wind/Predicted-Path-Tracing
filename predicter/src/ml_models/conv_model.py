@@ -1,6 +1,7 @@
 """
 Module containing the different ML Models
 """
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -31,6 +32,40 @@ class FirstNet(nn.Module):
         data_x = F.relu(self.conv4(data_x))
 
         return data_x
+
+    def forward_single(self, data_x):
+        """
+        Takes a single element and predicts its value
+        """
+        data_x = data_x.unsqueeze(0)
+        data_x = self.forward(data_x)
+        return data_x.squeeze(0)
+
+
+class SimpleNet(nn.Module):
+    """
+    Net completely based on the pytorch tutorial
+    images are 20*20
+    """
+
+    def __init__(self):
+        super(SimpleNet, self).__init__()
+        # 5 input image channel, 6 output channels, 5x5 square convolution
+        # kernel
+        layers = []
+        layers.append(nn.Conv2d(in_channels=5, out_channels=256, kernel_size=5, padding=2, groups=1, bias=False))
+        # layers.append(nn.ReLU(inplace=True))
+        # layers.append(nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, padding=1, groups=1, bias=False))
+        layers.append(nn.BatchNorm2d(num_features=256))
+        layers.append(nn.ReLU(inplace=True))
+        layers.append(nn.Conv2d(in_channels=256, out_channels=3, kernel_size=5, padding=2, groups=1))
+        self.dncnn = nn.Sequential(*layers)
+        self.cuda()
+
+    def forward(self, *input_data):
+        data_x = input_data[0]
+        out = self.dncnn(data_x * 1)
+        return data_x[:, :3, :, ] + out  # + out  # out +
 
     def forward_single(self, data_x):
         """

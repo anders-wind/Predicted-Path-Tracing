@@ -60,9 +60,9 @@ def run():
 
     # ========= Create Services
     data_repository: DatasetRepositoryBase = DatasetRepository(
-        Path("/home/anders/Documents/datasets/ppt/640x360_run04"), 640, 360)
+        Path("/home/anders/Documents/datasets/ppt/640x360_run05"), 640, 360)
     data_service = DatasetService(data_repository)
-    training_service = TrainingService(epochs=1)
+    training_service = TrainingService()
 
     # ========= Create data
     dataset = data_service.get_dataset()
