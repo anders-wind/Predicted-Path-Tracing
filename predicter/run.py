@@ -1,10 +1,11 @@
 """
 The runner module
 """
+from pathlib import Path
 import numpy as np
 from torchvision import transforms
 import matplotlib.pyplot as plt
-from src.dataset_service.dataset_repository import DummyDatasetRepository
+from src.dataset_service.dataset_repository import DummyDatasetRepository, DatasetRepository
 from src.dataset_service.dataset_service import DatasetService
 from src.dataset_service.transforms import ToTensor, Transposer
 from src.training_service.training_service import TrainingService
@@ -54,7 +55,7 @@ def run():
     np.random.seed(42)
 
     # ========= Create Services
-    data_repository = DummyDatasetRepository(32000)
+    data_repository = DatasetRepository(Path("/home/anders/Documents/datasets/ppt/640x360_run04"), 640, 360)
     data_service = DatasetService(data_repository)
     training_service = TrainingService(epochs=2)
 

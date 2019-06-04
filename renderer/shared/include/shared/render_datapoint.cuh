@@ -36,8 +36,7 @@ class render_datapoint
         ss << "x,y,z,v,w" << std::endl;
         for (const auto& vec : render)
         {
-            ss << vec[0] << ", " << vec[1] << ", " << vec[2] << ", " << vec[3] << ", " << vec[4]
-               << ", " << std::endl;
+            ss << vec[0] << ", " << vec[1] << ", " << vec[2] << ", " << vec[3] << ", " << vec[4] << std::endl;
         }
         return ss.str();
     }
@@ -57,7 +56,7 @@ class render_datapoint
         ss << "x,y,z" << std::endl;
         for (const auto& vec : target)
         {
-            ss << vec[0] << ", " << vec[1] << ", " << vec[2] << ", " << std::endl;
+            ss << vec[0] << ", " << vec[1] << ", " << vec[2] << std::endl;
         }
         return ss.str();
     }

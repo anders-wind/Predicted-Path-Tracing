@@ -27,8 +27,8 @@ class DatasetRepository:
         self.height = height
 
     def _open_and_read(self, path: Path) -> str:
-        with open(path) as file:
-            return str(file.read())
+        with open(path, "r") as file:
+            return file.read()
 
     def load_dataset(self) -> CombinedDataset:
         """
@@ -44,10 +44,12 @@ class DatasetRepository:
             target_file_name = Path(datastore_root_string + file_names[0])
             render_file_names = [Path(datastore_root_string + x) for x in file_names[1:]]
 
-            target = np.asarray(pd.read_csv(target_file_name).values)
+            target = pd.read_csv(target_file_name).values
+            target = np.asarray(target, dtype=float)
             target = target.reshape(self.width, self.height, 3)
             for render_file in render_file_names:
-                render = np.asarray(pd.read_csv(render_file).values)
+                render = pd.read_csv(render_file).values
+                render = np.asarray(render, dtype=float)
                 render = render.reshape(self.width, self.height, 5)
                 renders.append(render)
                 images.append(target)
