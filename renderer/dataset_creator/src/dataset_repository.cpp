@@ -9,13 +9,21 @@ namespace ppt
 namespace dataset_creator
 {
 
-std::string dataset_repository::get_file_name(const std::string& file_name,
-                                              bool is_target,
-                                              int render_number,
-                                              std::string file_extension) const
+// HELPERS
+
+std::string dataset_repository::get_file_path(const std::string& file_name) const
 {
     std::stringstream ss;
-    ss << datastore_path << "/" << file_name << (is_target ? "_target" : "_input_");
+    ss << datastore_path << "/" << file_name;
+    return ss.str();
+}
+
+
+std::string
+dataset_repository::get_file_name(const std::string& name, bool is_target, int render_number, std::string file_extension) const
+{
+    std::stringstream ss;
+    ss << name << (is_target ? "_target" : "_input_");
     if (!is_target)
     {
         ss << std::setfill('0') << std::setw(2) << render_number;
@@ -24,21 +32,33 @@ std::string dataset_repository::get_file_name(const std::string& file_name,
     return ss.str();
 }
 
+void save_to_file(std::string file_path, std::string content)
+{
+    std::ofstream file;
+    file.open(file_path);
+    file << content;
+    file.close(); // mixed oppinions on the web around if it is good practise to do this or not (since ofstream is RAII)
+}
+
+// PUBLIC METHODS
+
 void dataset_repository::save_datapoint(const shared::render_datapoint& render_datapoint, const std::string& file_name)
 {
     const auto timer = shared::scoped_timer("save_datapoint");
-    std::ofstream target_file;
-    target_file.open(get_file_name(file_name, true, 0, ".csv"));
-    target_file << render_datapoint.get_target_string();
-    target_file.close();
+    std::stringstream datapoint_ss;
 
-    for (size_t i = 0; i < render_datapoint.renders_size(); i++)
+    auto target_file_name = get_file_name(file_name, true, 0, ".csv");
+    save_to_file(get_file_path(target_file_name), render_datapoint.get_target_string());
+
+    datapoint_ss << target_file_name;
+    for (auto i = 0; i < render_datapoint.renders_size(); i++)
     {
-        std::ofstream render_file;
-        render_file.open(get_file_name(file_name, false, i, ".csv"));
-        render_file << render_datapoint.get_render_string(i);
-        render_file.close();
+        auto render_file_name = get_file_name(file_name, false, i, ".csv");
+        save_to_file(get_file_path(render_file_name), render_datapoint.get_render_string(i));
+        datapoint_ss << ", " << render_file_name;
     }
+
+    save_to_file(get_file_path(file_name + ".dp"), datapoint_ss.str());
 }
 
 void dataset_repository::save_datapoints(const std::vector<shared::render_datapoint>& render_dataset,
@@ -49,7 +69,7 @@ void dataset_repository::save_datapoints(const std::vector<shared::render_datapo
     for (const auto& datapoint : render_dataset)
     {
         ss << file_name;
-        ss << std::setfill('0') << std::setw(2) << i << "_";
+        ss << std::setfill('0') << std::setw(2) << i;
         save_datapoint(datapoint, ss.str());
         ss.str("");
         ss.clear();
@@ -60,17 +80,17 @@ void dataset_repository::save_datapoints(const std::vector<shared::render_datapo
 void dataset_repository::save_ppm(const shared::render_datapoint& render_datapoint, const std::string& file_name)
 {
     const auto timer = shared::scoped_timer("save_ppm");
-    std::ofstream target_file;
-    target_file.open(get_file_name(file_name, true, 0, ".ppm"));
-    target_file << render_datapoint.get_ppm_representation(render_datapoint.target);
-    target_file.close();
+
+    auto target_file_name = get_file_name(file_name, true, 0, ".ppm");
+    save_to_file(get_file_path(target_file_name),
+                 render_datapoint.get_ppm_representation(render_datapoint.target));
 
     for (size_t i = 0; i < render_datapoint.renders_size(); i++)
     {
         std::ofstream render_file;
-        render_file.open(get_file_name(file_name, false, i, ".ppm"));
-        render_file << render_datapoint.get_ppm_representation(render_datapoint.renders[i]);
-        render_file.close();
+        auto render_file_name = get_file_name(file_name, false, i, ".ppm");
+        save_to_file(get_file_path(render_file_name),
+                     render_datapoint.get_ppm_representation(render_datapoint.renders[i]));
     }
 }
 

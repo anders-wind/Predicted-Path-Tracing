@@ -27,7 +27,8 @@ class dataset_repository
 
 
     private:
-    std::string get_file_name(const std::string& file_name, bool is_target, int render_number, std::string file_extension) const;
+    std::string get_file_path(const std::string& file_name) const;
+    std::string get_file_name(const std::string& name, bool is_target, int render_number, std::string file_extension) const;
 };
 
 } // namespace dataset_creator

@@ -12,6 +12,12 @@ struct vec3
 {
     float e[3];
     __host__ __device__ vec3(){};
+    __host__ __device__ vec3(float v)
+    {
+        e[0] = v;
+        e[1] = v;
+        e[2] = v;
+    }
     __host__ __device__ vec3(float e0, float e1, float e2)
     {
         e[0] = e0;

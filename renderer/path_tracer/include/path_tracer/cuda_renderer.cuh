@@ -140,7 +140,7 @@ __global__ void render_init(int max_x, int max_y, int offset, curandState* rand_
     curand_init(row, col, offset, &rand_state[pixel_index]);
 }
 
-__global__ void reset_image(vec5* image_matrix, int max_x, int max_y)
+__global__ void reset_image(vec3* color_matrix, int max_x, int max_y)
 {
     int row = threadIdx.x + blockIdx.x * blockDim.x;
     int col = threadIdx.y + blockIdx.y * blockDim.y;
@@ -148,7 +148,7 @@ __global__ void reset_image(vec5* image_matrix, int max_x, int max_y)
         return;
 
     int pixel_index = RM(row, col, max_x);
-    image_matrix[pixel_index] = vec5(0, 0, 0, 0, 0);
+    color_matrix[pixel_index] = vec3(0, 0, 0);
 }
 
 __global__ void create_world(hitable** d_list, hitable** d_world, camera* d_camera, int hitables_size)
@@ -310,7 +310,8 @@ class cuda_renderer
         {
             update_world();
             results.push_back(ray_trace_datapoint(samples, ray_traced_image));
-            cuda_methods::reset_image<<<blocks, threads>>>(ray_traced_image.get_image_matrix(), w, h);
+            cuda_methods::reset_image<<<blocks, threads>>>(ray_traced_image.get_color_matrix(), w, h);
+            checkCudaErrors(cudaDeviceSynchronize());
         }
 
         return results;
