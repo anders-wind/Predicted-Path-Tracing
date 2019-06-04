@@ -50,22 +50,27 @@ class SimpleNet(nn.Module):
 
     def __init__(self):
         super(SimpleNet, self).__init__()
-        # 5 input image channel, 6 output channels, 5x5 square convolution
         # kernel
+        in_channel = 5
+        out_channel = 3
+        features = 128
+        kernel_size = 7
+        padding = int(kernel_size / 2)
         layers = []
-        layers.append(nn.Conv2d(in_channels=5, out_channels=256, kernel_size=5, padding=2, groups=1, bias=False))
-        # layers.append(nn.ReLU(inplace=True))
-        # layers.append(nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, padding=1, groups=1, bias=False))
-        layers.append(nn.BatchNorm2d(num_features=256))
-        layers.append(nn.ReLU(inplace=True))
-        layers.append(nn.Conv2d(in_channels=256, out_channels=3, kernel_size=5, padding=2, groups=1))
+        layers.append(nn.Conv2d(in_channels=in_channel, out_channels=features, kernel_size=kernel_size, padding=padding))
+        layers.append(nn.BatchNorm2d(num_features=features))
+        layers.append(nn.Conv2d(in_channels=features, out_channels=features, kernel_size=kernel_size, padding=padding))
+        layers.append(nn.BatchNorm2d(num_features=features))
+        layers.append(nn.Conv2d(in_channels=features, out_channels=out_channel, kernel_size=kernel_size, padding=padding))
+        layers.append(nn.Tanh())
         self.dncnn = nn.Sequential(*layers)
         self.cuda()
 
     def forward(self, *input_data):
         data_x = input_data[0]
-        out = self.dncnn(data_x * 1)
-        return data_x[:, :3, :, ] + out  # + out  # out +
+        data_original_rgb = data_x[:, :3, :, ]
+        out = self.dncnn(data_x)
+        return data_original_rgb + out
 
     def forward_single(self, data_x):
         """
