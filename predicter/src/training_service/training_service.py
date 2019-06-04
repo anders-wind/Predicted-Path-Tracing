@@ -7,7 +7,7 @@ import torch
 import torch.optim as optim
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from src.ml_models.conv_model import FirstNet, SimpleNet
+from src.ml_models.conv_model import FirstNet, SimpleNet, PyramidNet
 
 
 @dataclass
@@ -23,7 +23,7 @@ class TrainingService():
     A training service which allows for training and testing of models
     """
 
-    def __init__(self, epochs: int = 100, number_of_nets: int = 1):
+    def __init__(self, epochs: int = 300, number_of_nets: int = 1):
         self.epochs = epochs
         self.number_of_nets = number_of_nets
 
@@ -36,7 +36,8 @@ class TrainingService():
 
         for _ in range(self.number_of_nets):
             # net = FirstNet()
-            net = SimpleNet()
+            # net = SimpleNet()
+            net = PyramidNet()
             self._optimize_net(net, train_loader)
             test_results = self._evaluate_net(net, test_loader)
             if test_results.total_loss < best_loss:
