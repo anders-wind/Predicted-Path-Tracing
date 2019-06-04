@@ -26,13 +26,35 @@ class DatasetRepository:
         self.width = width
         self.height = height
 
+    def _open_and_read(self, path: Path) -> str:
+        with open(path) as file:
+            return str(file.read())
+
     def load_dataset(self) -> CombinedDataset:
-        pathlist = Path(self.datastore_root).glob('*.csv')
-        for path in pathlist: 
-            
-        result = pd.read_csv(self.datastore_root)
-        result.reshape(width, height)
-        return result
+        """
+        Loads the dataset
+        """
+        datapoint_paths = Path(self.datastore_root).glob('*.dp')
+        datastore_root_string = str(self.datastore_root) + "/"
+        images = []
+        renders = []
+        names = []
+        for path in datapoint_paths:
+            file_names = self._open_and_read(path).split(", ")
+            target_file_name = Path(datastore_root_string + file_names[0])
+            render_file_names = [Path(datastore_root_string + x) for x in file_names[1:]]
+
+            target = np.asarray(pd.read_csv(target_file_name).values)
+            target = target.reshape(self.width, self.height, 3)
+            for render_file in render_file_names:
+                render = np.asarray(pd.read_csv(render_file).values)
+                render = render.reshape(self.width, self.height, 5)
+                renders.append(render)
+                images.append(target)
+                names.append(str(render_file))
+
+        dataset = CombinedDataset(dataset_path=Path(), names=names, images=images, renders=renders)
+        return dataset
 
 
 class DummyDatasetRepository(DatasetRepositoryBase):
@@ -54,3 +76,6 @@ class DummyDatasetRepository(DatasetRepositoryBase):
 
         dataset = CombinedDataset(dataset_path=Path(), names=names, images=images, renders=renders)
         return dataset
+
+
+# repo = DatasetRepository(Path("/home/anders/Documents/datasets/ppt/640x360_run02"), 640, 380)
