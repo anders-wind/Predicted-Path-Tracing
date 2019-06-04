@@ -46,11 +46,11 @@ class DatasetRepository:
 
             target = pd.read_csv(target_file_name).values
             target = np.asarray(target, dtype=float)
-            target = target.reshape(self.width, self.height, 3)
+            target = target.reshape(self.height, self.width, 3)
             for render_file in render_file_names:
                 render = pd.read_csv(render_file).values
                 render = np.asarray(render, dtype=float)
-                render = render.reshape(self.width, self.height, 5)
+                render = render.reshape(self.height, self.width, 5)
                 renders.append(render)
                 images.append(target)
                 names.append(str(render_file))

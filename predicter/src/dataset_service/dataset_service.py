@@ -46,8 +46,8 @@ class DatasetService(ABC):
     def get_training_and_test_loaders(
             self,
             dataset: CombinedDataset,
-            batch_size: int = 16,
-            validation_split: float = 0.2,
+            batch_size: int = 5,
+            validation_split: float = 0.25,
             shuffle_dataset: bool = True,
     ) -> Tuple[DataLoader, DataLoader]:
         dataset_size = len(dataset)

@@ -1,6 +1,7 @@
 """
 Service for training and testing models
 """
+import sys
 from dataclasses import dataclass
 import torch.optim as optim
 import torch.nn as nn
@@ -48,7 +49,7 @@ class TrainingService():
         criterion = nn.MSELoss()
         optimizer = optim.Adam(net.parameters(), lr=0.002)
 
-        best_loss = 10000.0
+        best_loss = sys.float_info.max
         for epoch in range(self.epochs):
             running_loss = 0.0
             stale_rounds = 0
@@ -61,7 +62,7 @@ class TrainingService():
                 optimizer.step()
 
                 running_loss += loss.item()
-                if i % 100 == 99:
+                if i % 2 == 1:
                     print('[%d, %5d] loss: %.3f' % (epoch, i, running_loss / 100))
                     if best_loss <= running_loss:
                         stale_rounds += 1
