@@ -300,7 +300,7 @@ class cuda_renderer
         checkCudaErrors(cudaGetLastError());
     }
 
-    std::vector<shared::render_datapoint> ray_trace_datapoints(int samples[4], size_t number_of_images)
+    std::vector<shared::render_datapoint> ray_trace_datapoints(const int samples[4], size_t number_of_images)
     {
         const auto timer = shared::scoped_timer("ray_trace_datapoint");
         auto ray_traced_image = render(w, h);
@@ -317,7 +317,7 @@ class cuda_renderer
         return results;
     }
 
-    shared::render_datapoint ray_trace_datapoint(int samples[4])
+    shared::render_datapoint ray_trace_datapoint(const int samples[4])
     {
         const auto timer = shared::scoped_timer("ray_trace_datapoint");
         auto ray_traced_image = render(w, h);
@@ -326,7 +326,7 @@ class cuda_renderer
         return result;
     }
 
-    shared::render_datapoint ray_trace_datapoint(int samples[4], render& ray_traced_image)
+    shared::render_datapoint ray_trace_datapoint(const int samples[4], render& ray_traced_image)
     {
         auto result = shared::render_datapoint(w, h);
         auto* color_matrix = ray_traced_image.get_color_matrix();
