@@ -47,7 +47,7 @@ class SimpleNet(nn.Module):
     def __init__(self):
         super(SimpleNet, self).__init__()
         # kernel
-        in_channel = 5
+        in_channel = 8
         out_channel = 3
         features = 64
         kernel_size = 5

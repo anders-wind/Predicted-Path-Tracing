@@ -21,6 +21,7 @@ struct plane : public hitable
     __device__ plane(const vec3& pos, const vec3& normal, material* material)
       : _pos(pos), _normal(normal), _material(material)
     {
+        _normal.make_unit_vector();
     }
 
     __device__ ~plane()

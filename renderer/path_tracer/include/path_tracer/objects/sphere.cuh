@@ -43,8 +43,9 @@ struct sphere : public hitable
             {
                 out.t = temp;
                 out.p = r.point_at_parameter(temp);
-                out.normal = (out.p - _center) / _radius;
+                out.normal = ((out.p - _center) / _radius);
                 out.mat_ptr = _material;
+                out.normal.make_unit_vector();
                 return true;
             }
 
@@ -55,6 +56,7 @@ struct sphere : public hitable
                 out.p = r.point_at_parameter(temp);
                 out.normal = (out.p - _center) / _radius;
                 out.mat_ptr = _material;
+                out.normal.make_unit_vector();
                 return true;
             }
         }

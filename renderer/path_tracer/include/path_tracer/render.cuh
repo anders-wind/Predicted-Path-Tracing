@@ -3,6 +3,7 @@
 #include <shared/cuda_helpers.cuh>
 #include <shared/vecs/vec3.cuh>
 #include <shared/vecs/vec5.cuh>
+#include <shared/vecs/vec8.cuh>
 #include <string>
 #include <vector>
 
@@ -20,7 +21,7 @@ class render
 {
     private:
     vec3* d_color_matrix; // d for device only
-    vec5* m_image_matrix; // m for managed
+    vec8* m_image_matrix; // m for managed
 
     public:
     const size_t w;
@@ -29,7 +30,7 @@ class render
     const size_t render_image_bytes;
 
     render(int w, int h)
-      : w(w), h(h), render_color_bytes(w * h * sizeof(vec3)), render_image_bytes(w * h * sizeof(vec5))
+      : w(w), h(h), render_color_bytes(w * h * sizeof(vec3)), render_image_bytes(w * h * sizeof(vec8))
     {
         checkCudaErrors(cudaMallocManaged((void**)&d_color_matrix, render_color_bytes));
         checkCudaErrors(cudaMallocManaged((void**)&m_image_matrix, render_image_bytes));
@@ -69,7 +70,7 @@ class render
     }
 
     // todo think about how we can return as ref?
-    vec5* get_image_matrix()
+    vec8* get_image_matrix()
     {
         return m_image_matrix;
     }
@@ -81,7 +82,7 @@ class render
 
     std::vector<vec3> get_vector3_representation() const;
 
-    std::vector<vec5> get_vector5_representation() const;
+    std::vector<vec8> get_vector8_representation() const;
 };
 
 } // namespace path_tracer

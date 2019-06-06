@@ -11,7 +11,7 @@ namespace shared
 
 struct vec8
 {
-    float e[5];
+    float e[8];
     __host__ __device__ vec8(){};
 
     __host__ __device__ vec8(float v)

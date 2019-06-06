@@ -21,6 +21,7 @@
 #include <shared/render_datapoint.cuh>
 #include <shared/scoped_timer.cuh>
 #include <shared/vecs/vec3.cuh>
+#include <shared/vecs/vec8.cuh>
 #include <time.h>
 #include <vector>
 
@@ -111,7 +112,7 @@ __device__ hit_record depth_map(hitable** world, camera* cam, int col, int row, 
 }
 
 __global__ void
-post_process(vec3* image_matrix, vec5* out_image_matrix, hitable** world, camera* camera, int max_x, int max_y, int samples)
+post_process(vec3* image_matrix, vec8* out_image_matrix, hitable** world, camera* camera, int max_x, int max_y, int samples)
 {
     int row = threadIdx.x + blockIdx.x * blockDim.x;
     int col = threadIdx.y + blockIdx.y * blockDim.y;
@@ -126,7 +127,8 @@ post_process(vec3* image_matrix, vec5* out_image_matrix, hitable** world, camera
     auto hit = depth_map(world, camera, col, row, max_x, max_y);
     auto depth = sqrtf(fabs(hit.t)) / sqrtf(camera->_max_depth);
 
-    out_image_matrix[pixel_index] = vec5(norm_rgb, sample_precision, depth);
+    out_image_matrix[pixel_index] =
+        vec8(norm_rgb, sample_precision, depth, hit.normal[0], hit.normal[1], hit.normal[2]);
 }
 
 
@@ -357,7 +359,7 @@ class cuda_renderer
             }
             else
             {
-                result.renders[i] = ray_traced_image.get_vector5_representation();
+                result.renders[i] = ray_traced_image.get_vector8_representation();
             }
         }
         return result;

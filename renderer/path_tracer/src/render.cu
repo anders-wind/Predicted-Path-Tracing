@@ -13,7 +13,7 @@ using namespace ppt::shared;
 
 
 template <typename T>
-void get_vector_representation(vec5* m_image_matrix, size_t w, size_t h, std::vector<T>& colors)
+void get_vector_representation(vec8* m_image_matrix, size_t w, size_t h, std::vector<T>& colors)
 {
     for (int i = 0; i < h; i++)
     {
@@ -32,10 +32,10 @@ std::vector<vec3> render::get_vector3_representation() const
     return colors;
 }
 
-std::vector<vec5> render::get_vector5_representation() const
+std::vector<vec8> render::get_vector8_representation() const
 {
-    auto colors = std::vector<vec5>(w * h);
-    get_vector_representation<vec5>(m_image_matrix, w, h, colors);
+    auto colors = std::vector<vec8>(w * h);
+    get_vector_representation<vec8>(m_image_matrix, w, h, colors);
     return colors;
 }
 

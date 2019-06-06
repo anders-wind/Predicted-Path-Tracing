@@ -2,6 +2,7 @@
 #include "scoped_timer.cuh"
 #include "vecs/vec3.cuh"
 #include "vecs/vec5.cuh"
+#include "vecs/vec8.cuh"
 #include <sstream>
 #include <vector>
 
@@ -15,7 +16,7 @@ namespace shared
 class render_datapoint
 {
     public:
-    std::array<std::vector<vec5>, 3> renders;
+    std::array<std::vector<vec8>, 3> renders;
     std::vector<vec3> target;
 
     size_t w;
@@ -30,18 +31,21 @@ class render_datapoint
         return 3;
     }
 
-    std::string get_render_string(std::vector<vec5> render) const
+    std::string get_render_string(std::vector<vec8> render) const
     {
         std::stringstream ss;
-        ss << "x, y, z, v, w" << std::endl;
-        // ss << std::setprecision(6) << std::fixed;
+        ss << "r, g, b, c, d, nx, ny, nz" << std::endl;
+        ss << std::setprecision(7);
         for (const auto& vec : render)
         {
             ss << vec[0] << ", ";
             ss << vec[1] << ", ";
             ss << vec[2] << ", ";
             ss << vec[3] << ", ";
-            ss << vec[4] << std::endl;
+            ss << vec[4] << ", ";
+            ss << vec[5] << ", ";
+            ss << vec[6] << ", ";
+            ss << vec[7] << std::endl;
         }
         return ss.str();
     }
@@ -59,7 +63,7 @@ class render_datapoint
     {
         std::stringstream ss;
         ss << "x, y, z" << std::endl;
-        // ss << std::setprecision(6) << std::fixed;
+        ss << std::setprecision(7);
         for (const auto& vec : target)
         {
             ss << vec[0] << ", ";
