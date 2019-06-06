@@ -50,18 +50,18 @@ class SimpleNet(nn.Module):
         in_channel = 5
         out_channel = 3
         features = 64
-        kernel_size = 3
+        kernel_size = 5
         padding = int(kernel_size / 2)
         layers = []
-        layers.append(nn.Conv2d(in_channels=in_channel, out_channels=features, kernel_size=kernel_size, padding=padding))
         # layers.append(nn.ReLU())
         # layers.append(nn.BatchNorm2d(num_features=features))
         # layers.append(nn.ReLU())
-        # layers.append(nn.Conv2d(in_channels=features, out_channels=features, kernel_size=kernel_size, padding=padding))
         # layers.append(nn.BatchNorm2d(num_features=features))
         # layers.append(nn.Sigmoid())
-        layers.append(
-            nn.Conv2d(in_channels=features, out_channels=out_channel, kernel_size=kernel_size, padding=padding, bias=False))
+        layers.append(nn.Conv2d(in_channels=in_channel, out_channels=features, kernel_size=kernel_size, padding=padding))
+        layers.append(nn.Conv2d(in_channels=features, out_channels=features, kernel_size=kernel_size, padding=padding))
+        layers.append(nn.Conv2d(in_channels=features, out_channels=out_channel, kernel_size=kernel_size, padding=padding))
+        layers.append(nn.Conv2d(in_channels=out_channel, out_channels=out_channel, kernel_size=1, bias=False))
         self.dncnn = nn.Sequential(*layers)
         self.cuda()
 
@@ -104,12 +104,11 @@ class PyramidNet(nn.Module):
     def _rev_layer(self, input_features: int, output_features: int, kernel_size: int, stride: int):
         layers = []
         layers.append(
-            nn.Conv2d(
-                in_channels=input_features,
-                out_channels=output_features,
-                kernel_size=kernel_size,
-                stride=stride,
-                padding=int(kernel_size / 2) * stride))
+            nn.Conv2d(in_channels=input_features,
+                      out_channels=output_features,
+                      kernel_size=kernel_size,
+                      stride=stride,
+                      padding=int(kernel_size / 2) * stride))
         layers.append(nn.ReLU())
         layers.append(nn.BatchNorm2d(num_features=output_features))
         layers.append(nn.UpsamplingBilinear2d(size=[100, 100]))

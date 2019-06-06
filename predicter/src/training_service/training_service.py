@@ -67,7 +67,7 @@ class TrainingService():
 
                 running_loss += loss.item()
                 if (i + 1) % (run_loss_iterations) == 0:
-                    print('[%d, %5d] loss: %.3f' % (epoch, i, running_loss / run_loss_iterations))
+                    print('[%d, %5d] loss: %.5f' % (epoch, i, running_loss / run_loss_iterations))
                     running_loss = 0.0
 
             print(f'Finished Epoch: {epoch+1}/{self.epochs}')
