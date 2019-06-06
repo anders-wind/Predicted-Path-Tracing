@@ -14,9 +14,9 @@ int main()
     int w = 640;
     int h = 360;
     const int samples[4] = { 1, 10, 100, 1000 };
-    size_t number_of_images = 10;
+    size_t number_of_images = 1;
     std::string filename = "trial";
-    auto repository = dataset_repository("/home/anders/Documents/datasets/ppt/640x360_run04");
+    auto repository = dataset_repository("/home/anders/Documents/datasets/ppt/640x360_run06");
 
     // run
     try
