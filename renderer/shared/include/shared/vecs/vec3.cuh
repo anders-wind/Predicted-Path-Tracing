@@ -142,7 +142,7 @@ struct vec3
 
     __host__ __device__ inline float length() const
     {
-        return sqrt(squared_length());
+        return sqrtf(squared_length());
     }
 
     __host__ __device__ inline vec3& v_square()
@@ -155,9 +155,9 @@ struct vec3
 
     __host__ __device__ inline vec3& v_sqrt()
     {
-        e[0] = sqrt(e[0]);
-        e[1] = sqrt(e[1]);
-        e[2] = sqrt(e[2]);
+        e[0] = sqrtf(e[0]);
+        e[1] = sqrtf(e[1]);
+        e[2] = sqrtf(e[2]);
         return *this;
     }
 

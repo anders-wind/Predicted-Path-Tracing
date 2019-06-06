@@ -31,10 +31,10 @@ struct plane : public hitable
     __device__ __host__ bool hit(const ray& r, float t_min, float t_max, hit_record& out) const override
     {
         const float divider = dot(r._direction, _normal);
-        // if (divider == 0.0f)
-        // {
-        //     return false;
-        // }
+        if (divider == 0.0f)
+        {
+            return false;
+        }
 
         const float t = dot(_normal, (_pos + r._origin)) / divider;
         if (t < 0.0f)

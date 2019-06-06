@@ -122,8 +122,8 @@ post_process(vec3* image_matrix, vec5* out_image_matrix, hitable** world, camera
     auto in_pixel = image_matrix[pixel_index];
     auto norm_rgb = (vec3(in_pixel.e) / float(samples)).v_sqrt();
 
-    auto sample_precision = __logf(samples) / 32; // 10^32 is our choosen max value for number of samples
-    auto depth = sqrt(depth_map(world, camera, col, row, max_x, max_y) / camera->_max_depth);
+    auto sample_precision = __logf(samples) / 32.0f; // 10^32 is our choosen max value for number of samples
+    auto depth = sqrtf(fabs(depth_map(world, camera, col, row, max_x, max_y))) / sqrtf(camera->_max_depth);
 
     out_image_matrix[pixel_index] = vec5(norm_rgb, sample_precision, depth);
 }
@@ -201,7 +201,7 @@ __global__ void create_random_world(hitable** d_list,
             }
             else if (number_of_refraction < refraction)
             {
-                mat = new dielectric(curand_uniform(local_rand));
+                mat = new dielectric(0.001f + fabs(curand_uniform(local_rand) - 0.001f));
                 number_of_refraction++;
             }
             else
@@ -309,6 +309,7 @@ class cuda_renderer
         results.reserve(number_of_images);
         for (auto i = 0; i < number_of_images; i++)
         {
+            std::cout << "Rendering " << (i + 1) << "/" << number_of_images << std::endl;
             update_world();
             results.push_back(ray_trace_datapoint(samples, ray_traced_image));
             cuda_methods::reset_image<<<blocks, threads>>>(ray_traced_image.get_color_matrix(), w, h);

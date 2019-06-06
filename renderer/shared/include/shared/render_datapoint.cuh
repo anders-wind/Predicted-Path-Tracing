@@ -33,10 +33,15 @@ class render_datapoint
     std::string get_render_string(std::vector<vec5> render) const
     {
         std::stringstream ss;
-        ss << "x,y,z,v,w" << std::endl;
+        ss << "x, y, z, v, w" << std::endl;
+        // ss << std::setprecision(6) << std::fixed;
         for (const auto& vec : render)
         {
-            ss << vec[0] << ", " << vec[1] << ", " << vec[2] << ", " << vec[3] << ", " << vec[4] << std::endl;
+            ss << vec[0] << ", ";
+            ss << vec[1] << ", ";
+            ss << vec[2] << ", ";
+            ss << vec[3] << ", ";
+            ss << vec[4] << std::endl;
         }
         return ss.str();
     }
@@ -53,10 +58,13 @@ class render_datapoint
     std::string get_target_string() const
     {
         std::stringstream ss;
-        ss << "x,y,z" << std::endl;
+        ss << "x, y, z" << std::endl;
+        // ss << std::setprecision(6) << std::fixed;
         for (const auto& vec : target)
         {
-            ss << vec[0] << ", " << vec[1] << ", " << vec[2] << std::endl;
+            ss << vec[0] << ", ";
+            ss << vec[1] << ", ";
+            ss << vec[2] << std::endl;
         }
         return ss.str();
     }
