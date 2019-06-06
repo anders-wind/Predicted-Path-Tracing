@@ -59,7 +59,8 @@ class SimpleNet(nn.Module):
         # layers.append(nn.ReLU())
         # layers.append(nn.Conv2d(in_channels=features, out_channels=features, kernel_size=kernel_size, padding=padding))
         # layers.append(nn.BatchNorm2d(num_features=features))
-        layers.append(nn.Conv2d(in_channels=features, out_channels=out_channel, kernel_size=kernel_size, padding=padding))
+        layers.append(
+            nn.Conv2d(in_channels=features, out_channels=out_channel, kernel_size=kernel_size, padding=padding, bias=False))
         layers.append(nn.Sigmoid())
         self.dncnn = nn.Sequential(*layers)
         self.cuda()

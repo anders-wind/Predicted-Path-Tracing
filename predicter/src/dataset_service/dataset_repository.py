@@ -44,12 +44,19 @@ class DatasetRepository:
             target_file_name = Path(datastore_root_string + file_names[0])
             render_file_names = [Path(datastore_root_string + x) for x in file_names[1:]]
 
-            target = pd.read_csv(target_file_name).values
-            target = np.asarray(target, dtype=float)
+            target = pd.read_csv(target_file_name, dtype={'x': np.float32, 'y': np.float32, 'z': np.float32}).values
+            target = np.asarray(target, dtype=np.float32)
             target = target.reshape(self.height, self.width, 3)
             for render_file in render_file_names:
-                render = pd.read_csv(render_file).values
-                render = np.asarray(render, dtype=float)
+                render = pd.read_csv(
+                    render_file, dtype={
+                        'x': np.float32,
+                        'y': np.float32,
+                        'z': np.float32,
+                        'v': np.float32,
+                        'w': np.float32
+                    }).values
+                render = np.asarray(render, dtype=np.float32)
                 render = render.reshape(self.height, self.width, 5)
                 renders.append(render)
                 images.append(target)
