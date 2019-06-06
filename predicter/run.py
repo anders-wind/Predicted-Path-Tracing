@@ -89,7 +89,8 @@ def run():
     net = training_service.train(train_loader, test_loader)
 
     # ========= Show Results
-    show_images(net, input_render=dataset[1]["render"], target_image=dataset[1]["image"])
+    show_index = 4
+    show_images(net, input_render=dataset[show_index]["render"], target_image=dataset[show_index]["image"])
 
 
 if __name__ == "__main__":

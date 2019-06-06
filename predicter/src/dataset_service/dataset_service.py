@@ -46,8 +46,8 @@ class DatasetService(ABC):
     def get_training_and_test_loaders(
             self,
             dataset: CombinedDataset,
-            batch_size: int = 2,
-            validation_split: float = 0.25,
+            batch_size: int = 3,
+            validation_split: float = 0.1,
             shuffle_dataset: bool = True,
     ) -> Tuple[DataLoader, DataLoader]:
         """

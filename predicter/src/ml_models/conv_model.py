@@ -49,24 +49,25 @@ class SimpleNet(nn.Module):
         # kernel
         in_channel = 5
         out_channel = 3
-        features = 128
-        kernel_size = 5
+        features = 64
+        kernel_size = 3
         padding = int(kernel_size / 2)
         layers = []
         layers.append(nn.Conv2d(in_channels=in_channel, out_channels=features, kernel_size=kernel_size, padding=padding))
-        layers.append(nn.ReLU())
+        # layers.append(nn.ReLU())
         # layers.append(nn.BatchNorm2d(num_features=features))
         # layers.append(nn.ReLU())
         # layers.append(nn.Conv2d(in_channels=features, out_channels=features, kernel_size=kernel_size, padding=padding))
         # layers.append(nn.BatchNorm2d(num_features=features))
+        # layers.append(nn.Sigmoid())
         layers.append(
             nn.Conv2d(in_channels=features, out_channels=out_channel, kernel_size=kernel_size, padding=padding, bias=False))
-        layers.append(nn.Sigmoid())
         self.dncnn = nn.Sequential(*layers)
         self.cuda()
 
     def forward(self, *input_data):
         data_x = input_data[0]
+        # out = self.dncnn(data_x)
         out = self.dncnn(data_x)
         return out
 

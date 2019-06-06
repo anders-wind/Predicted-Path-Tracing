@@ -23,7 +23,7 @@ class TrainingService():
     A training service which allows for training and testing of models
     """
 
-    def __init__(self, epochs: int = 100, number_of_nets: int = 1):
+    def __init__(self, epochs: int = 30, number_of_nets: int = 1):
         self.epochs = epochs
         self.number_of_nets = number_of_nets
 
@@ -70,7 +70,7 @@ class TrainingService():
                     print('[%d, %5d] loss: %.3f' % (epoch, i, running_loss / run_loss_iterations))
                     running_loss = 0.0
 
-            print('Finished Epoch: ', epoch)
+            print(f'Finished Epoch: {epoch+1}/{self.epochs}')
 
         print('Finished Training')
 
