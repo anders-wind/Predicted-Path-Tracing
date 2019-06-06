@@ -1,6 +1,6 @@
 #pragma once
 
-#include <shared/vec3.cuh>
+#include <shared/vecs/vec3.cuh>
 
 namespace ppt
 {

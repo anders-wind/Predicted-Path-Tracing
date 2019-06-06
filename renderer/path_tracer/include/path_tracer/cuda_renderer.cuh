@@ -20,7 +20,7 @@
 #include <shared/random_helpers.cuh>
 #include <shared/render_datapoint.cuh>
 #include <shared/scoped_timer.cuh>
-#include <shared/vec3.cuh>
+#include <shared/vecs/vec3.cuh>
 #include <time.h>
 #include <vector>
 
@@ -285,7 +285,7 @@ class cuda_renderer
         cuda_methods::render_image<<<blocks, threads>>>(color_matrix, w, h, samples, d_camera, d_world, d_rand_state);
         checkCudaErrors(cudaGetLastError());
         checkCudaErrors(cudaDeviceSynchronize());
-        cuda_methods::post_process<<<blocks, threads>>>(color_matrix, image_matrix, d_world, d_camera, w, h, samples, samples);
+        cuda_methods::post_process<<<blocks, threads>>>(color_matrix, image_matrix, d_world, d_camera, w, h, samples);
         checkCudaErrors(cudaGetLastError());
         checkCudaErrors(cudaDeviceSynchronize());
         return ray_traced_image;
@@ -333,7 +333,6 @@ class cuda_renderer
         auto* image_matrix = ray_traced_image.get_image_matrix();
 
         auto sample_sum = 0;
-        auto total_sample = samples[0] + samples[1] + samples[2] + samples[3];
         for (auto i = 0; i < 4; i++)
         {
             const auto timer_intern = shared::scoped_timer("   _iteration");
@@ -345,8 +344,7 @@ class cuda_renderer
             checkCudaErrors(cudaGetLastError());
             checkCudaErrors(cudaDeviceSynchronize());
 
-            cuda_methods::post_process<<<blocks, threads>>>(
-                color_matrix, image_matrix, d_world, d_camera, w, h, sample_sum, total_sample);
+            cuda_methods::post_process<<<blocks, threads>>>(color_matrix, image_matrix, d_world, d_camera, w, h, sample_sum);
             checkCudaErrors(cudaGetLastError());
             checkCudaErrors(cudaDeviceSynchronize());
 

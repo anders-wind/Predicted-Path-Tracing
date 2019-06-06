@@ -1,7 +1,7 @@
 #pragma once
 #include "scoped_timer.cuh"
-#include "vec3.cuh"
-#include "vec5.cuh"
+#include "vecs/vec3.cuh"
+#include "vecs/vec5.cuh"
 #include <sstream>
 #include <vector>
 

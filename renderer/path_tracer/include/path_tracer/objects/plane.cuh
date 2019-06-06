@@ -5,7 +5,7 @@
 #include "path_tracer/ray.cuh"
 #include <math.h>
 #include <memory>
-#include <shared/vec3.cuh>
+#include <shared/vecs/vec3.cuh>
 
 namespace ppt
 {

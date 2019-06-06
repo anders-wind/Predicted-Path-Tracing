@@ -1,7 +1,7 @@
 #pragma once
 #include "ray.cuh"
 #include <random>
-#include <shared/vec3.cuh>
+#include <shared/vecs/vec3.cuh>
 
 namespace ppt
 {

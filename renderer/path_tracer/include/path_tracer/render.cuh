@@ -1,8 +1,8 @@
 #pragma once
 #include <cuda.h>
 #include <shared/cuda_helpers.cuh>
-#include <shared/vec3.cuh>
-#include <shared/vec5.cuh>
+#include <shared/vecs/vec3.cuh>
+#include <shared/vecs/vec5.cuh>
 #include <string>
 #include <vector>
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "vec3.cuh"
+#include "vecs/vec3.cuh"
 #include <curand_kernel.h>
 #include <random>
 

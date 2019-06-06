@@ -2,7 +2,7 @@
 #include "hitable.cuh"
 #include "ray.cuh"
 #include <shared/random_helpers.cuh>
-#include <shared/vec3.cuh>
+#include <shared/vecs/vec3.cuh>
 
 namespace ppt
 {
