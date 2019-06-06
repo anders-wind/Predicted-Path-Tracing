@@ -110,7 +110,7 @@ __device__ float calc_depth(hitable** world, camera* camera, int col, int row, i
 }
 
 __global__ void
-post_process(vec3* image_matrix, vec5* out_image_matrix, hitable** world, camera* camera, int max_x, int max_y, int samples, int total)
+post_process(vec3* image_matrix, vec5* out_image_matrix, hitable** world, camera* camera, int max_x, int max_y, int samples)
 {
     int row = threadIdx.x + blockIdx.x * blockDim.x;
     int col = threadIdx.y + blockIdx.y * blockDim.y;
@@ -121,7 +121,7 @@ post_process(vec3* image_matrix, vec5* out_image_matrix, hitable** world, camera
     auto in_pixel = image_matrix[pixel_index];
     auto norm_rgb = (vec3(in_pixel.e) / float(samples)).v_sqrt();
 
-    auto sample_precision = ((float)samples) / (float)total;
+    auto sample_precision = __logf(samples) / 32; // 10^32 is our choosen max value for number of samples
     auto depth = calc_depth(world, camera, col, row, max_x, max_y);
 
     out_image_matrix[pixel_index] = vec5(norm_rgb, sample_precision, depth);

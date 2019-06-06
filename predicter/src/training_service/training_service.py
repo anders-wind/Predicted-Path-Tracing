@@ -23,7 +23,7 @@ class TrainingService():
     A training service which allows for training and testing of models
     """
 
-    def __init__(self, epochs: int = 300, number_of_nets: int = 1):
+    def __init__(self, epochs: int = 25, number_of_nets: int = 1):
         self.epochs = epochs
         self.number_of_nets = number_of_nets
 
@@ -36,8 +36,8 @@ class TrainingService():
 
         for _ in range(self.number_of_nets):
             # net = FirstNet()
-            # net = SimpleNet()
-            net = PyramidNet()
+            net = SimpleNet()
+            # net = PyramidNet()
             self._optimize_net(net, train_loader)
             test_results = self._evaluate_net(net, test_loader)
             if test_results.total_loss < best_loss:
@@ -51,14 +51,15 @@ class TrainingService():
     def _optimize_net(self, net: nn.Module, train_loader: DataLoader):
         print('Started Training')
         net.train()
-        criterion = nn.MSELoss(reduction='sum')
+        criterion = nn.MSELoss()
         optimizer = optim.Adam(net.parameters(), lr=1e-4)
-
+        run_loss_iterations = 1
         best_loss = sys.float_info.max
 
         for epoch in range(self.epochs):
             running_loss = 0.0
             stale_rounds = 0
+            best_round_loss = sys.float_info.max
             for i, data in enumerate(train_loader):
                 inputs, outputs = data["render"], data["image"]
                 optimizer.zero_grad()
@@ -68,17 +69,22 @@ class TrainingService():
                 optimizer.step()
 
                 running_loss += loss.item()
-                if i % 1 == 0:
-                    print('[%d, %5d] loss: %.3f' % (epoch, i, running_loss / 100))
-                    if best_loss <= running_loss:
+                if i % run_loss_iterations == 0:
+                    print('[%d, %5d] loss: %.3f' % (epoch, i, running_loss / run_loss_iterations))
+                    if best_round_loss <= running_loss:
                         stale_rounds += 1
                     else:
-                        best_loss = running_loss
+                        stale_rounds = 0
+
+                    best_round_loss = running_loss
 
                     if stale_rounds >= 5:
-                        return net
+                        break
 
                     running_loss = 0.0
+
+            if best_round_loss < best_loss:
+                best_loss = best_round_loss
 
             print('Finished Epoch: ', epoch)
 
@@ -87,7 +93,7 @@ class TrainingService():
     def _evaluate_net(self, net: nn.Module, test_loader: DataLoader) -> TestResults:
         print('Started Evaluating')
         net.eval()
-        criterion = nn.MSELoss(reduction='sum')
+        criterion = nn.MSELoss()
         running_loss = 0.0
         with torch.no_grad():
             for data in test_loader:
