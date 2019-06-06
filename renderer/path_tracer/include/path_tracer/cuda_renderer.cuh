@@ -98,7 +98,7 @@ render_image(vec3* image_matrix, int max_x, int max_y, int samples, camera* cam,
     image_matrix[pixel_index] = pix;
 }
 
-__device__ float depth_map(hitable** world, camera* cam, int col, int row, int max_x, int max_y)
+__device__ hit_record depth_map(hitable** world, camera* cam, int col, int row, int max_x, int max_y)
 {
     hit_record rec;
     float u = float(col) / float(max_x);
@@ -107,7 +107,7 @@ __device__ float depth_map(hitable** world, camera* cam, int col, int row, int m
 
     ray r = local_camera.get_ray(u, v);
     (*world)->hit(r, local_camera._min_depth, local_camera._max_depth, rec);
-    return rec.t;
+    return rec;
 }
 
 __global__ void
@@ -123,7 +123,8 @@ post_process(vec3* image_matrix, vec5* out_image_matrix, hitable** world, camera
     auto norm_rgb = (vec3(in_pixel.e) / float(samples)).v_sqrt();
 
     auto sample_precision = __logf(samples) / 32.0f; // 10^32 is our choosen max value for number of samples
-    auto depth = sqrtf(fabs(depth_map(world, camera, col, row, max_x, max_y))) / sqrtf(camera->_max_depth);
+    auto hit = depth_map(world, camera, col, row, max_x, max_y);
+    auto depth = sqrtf(fabs(hit.t)) / sqrtf(camera->_max_depth);
 
     out_image_matrix[pixel_index] = vec5(norm_rgb, sample_precision, depth);
 }
@@ -237,8 +238,8 @@ class cuda_renderer
     camera* d_camera;
 
     public:
-    int num_threads_x = 32;
-    int num_threads_y = 32;
+    int num_threads_x = 16;
+    int num_threads_y = 16;
     dim3 blocks;
     dim3 threads;
     const size_t w;

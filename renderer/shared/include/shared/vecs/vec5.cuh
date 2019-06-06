@@ -195,6 +195,8 @@ struct vec5
         e[0] *= k;
         e[1] *= k;
         e[2] *= k;
+        e[3] *= k;
+        e[4] *= k;
         return *this;
     }
 };
