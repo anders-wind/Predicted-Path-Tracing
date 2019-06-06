@@ -50,13 +50,13 @@ class SimpleNet(nn.Module):
         in_channel = 4
         out_channel = 3
         features = 128
-        kernel_size = 11
+        kernel_size = 5
         padding = int(kernel_size / 2)
         layers = []
         layers.append(nn.Conv2d(in_channels=in_channel, out_channels=features, kernel_size=kernel_size, padding=padding))
         layers.append(nn.ReLU())
-        layers.append(nn.BatchNorm2d(num_features=features))
-        layers.append(nn.ReLU())
+        # layers.append(nn.BatchNorm2d(num_features=features))
+        # layers.append(nn.ReLU())
         # layers.append(nn.Conv2d(in_channels=features, out_channels=features, kernel_size=kernel_size, padding=padding))
         # layers.append(nn.BatchNorm2d(num_features=features))
         layers.append(nn.Conv2d(in_channels=features, out_channels=out_channel, kernel_size=kernel_size, padding=padding))

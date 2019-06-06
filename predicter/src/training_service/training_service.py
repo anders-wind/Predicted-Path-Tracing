@@ -54,12 +54,9 @@ class TrainingService():
         criterion = nn.MSELoss()
         optimizer = optim.Adam(net.parameters(), lr=1e-4)
         run_loss_iterations = 1
-        best_loss = sys.float_info.max
 
         for epoch in range(self.epochs):
             running_loss = 0.0
-            stale_rounds = 0
-            best_round_loss = sys.float_info.max
             for i, data in enumerate(train_loader):
                 inputs, outputs = data["render"], data["image"]
                 optimizer.zero_grad()
@@ -69,22 +66,9 @@ class TrainingService():
                 optimizer.step()
 
                 running_loss += loss.item()
-                if i % run_loss_iterations == 0:
+                if (i + 1) % (run_loss_iterations) == 0:
                     print('[%d, %5d] loss: %.3f' % (epoch, i, running_loss / run_loss_iterations))
-                    if best_round_loss <= running_loss:
-                        stale_rounds += 1
-                    else:
-                        stale_rounds = 0
-
-                    best_round_loss = running_loss
-
-                    if stale_rounds >= 5:
-                        break
-
                     running_loss = 0.0
-
-            if best_round_loss < best_loss:
-                best_loss = best_round_loss
 
             print('Finished Epoch: ', epoch)
 
