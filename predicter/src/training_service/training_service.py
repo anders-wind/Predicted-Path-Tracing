@@ -23,7 +23,7 @@ class TrainingService():
     A training service which allows for training and testing of models
     """
 
-    def __init__(self, epochs: int = 25, number_of_nets: int = 1):
+    def __init__(self, epochs: int = 100, number_of_nets: int = 1):
         self.epochs = epochs
         self.number_of_nets = number_of_nets
 

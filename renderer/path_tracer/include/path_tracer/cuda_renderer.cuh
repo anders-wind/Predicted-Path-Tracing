@@ -85,13 +85,13 @@ render_image(vec3* image_matrix, int max_x, int max_y, int samples, camera* cam,
     curandState local_rand_state = rand_state[pixel_index];
 
     vec3 pix = vec3(image_matrix[pixel_index].e);
-    // const camera local_camera(*cam);
+    const camera local_camera(*cam);
     for (int s = 0; s < samples; s++)
     {
         float u = float(col + curand_normal(&local_rand_state)) / float(max_x);
         float v = float(max_y - row + curand_normal(&local_rand_state)) / float(max_y);
-        ray r = cam->get_ray(u, v);
-        pix += color(r, world, &local_rand_state, cam->_min_depth, cam->_max_depth);
+        ray r = local_camera.get_ray(u, v);
+        pix += color(r, world, &local_rand_state, local_camera._min_depth, local_camera._max_depth);
     }
 
     rand_state[pixel_index] = local_rand_state;
@@ -103,8 +103,10 @@ __device__ float depth_map(hitable** world, camera* cam, int col, int row, int m
     hit_record rec;
     float u = float(col) / float(max_x);
     float v = float(max_y - row) / float(max_y);
-    ray r = cam->get_ray(u, v);
-    (*world)->hit(r, cam->_min_depth, cam->_max_depth, rec);
+    const camera local_camera(*cam);
+
+    ray r = local_camera.get_ray(u, v);
+    (*world)->hit(r, local_camera._min_depth, local_camera._max_depth, rec);
     return rec.t;
 }
 
@@ -121,7 +123,7 @@ post_process(vec3* image_matrix, vec5* out_image_matrix, hitable** world, camera
     auto norm_rgb = (vec3(in_pixel.e) / float(samples)).v_sqrt();
 
     auto sample_precision = __logf(samples) / 32; // 10^32 is our choosen max value for number of samples
-    auto depth = depth_map(world, camera, col, row, max_x, max_y);
+    auto depth = sqrt(depth_map(world, camera, col, row, max_x, max_y) / camera->_max_depth);
 
     out_image_matrix[pixel_index] = vec5(norm_rgb, sample_precision, depth);
 }

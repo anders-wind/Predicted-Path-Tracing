@@ -47,7 +47,7 @@ class SimpleNet(nn.Module):
     def __init__(self):
         super(SimpleNet, self).__init__()
         # kernel
-        in_channel = 4
+        in_channel = 5
         out_channel = 3
         features = 128
         kernel_size = 5
@@ -66,8 +66,7 @@ class SimpleNet(nn.Module):
 
     def forward(self, *input_data):
         data_x = input_data[0]
-        # data_original_rgb = data_x[:, :3, :, ]
-        out = self.dncnn(data_x[:, :4, :, ])
+        out = self.dncnn(data_x)
         return out
 
     def forward_single(self, data_x):

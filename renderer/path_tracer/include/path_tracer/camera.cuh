@@ -11,12 +11,12 @@ namespace path_tracer
 struct camera
 {
     public:
-    const vec3 _origin;
-    const vec3 _lower_left_corner;
-    const vec3 _horizontal;
-    const vec3 _vertical;
-    const float _min_depth;
-    const float _max_depth;
+    vec3 _origin;
+    vec3 _lower_left_corner;
+    vec3 _horizontal;
+    vec3 _vertical;
+    float _min_depth;
+    float _max_depth;
 
     __host__ __device__ camera(const vec3& lower_left_corner,
                                const vec3& horizontal,
@@ -42,22 +42,6 @@ struct camera
       , _min_depth(camera._min_depth)
     {
     }
-
-    __host__ __device__ camera operator=(const camera& other)
-    {
-        return camera(other);
-    }
-
-    __device__ float get_min_depth() const
-    {
-        return _min_depth;
-    }
-
-    __device__ float get_max_depth() const
-    {
-        return _max_depth;
-    }
-
 
     __device__ ray get_ray(float u, float v) const
     {
