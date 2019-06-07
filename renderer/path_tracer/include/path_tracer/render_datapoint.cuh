@@ -1,22 +1,26 @@
 #pragma once
-#include "scoped_timer.cuh"
-#include "vecs/vec3.cuh"
-#include "vecs/vec5.cuh"
-#include "vecs/vec8.cuh"
+#include "render.cuh"
+#include <shared/scoped_timer.cuh>
+#include <shared/vecs/vec3.cuh>
+#include <shared/vecs/vec5.cuh>
+#include <shared/vecs/vec8.cuh>
 #include <sstream>
 #include <vector>
 
 namespace ppt
 {
-namespace shared
+namespace path_tracer
 {
-
+using namespace shared;
 #define RM(row, col, w) row* w + col
 #define CM(row, col, h) col* h + row
+
 class render_datapoint
 {
+    constexpr static int input_datapoints = 3;
+
     public:
-    std::array<std::vector<vec8>, 3> renders;
+    std::array<std::vector<vec8>, input_datapoints> renders;
     std::vector<vec3> target;
 
     size_t w;
@@ -25,6 +29,24 @@ class render_datapoint
     render_datapoint(int w, int h) : w(w), h(h)
     {
     }
+
+    void set_result(const render& render_holder, int idx)
+    {
+        if (idx < input_datapoints)
+        {
+            renders[idx] = render_holder.get_vector8_representation();
+        }
+        else if (idx == input_datapoints)
+        {
+            target = render_holder.get_vector3_representation();
+        }
+        else
+        {
+            std::cerr << input_datapoints << " " << idx << std::endl;
+            throw std::runtime_error("Out of bounds datapoint");
+        }
+    }
+
 
     size_t constexpr renders_size() const
     {
@@ -92,5 +114,5 @@ class render_datapoint
         return ss.str();
     }
 };
-} // namespace shared
+} // namespace path_tracer
 } // namespace ppt

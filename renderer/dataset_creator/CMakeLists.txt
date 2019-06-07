@@ -15,7 +15,7 @@ file(GLOB_RECURSE HEADERS "include/*.cuh" "include/*.hpp")
 add_library(${MODULE_NAME} 
     SHARED ${SOURCES} ${HEADERS})
 
-target_link_libraries (${MODULE_NAME} PUBLIC ppt-shared stdc++fs)
+target_link_libraries (${MODULE_NAME} PUBLIC ppt-shared ppt-path-tracer stdc++fs)
 
 target_compile_features(${MODULE_NAME} 
     PUBLIC cxx_std_14)

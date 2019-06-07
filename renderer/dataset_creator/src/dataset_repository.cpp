@@ -42,7 +42,8 @@ void save_to_file(std::string file_path, std::string content)
 
 // PUBLIC METHODS
 
-void dataset_repository::save_datapoint(const shared::render_datapoint& render_datapoint, const std::string& file_name)
+void dataset_repository::save_datapoint(const path_tracer::render_datapoint& render_datapoint,
+                                        const std::string& file_name)
 {
     const auto timer = shared::scoped_timer("save_datapoint");
     std::stringstream datapoint_ss;
@@ -61,7 +62,7 @@ void dataset_repository::save_datapoint(const shared::render_datapoint& render_d
     save_to_file(get_file_path(file_name + ".dp"), datapoint_ss.str());
 }
 
-void dataset_repository::save_datapoints(const std::vector<shared::render_datapoint>& render_dataset,
+void dataset_repository::save_datapoints(const std::vector<path_tracer::render_datapoint>& render_dataset,
                                          const std::string& file_name)
 {
     auto i = 0;
@@ -77,7 +78,7 @@ void dataset_repository::save_datapoints(const std::vector<shared::render_datapo
     }
 }
 
-void dataset_repository::save_ppm(const shared::render_datapoint& render_datapoint, const std::string& file_name)
+void dataset_repository::save_ppm(const path_tracer::render_datapoint& render_datapoint, const std::string& file_name)
 {
     const auto timer = shared::scoped_timer("save_ppm");
 
@@ -94,7 +95,7 @@ void dataset_repository::save_ppm(const shared::render_datapoint& render_datapoi
     }
 }
 
-void dataset_repository::save_ppms(const std::vector<shared::render_datapoint>& render_dataset,
+void dataset_repository::save_ppms(const std::vector<path_tracer::render_datapoint>& render_dataset,
                                    const std::string& file_name)
 {
     auto i = 0;

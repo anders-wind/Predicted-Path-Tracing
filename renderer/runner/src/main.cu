@@ -16,18 +16,19 @@ int main()
     const int samples[4] = { 1, 10, 100, 1000 };
     size_t number_of_images = 32;
     std::string filename = "trial";
-    auto repository = dataset_repository("/home/anders/Documents/datasets/ppt/640x360_run06");
+    auto repository = dataset_repository("~/Documents/datasets/ppt/640x360_run07");
 
     // run
-    try
-    {
-        auto renderer = cuda_renderer(w, h);
-        auto render_datapoints = renderer.ray_trace_datapoints(samples, number_of_images);
-        repository.save_datapoints(render_datapoints, filename);
-        repository.save_ppms(render_datapoints, filename);
-    }
-    catch (...)
-    {
-        std::cout << "failed" << std::endl;
-    }
+    // try
+    // {
+    auto renderer = cuda_renderer(w, h);
+    auto render_datapoints = renderer.ray_trace_datapoints(samples, number_of_images);
+    repository.save_datapoints(render_datapoints, filename);
+    repository.save_ppms(render_datapoints, filename);
+    // }
+    // catch (...)
+    // {
+    //     std::cout << "failed" << std::endl;
+    //     throw;
+    // }
 }

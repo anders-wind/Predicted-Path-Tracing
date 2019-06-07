@@ -11,6 +11,7 @@
 #include "objects/sphere.cuh"
 #include "ray.cuh"
 #include "render.cuh"
+#include "render_datapoint.cuh"
 #include <cuda.h>
 #include <curand_kernel.h>
 #include <device_launch_parameters.h>
@@ -18,7 +19,6 @@
 #include <random>
 #include <shared/cuda_helpers.cuh>
 #include <shared/random_helpers.cuh>
-#include <shared/render_datapoint.cuh>
 #include <shared/scoped_timer.cuh>
 #include <shared/vecs/vec3.cuh>
 #include <shared/vecs/vec8.cuh>
@@ -123,7 +123,7 @@ post_process(vec3* image_matrix, vec8* out_image_matrix, hitable** world, camera
     auto in_pixel = image_matrix[pixel_index];
     auto norm_rgb = (vec3(in_pixel.e) / float(samples)).v_sqrt();
 
-    auto sample_precision = __logf(samples) / 32.0f; // 10^32 is our choosen max value for number of samples
+    auto sample_precision = __logf(samples) / 16.0f; // 2^16=65536 is our (arbitrarily) choosen max number of samples
     auto hit = depth_map(world, camera, col, row, max_x, max_y);
     auto depth = sqrtf(fabs(hit.t)) / sqrtf(camera->_max_depth);
 
@@ -309,11 +309,11 @@ class cuda_renderer
         checkCudaErrors(cudaGetLastError());
     }
 
-    std::vector<shared::render_datapoint> ray_trace_datapoints(const int samples[4], size_t number_of_images)
+    std::vector<path_tracer::render_datapoint> ray_trace_datapoints(const int samples[4], size_t number_of_images)
     {
         const auto timer = shared::scoped_timer("ray_trace_datapoint");
         auto ray_traced_image = render(w, h);
-        auto results = std::vector<shared::render_datapoint>();
+        auto results = std::vector<path_tracer::render_datapoint>();
         results.reserve(number_of_images);
         for (auto i = 0; i < number_of_images; i++)
         {
@@ -327,7 +327,7 @@ class cuda_renderer
         return results;
     }
 
-    shared::render_datapoint ray_trace_datapoint(const int samples[4])
+    path_tracer::render_datapoint ray_trace_datapoint(const int samples[4])
     {
         const auto timer = shared::scoped_timer("ray_trace_datapoint");
         auto ray_traced_image = render(w, h);
@@ -336,24 +336,23 @@ class cuda_renderer
         return result;
     }
 
-    shared::render_datapoint ray_trace_datapoint(const int samples[4], render& ray_traced_image)
+    path_tracer::render_datapoint ray_trace_datapoint(const int samples[4], render& ray_traced_image)
     {
-        auto result = shared::render_datapoint(w, h);
+        auto result = path_tracer::render_datapoint(w, h);
         auto* color_matrix = ray_traced_image.get_color_matrix();
         auto* image_matrix = ray_traced_image.get_image_matrix();
 
-        auto sample_sum = 0;
+        int sample_sum = 0;
         for (auto i = 0; i < 4; i++)
         {
-            const auto timer_intern = shared::scoped_timer(" _iteration");
-
-            auto low = samples[i];
-            auto high = i == 3 ? low : low * 10;
+            auto low = i == 3 ? samples[i] - sample_sum : samples[i];
+            auto high = i == 3 ? low + 1 : low * 9;
             std::uniform_int_distribution<int> distribution(low, high - 1);
 
             int sample = distribution(generator);
-            std::cout << "  samples: " << sample << std::endl;
             sample_sum += sample;
+
+            const auto timer_intern = shared::scoped_timer(" _samples: " + std::to_string(sample));
 
             cuda_methods::render_image<<<blocks, threads>>>(color_matrix, w, h, sample, d_camera, d_world, d_rand_state);
             checkCudaErrors(cudaGetLastError());
@@ -363,14 +362,7 @@ class cuda_renderer
             checkCudaErrors(cudaGetLastError());
             checkCudaErrors(cudaDeviceSynchronize());
 
-            if (i == 3)
-            {
-                result.target = ray_traced_image.get_vector3_representation();
-            }
-            else
-            {
-                result.renders[i] = ray_traced_image.get_vector8_representation();
-            }
+            result.set_result(ray_traced_image, i);
         }
         return result;
     }

@@ -1,6 +1,6 @@
 #pragma once
 #include <experimental/filesystem>
-#include <shared/render_datapoint.cuh>
+#include <path_tracer/render_datapoint.cuh>
 #include <string>
 
 namespace ppt
@@ -19,11 +19,12 @@ class dataset_repository
         std::experimental::filesystem::create_directories({ datastore_path });
     }
 
-    void save_datapoint(const shared::render_datapoint& render_datapoint, const std::string& file_name);
-    void save_datapoints(const std::vector<shared::render_datapoint>& render_dataset, const std::string& file_name);
+    void save_datapoint(const path_tracer::render_datapoint& render_datapoint, const std::string& file_name);
+    void save_datapoints(const std::vector<path_tracer::render_datapoint>& render_dataset,
+                         const std::string& file_name);
 
-    void save_ppm(const shared::render_datapoint& render_datapoint, const std::string& file_name);
-    void save_ppms(const std::vector<shared::render_datapoint>& render_dataset, const std::string& file_name);
+    void save_ppm(const path_tracer::render_datapoint& render_datapoint, const std::string& file_name);
+    void save_ppms(const std::vector<path_tracer::render_datapoint>& render_dataset, const std::string& file_name);
 
 
     private:

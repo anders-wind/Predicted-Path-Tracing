@@ -13,14 +13,14 @@ using namespace ppt::shared;
 
 
 template <typename T>
-void get_vector_representation(vec8* m_image_matrix, size_t w, size_t h, std::vector<T>& colors)
+void get_vector_representation(std::vector<vec8> h_image_matrix, size_t w, size_t h, std::vector<T>& colors)
 {
     for (int i = 0; i < h; i++)
     {
         for (int j = 0; j < w; j++)
         {
             const auto pixel_index = RM(i, j, w);
-            colors[pixel_index] = T(m_image_matrix[pixel_index].e);
+            colors[pixel_index] = T(h_image_matrix[pixel_index].e);
         }
     }
 }
@@ -28,15 +28,23 @@ void get_vector_representation(vec8* m_image_matrix, size_t w, size_t h, std::ve
 std::vector<vec3> render::get_vector3_representation() const
 {
     auto colors = std::vector<vec3>(w * h);
-    get_vector_representation<vec3>(m_image_matrix, w, h, colors);
+    auto h_image_matrix = std::vector<vec8>(w * h);
+    h_image_matrix.resize(w * h);
+    auto bytes = sizeof(vec8) * w * h;
+    checkCudaErrors(cudaMemcpy(&h_image_matrix[0], d_image_matrix, bytes, cudaMemcpyDeviceToHost));
+    get_vector_representation<vec3>(h_image_matrix, w, h, colors);
+
     return colors;
 }
 
 std::vector<vec8> render::get_vector8_representation() const
 {
     auto colors = std::vector<vec8>(w * h);
-    get_vector_representation<vec8>(m_image_matrix, w, h, colors);
-    return colors;
+    auto h_image_matrix = std::vector<vec8>(w * h);
+    h_image_matrix.resize(w * h);
+    auto bytes = sizeof(vec8) * w * h;
+    checkCudaErrors(cudaMemcpy(&h_image_matrix[0], d_image_matrix, bytes, cudaMemcpyDeviceToHost));
+    return h_image_matrix;
 }
 
 
