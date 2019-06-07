@@ -346,8 +346,8 @@ class cuda_renderer
         for (auto i = 0; i < 4; i++)
         {
             auto low = i == 3 ? samples[i] - sample_sum : samples[i];
-            auto high = i == 3 ? low + 1 : low * 9;
-            std::uniform_int_distribution<int> distribution(low, high - 1);
+            auto high = i == 3 ? low : low * 9;
+            std::uniform_int_distribution<int> distribution(low, high);
 
             int sample = distribution(generator);
             sample_sum += sample;
