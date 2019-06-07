@@ -238,6 +238,7 @@ class cuda_renderer
     hitable** d_list;
     hitable** d_world;
     camera* d_camera;
+    std::default_random_engine generator;
 
     public:
     int num_threads_x = 16;
@@ -248,7 +249,11 @@ class cuda_renderer
     const size_t h;
 
     cuda_renderer(int w, int h)
-      : blocks(h / num_threads_y + 1, w / num_threads_x + 1), threads(num_threads_x, num_threads_y), w(w), h(h)
+      : blocks(h / num_threads_y + 1, w / num_threads_x + 1)
+      , threads(num_threads_x, num_threads_y)
+      , w(w)
+      , h(h)
+      , generator(std::default_random_engine())
     {
         const auto timer = shared::scoped_timer("cuda_renderer");
 
@@ -340,9 +345,14 @@ class cuda_renderer
         auto sample_sum = 0;
         for (auto i = 0; i < 4; i++)
         {
-            const auto timer_intern = shared::scoped_timer("   _iteration");
+            const auto timer_intern = shared::scoped_timer(" _iteration");
 
-            int sample = samples[i];
+            auto low = samples[i];
+            auto high = i == 3 ? low : low * 10;
+            std::uniform_int_distribution<int> distribution(low, high - 1);
+
+            int sample = distribution(generator);
+            std::cout << "  samples: " << sample << std::endl;
             sample_sum += sample;
 
             cuda_methods::render_image<<<blocks, threads>>>(color_matrix, w, h, sample, d_camera, d_world, d_rand_state);
