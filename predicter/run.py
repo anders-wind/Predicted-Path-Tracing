@@ -72,8 +72,8 @@ def run():
     np.random.seed(42)
 
     # ========= Create Services
-    data_repository: DatasetRepositoryBase = DatasetRepository(
-        Path("/home/anders/Documents/datasets/ppt/640x360_run06"), 640, 360)
+    data_root = Path(Path.home(), Path("Documents/datasets/ppt/640x360_run06"))
+    data_repository: DatasetRepositoryBase = DatasetRepository(data_root, 640, 360)
     data_service = DatasetService(data_repository)
     training_service = TrainingService()
 
