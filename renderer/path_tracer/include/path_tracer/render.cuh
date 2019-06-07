@@ -12,7 +12,10 @@ namespace ppt
 namespace path_tracer
 {
 
-using namespace ppt::shared;
+using vec3 = ppt::shared::vec3;
+using vec5 = ppt::shared::vec5;
+using vec8 = ppt::shared::vec8;
+
 /**
  * Render class contains logic for handeling the memory of a render,
  * as well as utility functions for serializing the render.
@@ -48,24 +51,13 @@ class render
         other.d_image_matrix = nullptr;
     }
 
-    // For now delete copy and assignment to make sure we do not do it anywhere
     render(const render& other) = delete;
     render& operator=(const render& other) = delete;
-    render& operator=(render&& other)
-    {
-        cudaFree(d_image_matrix);
-        d_image_matrix = other.d_image_matrix;
-        other.d_image_matrix = nullptr;
-
-        cudaFree(d_color_matrix);
-        d_color_matrix = other.d_color_matrix;
-        other.d_color_matrix = nullptr;
-
-        return *this;
-    }
+    render& operator=(render&& other) = delete;
 
     ~render()
     {
+        cudaFree(d_color_matrix);
         cudaFree(d_image_matrix);
     }
 

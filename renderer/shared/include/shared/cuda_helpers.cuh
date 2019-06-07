@@ -9,8 +9,9 @@ namespace ppt
 namespace shared
 {
 
-void check_cuda(cudaError_t result, char const *const func, const char *const file, int const line);
+void check_cuda(cudaError_t result, char const* const func, const char* const file, int const line);
+
 }
 } // namespace ppt
 
-#define checkCudaErrors(val) check_cuda((val), #val, __FILE__, __LINE__)
+#define checkCudaErrors(val) ppt::shared::check_cuda((val), #val, __FILE__, __LINE__)

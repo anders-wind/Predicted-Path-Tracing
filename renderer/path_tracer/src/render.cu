@@ -7,7 +7,10 @@ namespace ppt
 namespace path_tracer
 {
 
-using namespace ppt::shared;
+using vec3 = ppt::shared::vec3;
+using vec5 = ppt::shared::vec5;
+using vec8 = ppt::shared::vec8;
+
 #define RM(row, col, w) row* w + col
 #define CM(row, col, h) col* h + row
 

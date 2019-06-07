@@ -6,7 +6,7 @@ namespace ppt
 {
 namespace path_tracer
 {
-using namespace ppt::shared;
+using vec3 = ppt::shared::vec3;
 
 struct ray
 {
