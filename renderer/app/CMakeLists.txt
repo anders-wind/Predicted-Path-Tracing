@@ -21,7 +21,8 @@ target_link_libraries (${MODULE_NAME}
     ppt-dataset-creator
     glfw
     GL
-    GLU)
+    GLU
+    GLEW::GLEW)
 
 target_compile_features(${MODULE_NAME} 
     PUBLIC cxx_std_17)

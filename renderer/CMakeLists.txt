@@ -23,6 +23,11 @@ if (WIN32)
 	set(CMAKE_CUDA_COMPILER "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.1/bin/nvcc.exe")
 endif (WIN32)
 
+find_package(GLEW REQUIRED)
+if (GLEW_FOUND)
+    include_directories($(GLEW_INCLUDE_DIRS))
+endif()
+
 # Add third parties
 add_subdirectory(third_party)
 

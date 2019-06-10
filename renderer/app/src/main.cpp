@@ -1,4 +1,6 @@
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <iostream>
 
 int main(void)
 {
@@ -18,6 +20,13 @@ int main(void)
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
+    glewInit();
+    if (!glewIsSupported("GL_VERSION_2_0 "))
+    {
+        fprintf(stderr, "ERROR: Support for necessary OpenGL extensions missing.");
+        fflush(stderr);
+        exit(0);
+    }
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))

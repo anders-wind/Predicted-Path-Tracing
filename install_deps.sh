@@ -9,7 +9,7 @@ sudo apt-get install -y python3.7 pip3 ipython
 
 # Install OpenGL
 sudo apt-get install -y xorg openbox doxygen libgl-dev libxmu-dev libx11-dev libxi-dev libxrandr-dev libxinerama-dev libxcursor-dev
-sudo apt-get install -y libglu1-mesa-dev freeglut3-dev mesa-common-dev
+sudo apt-get install -y libglu1-mesa-dev freeglut3-dev mesa-common-dev libglew-dev
 
 # Install CUDA
 wget https://developer.nvidia.com/compute/cuda/10.1/Prod/local_installers/cuda_10.1.168_418.67_linux.run
