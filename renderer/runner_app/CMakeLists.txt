@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-SET(MODULE_NAME "ppt-runner")
+SET(MODULE_NAME "ppt-runner-app")
 SET(MODULE_NAME_CONFIG "ppt-runner-config")
 message(STATUS "Project: " ${MODULE_NAME})
 
@@ -15,11 +15,11 @@ file(GLOB_RECURSE HEADERS "include/*.cuh" "include/*.hpp")
 add_executable(${MODULE_NAME} ${SOURCES})
 
 target_link_libraries (${MODULE_NAME} 
-    PUBLIC 
+    PUBLIC
     ppt-shared
     ppt-path-tracer 
     ppt-dataset-creator
-    glut GLU GL)
+    glfw)
 
 target_compile_features(${MODULE_NAME} 
     PUBLIC cxx_std_14)
