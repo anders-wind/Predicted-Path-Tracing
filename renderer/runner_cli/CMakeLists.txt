@@ -5,12 +5,12 @@ message(STATUS "Project: " ${MODULE_NAME})
 
 project(${MODULE_NAME}
     VERSION 0.0.1
-    LANGUAGES C CXX CUDA)
+    LANGUAGES C CXX)
 
 include(GNUInstallDirs)
 
-file(GLOB_RECURSE SOURCES "src/*.cu" "src/*.cpp")
-file(GLOB_RECURSE HEADERS "include/*.cuh" "include/*.hpp")
+file(GLOB_RECURSE SOURCES "src/*.cpp")
+file(GLOB_RECURSE HEADERS "include/*.hpp")
 
 add_executable(${MODULE_NAME} ${SOURCES})
 
@@ -21,7 +21,7 @@ target_link_libraries (${MODULE_NAME}
     ppt-dataset-creator)
 
 target_compile_features(${MODULE_NAME} 
-    PUBLIC cxx_std_14)
+    PUBLIC cxx_std_17)
 
 target_include_directories(${MODULE_NAME}
     PUBLIC
