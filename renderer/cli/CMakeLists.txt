@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
-SET(MODULE_NAME "ppt-runner-cli")
-SET(MODULE_NAME_CONFIG "ppt-runner-config")
+SET(MODULE_NAME "ppt-cli")
+SET(MODULE_NAME_CONFIG "ppt-cli-config")
 message(STATUS "Project: " ${MODULE_NAME})
 
 project(${MODULE_NAME}

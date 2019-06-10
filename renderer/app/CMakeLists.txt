@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
-SET(MODULE_NAME "ppt-runner-app")
-SET(MODULE_NAME_CONFIG "ppt-runner-config")
+SET(MODULE_NAME "ppt-app")
+SET(MODULE_NAME_CONFIG "ppt-app-config")
 message(STATUS "Project: " ${MODULE_NAME})
 
 project(${MODULE_NAME}
@@ -19,7 +19,9 @@ target_link_libraries (${MODULE_NAME}
     ppt-shared
     ppt-path-tracer 
     ppt-dataset-creator
-    glfw)
+    glfw
+    GL
+    GLU)
 
 target_compile_features(${MODULE_NAME} 
     PUBLIC cxx_std_17)
