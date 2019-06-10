@@ -19,9 +19,9 @@ target_link_libraries (${MODULE_NAME}
     ppt-shared
     ppt-path-tracer 
     ppt-dataset-creator
-    glfw
     GL
     GLU
+    glfw
     GLEW::GLEW)
 
 target_compile_features(${MODULE_NAME} 

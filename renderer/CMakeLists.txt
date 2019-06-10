@@ -17,8 +17,6 @@ else()
     message("Cannot find ccache")
 endif()
 
-find_program(OpenGl REQUIRED)
-
 if (WIN32)
 	set(CMAKE_CUDA_COMPILER "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.1/bin/nvcc.exe")
 endif (WIN32)
