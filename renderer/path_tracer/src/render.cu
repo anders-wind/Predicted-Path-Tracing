@@ -7,47 +7,49 @@ namespace ppt
 namespace path_tracer
 {
 
+using vec3 = ppt::shared::vec3;
+using vec5 = ppt::shared::vec5;
+using vec8 = ppt::shared::vec8;
+
 #define RM(row, col, w) row* w + col
 #define CM(row, col, h) col* h + row
-using namespace ppt::shared;
 
-std::string render::get_ppm_representation() const
+
+template <typename T>
+void get_vector_representation(std::vector<vec8> h_image_matrix, size_t w, size_t h, std::vector<T>& colors)
 {
-    const auto colors = get_vector_representation();
-    return get_ppm_representation(colors);
-}
-
-std::string render::get_ppm_representation(const std::vector<rgb>& colors) const
-{
-    const auto timer = scoped_timer("write_ppm_image");
-
-    std::stringstream ss;
-    ss << "P3\n" << w << " " << h << "\n255\n";
-
     for (int i = 0; i < h; i++)
     {
         for (int j = 0; j < w; j++)
         {
-            ss << colors[RM(i, j, w)] << std::endl;
+            const auto pixel_index = RM(i, j, w);
+            colors[pixel_index] = T(h_image_matrix[pixel_index].e);
         }
     }
-
-    return ss.str();
 }
 
-std::vector<rgb> render::get_vector_representation() const
+std::vector<vec3> render::get_vector3_representation() const
 {
-    auto colors = std::vector<rgb>(w * h);
-    for (int i = 0; i < h; i++)
-    {
-        for (int j = 0; j < w; j++)
-        {
-            const size_t pixel_index = RM(i, j, w);
-            colors[pixel_index] = m_image_matrix[pixel_index];
-        }
-    }
+    auto colors = std::vector<vec3>(w * h);
+    auto h_image_matrix = std::vector<vec8>(w * h);
+    h_image_matrix.resize(w * h);
+    auto bytes = sizeof(vec8) * w * h;
+    checkCudaErrors(cudaMemcpy(&h_image_matrix[0], d_image_matrix, bytes, cudaMemcpyDeviceToHost));
+    get_vector_representation<vec3>(h_image_matrix, w, h, colors);
+
     return colors;
 }
+
+std::vector<vec8> render::get_vector8_representation() const
+{
+    auto colors = std::vector<vec8>(w * h);
+    auto h_image_matrix = std::vector<vec8>(w * h);
+    h_image_matrix.resize(w * h);
+    auto bytes = sizeof(vec8) * w * h;
+    checkCudaErrors(cudaMemcpy(&h_image_matrix[0], d_image_matrix, bytes, cudaMemcpyDeviceToHost));
+    return h_image_matrix;
+}
+
 
 } // namespace path_tracer
 } // namespace ppt

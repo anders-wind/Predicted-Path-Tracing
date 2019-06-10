@@ -14,7 +14,12 @@ file(GLOB_RECURSE HEADERS "include/*.cuh" "include/*.hpp")
 
 add_executable(${MODULE_NAME} ${SOURCES})
 
-target_link_libraries (${MODULE_NAME} PUBLIC ppt-shared ppt-path-tracer glut GLU GL)
+target_link_libraries (${MODULE_NAME} 
+    PUBLIC 
+    ppt-shared
+    ppt-path-tracer 
+    ppt-dataset-creator
+    glut GLU GL)
 
 target_compile_features(${MODULE_NAME} 
     PUBLIC cxx_std_14)
@@ -22,7 +27,8 @@ target_compile_features(${MODULE_NAME}
 target_include_directories(${MODULE_NAME}
     PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+	${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
 target_compile_definitions(${MODULE_NAME} 
     PRIVATE -D_EXPORT)

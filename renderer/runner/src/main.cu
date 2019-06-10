@@ -1,7 +1,7 @@
 #include <GL/glut.h>
-#include <fstream>
-#include <iostream>
+#include <dataset_creator/dataset_repository.hpp>
 #include <path_tracer/cuda_renderer.cuh>
+#include <shared/sample_service.cuh>
 #include <string>
 
 void display_me(void)
@@ -29,27 +29,22 @@ void init_window(int argc, char** argv)
 
 int main(int argc, char** argv)
 {
-    init_window(argc, argv);
-    using namespace ppt::shared;
-    using namespace ppt::path_tracer;
-    int w = 1280;
-    int h = 720;
-    int s = 32;
-    std::string filename = "render";
+    // init_window(argc, argv);
+    // settings
+    int w = 640;
+    int h = 360;
+    size_t number_of_images = 2;
+    std::string filename = "trial";
 
-    try
-    {
-        auto renderer = cuda_renderer(w, h);
-        auto render = renderer.ray_trace(s);
-        auto ppm = render.get_ppm_representation();
+    // services
+    const auto sampler = std::make_shared<ppt::shared::sample_service>();
+    auto repository = ppt::dataset_creator::dataset_repository(
+        std::string(getenv("HOME")) + "/Documents/datasets/ppt/640x360_run07");
 
-        std::ofstream myfile;
-        myfile.open(filename + ".ppm");
-        myfile << ppm;
-        myfile.close();
-    }
-    catch (...)
-    {
-        std::cout << "failed" << std::endl;
-    }
+    auto renderer = ppt::path_tracer::cuda_renderer(w, h, sampler);
+
+    // ray trace
+    auto render_datapoints = renderer.ray_trace_datapoints(number_of_images);
+    repository.save_datapoints(render_datapoints, filename);
+    repository.save_ppms(render_datapoints, filename);
 }

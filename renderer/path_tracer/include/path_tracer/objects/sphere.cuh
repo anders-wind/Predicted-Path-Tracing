@@ -1,10 +1,10 @@
 #pragma once
 
-#include "hitable.cuh"
-#include "ray.cuh"
+#include "path_tracer/hitable.cuh"
+#include "path_tracer/ray.cuh"
 #include <math.h>
 #include <memory>
-#include <shared/vec3.cuh>
+#include <shared/vecs/vec3.cuh>
 
 namespace ppt
 {
@@ -23,23 +23,29 @@ struct sphere : public hitable
     {
     }
 
-    __device__ bool hit(const ray& r, float t_min, float t_max, hit_record& out) const override
+    __device__ ~sphere()
+    {
+        delete _material;
+    }
+
+    __device__ __host__ bool hit(const ray& r, float t_min, float t_max, hit_record& out) const override
     {
         vec3 oc = r.origin() - _center;
-        float a = dot(r.direction(), r.direction());
-        float b = dot(oc, r.direction());
-        float c = dot(oc, oc) - _radius * _radius;
-        float discriminant = b * b - a * c;
+        const auto a = dot(r.direction(), r.direction());
+        const auto b = dot(oc, r.direction());
+        const auto c = dot(oc, oc) - _radius * _radius;
+        const auto discriminant = b * b - a * c;
 
         if (discriminant > 0)
         {
-            float temp = (-b - sqrt(b * b - a * c)) / a;
+            auto temp = (-b - sqrt(b * b - a * c)) / a;
             if (temp < t_max && temp > t_min)
             {
                 out.t = temp;
                 out.p = r.point_at_parameter(temp);
-                out.normal = (out.p - _center) / _radius;
+                out.normal = ((out.p - _center) / _radius);
                 out.mat_ptr = _material;
+                out.normal.make_unit_vector();
                 return true;
             }
 
@@ -50,6 +56,7 @@ struct sphere : public hitable
                 out.p = r.point_at_parameter(temp);
                 out.normal = (out.p - _center) / _radius;
                 out.mat_ptr = _material;
+                out.normal.make_unit_vector();
                 return true;
             }
         }

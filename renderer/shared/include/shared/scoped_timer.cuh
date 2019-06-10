@@ -1,7 +1,8 @@
+#pragma once
+#include <iomanip>
 #include <iostream>
 #include <string>
 #include <time.h>
-
 namespace ppt
 {
 namespace shared
@@ -22,7 +23,8 @@ struct scoped_timer
 
     ~scoped_timer()
     {
-        std::clog << name << " took " << ((double)(clock() - start)) / CLOCKS_PER_SEC << " seconds.\n";
+        std::clog << std::setw(25) << std::left << name << std::setw(12)
+                  << ((double)(clock() - start)) / CLOCKS_PER_SEC << " seconds\n";
     }
 };
 

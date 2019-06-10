@@ -12,11 +12,24 @@ struct vec3
 {
     float e[3];
     __host__ __device__ vec3(){};
+    __host__ __device__ vec3(float v)
+    {
+        e[0] = v;
+        e[1] = v;
+        e[2] = v;
+    }
     __host__ __device__ vec3(float e0, float e1, float e2)
     {
         e[0] = e0;
         e[1] = e1;
         e[2] = e2;
+    }
+
+    __host__ __device__ explicit vec3(float o[8])
+    {
+        e[0] = o[0];
+        e[1] = o[1];
+        e[2] = o[2];
     }
 
     __host__ __device__ inline float x() const
@@ -129,14 +142,22 @@ struct vec3
 
     __host__ __device__ inline float length() const
     {
-        return sqrt(e[0] * e[0] + e[1] * e[1] + e[2] * e[2]);
+        return sqrtf(squared_length());
+    }
+
+    __host__ __device__ inline vec3& v_square()
+    {
+        e[0] *= e[0];
+        e[1] *= e[1];
+        e[2] *= e[2];
+        return *this;
     }
 
     __host__ __device__ inline vec3& v_sqrt()
     {
-        e[0] = sqrt(e[0]);
-        e[1] = sqrt(e[1]);
-        e[2] = sqrt(e[2]);
+        e[0] = sqrtf(e[0]);
+        e[1] = sqrtf(e[1]);
+        e[2] = sqrtf(e[2]);
         return *this;
     }
 
@@ -282,12 +303,6 @@ struct rgb : public vec3
         e[2] = v;
     }
 };
-
-inline std::ostream& operator<<(std::ostream& is, const rgb& t)
-{
-    is << t.e[0] * 255.99 << " " << t.e[1] * 255.99 << " " << t.e[2] * 255.99;
-    return is;
-}
 
 } // namespace shared
 } // namespace ppt

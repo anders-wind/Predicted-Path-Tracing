@@ -2,7 +2,7 @@
 #include "hitable.cuh"
 #include "ray.cuh"
 #include <shared/random_helpers.cuh>
-#include <shared/vec3.cuh>
+#include <shared/vecs/vec3.cuh>
 
 namespace ppt
 {
@@ -20,15 +20,15 @@ struct material
 
 struct lambertian : public material
 {
-    rgb albedo;
-    __device__ lambertian(const rgb& a) : albedo(a)
+    vec3 albedo;
+    __device__ lambertian(const vec3& a) : albedo(a)
     {
     }
 
     __device__ bool
     scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, curandState* local_rand_state) const override
     {
-        vec3 target = rec.p + rec.normal + random_in_unit_sphere(local_rand_state) / 1.2f;
+        vec3 target = rec.p + rec.normal + shared::random_in_unit_sphere(local_rand_state) / 1.2f;
         scattered = ray(rec.p, target - rec.p);
         attenuation = albedo;
         return true;
@@ -37,7 +37,7 @@ struct lambertian : public material
 
 struct metal : public material
 {
-    const rgb albedo;
+    const vec3 albedo;
     const float fuzz;
 
     __device__ metal(const vec3& a, float f) : albedo(a), fuzz(f < 1 ? f : 1)
@@ -48,7 +48,7 @@ struct metal : public material
     scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, curandState* local_rand_state) const override
     {
         vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
-        scattered = ray(rec.p, reflected + random_in_unit_sphere(local_rand_state) * fuzz);
+        scattered = ray(rec.p, reflected + shared::random_in_unit_sphere(local_rand_state) * fuzz);
         attenuation = albedo;
         return dot(scattered.direction(), rec.normal) > 0;
     }

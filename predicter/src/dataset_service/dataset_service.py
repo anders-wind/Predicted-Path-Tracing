@@ -46,10 +46,13 @@ class DatasetService(ABC):
     def get_training_and_test_loaders(
             self,
             dataset: CombinedDataset,
-            batch_size: int = 16,
-            validation_split: float = 0.2,
+            batch_size: int = 3,
+            validation_split: float = 0.1,
             shuffle_dataset: bool = True,
     ) -> Tuple[DataLoader, DataLoader]:
+        """
+        Returns training and test data loaders.
+        """
         dataset_size = len(dataset)
         indices = list(range(dataset_size))
         split = int(np.floor(validation_split * dataset_size))
