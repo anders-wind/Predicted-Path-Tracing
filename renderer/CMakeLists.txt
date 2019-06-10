@@ -23,6 +23,10 @@ if (WIN32)
 	set(CMAKE_CUDA_COMPILER "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.1/bin/nvcc.exe")
 endif (WIN32)
 
+# Add third parties
+add_subdirectory(third_party)
+
+
 add_subdirectory(shared) 
 add_subdirectory(path_tracer)
 add_subdirectory(dataset_creator)

@@ -4,11 +4,11 @@
 # Install Base dependencies
 sudo apt-get update
 sudp apt-get install -y git wget curl
-sudo apt-get install -y gcc-8 g++-8 build-essential 
+sudo apt-get install -y gcc-8 g++-8 build-essential cmake
 sudo apt-get install -y python3.7 pip3 ipython
 
 # Install OpenGL
-sudo apt-get install -y xorg openbox
+sudo apt-get install -y xorg openbox doxygen libx11-dev libxi-dev libxrandr-dev libxinerama-dev libxcursor-dev
 sudo apt-get install -y libglu1-mesa-dev freeglut3-dev mesa-common-dev
 
 # Install CUDA
