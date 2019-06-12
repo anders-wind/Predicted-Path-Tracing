@@ -1,25 +1,65 @@
+#include "app/glew_helpers.hpp"
+#include "app/glfw_helpers.hpp"
+#include "app/shader_helpers.hpp"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <fstream>
 #include <iostream>
+#include <sstream>
+#include <string>
+
+namespace ppt
+{
+namespace app
+{
 
 
 void main_loop(GLFWwindow* window)
 {
     // a triangle
     constexpr int element_size = 2;
-    constexpr int number_of_elements = 3;
+    constexpr int number_of_elements = 4;
+    constexpr int number_of_indices = 6;
     float positions[element_size * number_of_elements] = {
-        -0.5f, -0.5f, 0.0f, 0.5f, 0.5f, -0.5f,
+        -1.0f, -1.0f, //
+        1.0f,  -1.0f, //
+        1.0f,  1.0f, //
+        -1.0f, 1.0f //
+    };
+    unsigned int indices[number_of_indices] = {
+        0,
+        1,
+        2,
+        // second
+        0,
+        2,
+        3,
     };
 
+    // vertex buffer
     unsigned int buffer; // this is the handle for the buffer
     glGenBuffers(1, &buffer); // create the buffer and write the id
     glBindBuffer(GL_ARRAY_BUFFER, buffer); // Select the buffer as active.
-    glBufferData(GL_ARRAY_BUFFER, element_size * number_of_elements * sizeof(float), positions, GL_STATIC_DRAW); // static for update once, dynamic for updated many time
+    glBufferData(GL_ARRAY_BUFFER, element_size * (number_of_elements) * sizeof(float), positions, GL_STATIC_DRAW); // static for update once, dynamic for updated many time
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, element_size, GL_FLOAT, GL_FALSE, element_size * sizeof(float), (const void*)0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0); // bind no buffer.
+    // glBindBuffer(GL_ARRAY_BUFFER, 0); // bind no buffer.
 
+    // index buffer
+    unsigned int ibo; // this is the handle for the buffer
+    glGenBuffers(1, &ibo); // create the buffer and write the id
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo); // Select the buffer as active.
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                 number_of_indices * sizeof(unsigned int),
+                 indices,
+                 GL_STATIC_DRAW); // static for update once, dynamic for updated many time
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // bind no buffer.
+
+
+    auto shader_programs = parse_shader("app/res/shaders/basic.shader");
+    std::cout << shader_programs.vertex_source << std::endl;
+    auto shader = create_shader(shader_programs.vertex_source, shader_programs.fragment_source);
+    glUseProgram(shader);
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
@@ -27,7 +67,7 @@ void main_loop(GLFWwindow* window)
         glClear(GL_COLOR_BUFFER_BIT);
 
         glBindBuffer(GL_ARRAY_BUFFER, buffer); // Select the buffer as active.
-        glDrawArrays(GL_TRIANGLES, 0, number_of_elements);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         glBindBuffer(GL_ARRAY_BUFFER, 0); // bind no buffer.
 
         /* Swap front and back buffers */
@@ -36,54 +76,27 @@ void main_loop(GLFWwindow* window)
         /* Poll for and process events */
         glfwPollEvents();
     }
+    glDeleteProgram(shader);
 }
 
-GLFWwindow* init_window()
-{
-    GLFWwindow* window;
-
-    /* Initialize the library */
-    if (!glfwInit())
-        exit(-1);
-
-    /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "PPT", NULL, NULL);
-    if (!window)
-    {
-        glfwTerminate();
-        exit(-1);
-    }
-
-    /* Make the window's context current */
-    glfwMakeContextCurrent(window);
-    return window;
-}
-
-void glew_init()
-{
-    // Init Glew
-    if (glewInit() != GLEW_OK || !glewIsSupported("GL_VERSION_2_0 "))
-    {
-        fprintf(stderr, "ERROR: Support for necessary OpenGL extensions missing.");
-        fflush(stderr);
-        exit(0);
-    }
-}
 
 void shutdown()
 {
     glfwTerminate();
 }
 
+} // namespace app
+} // namespace ppt
+
 int main(void)
 {
-    GLFWwindow* window = init_window();
+    GLFWwindow* window = ppt::app::init_window();
 
-    glew_init();
+    ppt::app::glew_init();
 
-    main_loop(window);
+    ppt::app::main_loop(window);
 
-    shutdown();
+    ppt::app::shutdown();
 
     return 0;
 }
