@@ -26,6 +26,8 @@ GLFWwindow* init_window()
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
+
+    glfwSwapInterval(1);
     return window;
 }
 
