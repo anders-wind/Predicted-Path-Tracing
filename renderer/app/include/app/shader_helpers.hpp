@@ -22,7 +22,7 @@ struct shader_program_source
  *  and a fragment shader starting with #shader fragment
  *
  */
-static shader_program_source parse_shader(const std::string& file_path)
+shader_program_source parse_shader(const std::string& file_path)
 {
     std::ifstream stream(file_path);
     if (stream.fail())
@@ -64,7 +64,7 @@ static shader_program_source parse_shader(const std::string& file_path)
 }
 
 
-static unsigned int compile_shader(const std::string& source, unsigned int type)
+unsigned int compile_shader(const std::string& source, unsigned int type)
 {
     unsigned int id = glCreateShader(type);
     const char* src = source.c_str();
@@ -88,7 +88,7 @@ static unsigned int compile_shader(const std::string& source, unsigned int type)
     return id;
 }
 
-static unsigned int create_shader(const std::string& vertex_shader, const std::string& fragment_shader)
+unsigned int create_shader(const std::string& vertex_shader, const std::string& fragment_shader)
 {
     unsigned int program = glCreateProgram();
     unsigned int vs = compile_shader(vertex_shader, GL_VERTEX_SHADER);

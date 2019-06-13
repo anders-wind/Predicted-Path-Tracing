@@ -2,20 +2,21 @@
 #pragma once
 #include <GL/glew.h>
 #include <iostream>
+#include <signal.h>
 
 namespace ppt
 {
 namespace app
 {
 
-static void gl_clear_errors()
+void gl_clear_errors()
 {
     while (glGetError() != GL_NO_ERROR)
     {
     }
 }
 
-static bool gl_check_errors(const char* function, const char* file, int line)
+bool gl_check_errors(const char* function, const char* file, int line)
 {
     auto is_ok = true;
     while (GLenum error = glGetError())

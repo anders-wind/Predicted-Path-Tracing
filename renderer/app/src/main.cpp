@@ -1,12 +1,13 @@
 #include "app/glew_helpers.hpp"
 #include "app/glfw_helpers.hpp"
+#include "app/index_buffer.hpp"
 #include "app/opengl_helpers.hpp"
 #include "app/shader_helpers.hpp"
+#include "app/vertex_buffer.hpp"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <fstream>
 #include <iostream>
-#include <signal.h>
 #include <sstream>
 #include <string>
 
@@ -38,25 +39,18 @@ void main_loop(GLFWwindow* window)
         3,
     };
 
-    // vertex buffer
-    unsigned int buffer; // this is the handle for the buffer
-    GL_CALL(glGenBuffers(1, &buffer)); // create the buffer and write the id
-    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, buffer)); // Select the buffer as active.
-    GL_CALL(glBufferData(GL_ARRAY_BUFFER, element_size * (number_of_elements) * sizeof(float), positions, GL_STATIC_DRAW)); // static for update once, dynamic for updated many time
+    // vertex array
+    unsigned int vao;
+    GL_CALL(glGenVertexArrays(1, &vao));
+    GL_CALL(glBindVertexArray(vao));
+
+
+    auto vb = vertex_buffer(positions, element_size * number_of_elements * sizeof(float));
+
     GL_CALL(glEnableVertexAttribArray(0));
     GL_CALL(glVertexAttribPointer(0, element_size, GL_FLOAT, GL_FALSE, element_size * sizeof(float), (const void*)0));
-    // glBindBuffer(GL_ARRAY_BUFFER, 0); // bind no buffer.
 
-    // index buffer
-    unsigned int ibo; // this is the handle for the buffer
-    GL_CALL(glGenBuffers(1, &ibo)); // create the buffer and write the id
-    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo)); // Select the buffer as active.
-    GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                         number_of_indices * sizeof(unsigned int),
-                         indices,
-                         GL_STATIC_DRAW)); // static for update once, dynamic for updated many time
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // bind no buffer.
-
+    auto ib = index_buffer(indices, number_of_indices);
 
     auto shader_programs = parse_shader("app/res/shaders/basic.shader");
     auto shader = create_shader(shader_programs.vertex_source, shader_programs.fragment_source);
@@ -70,20 +64,32 @@ void main_loop(GLFWwindow* window)
     float r = 0.0f;
     float increment = 0.05f;
 
+    GL_CALL(glBindVertexArray(0));
+    GL_CALL(glUseProgram(0));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
         GL_CALL(glClear(GL_COLOR_BUFFER_BIT));
 
-        GL_CALL(glUniform4f(u_color_location, r, 0.3f, 0.8f, 1.0f));
-        GL_CALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+        // Bind
+        GL_CALL(glUseProgram(shader));
+        GL_CALL(glBindVertexArray(vao));
+        ib.bind();
 
+        // color
+        GL_CALL(glUniform4f(u_color_location, r, 0.3f, 0.8f, 1.0f));
         if (r > 1.0f || r < 0.0f)
         {
             increment *= -1;
         }
-
         r += increment;
+
+        // Draw
+        GL_CALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+        
         /* Swap front and back buffers */
         GL_CALL(glfwSwapBuffers(window));
 
