@@ -22,7 +22,8 @@ target_link_libraries (${MODULE_NAME}
     GL
     GLU
     glfw
-    GLEW::GLEW)
+    GLEW::GLEW
+    stb)
 
 target_compile_features(${MODULE_NAME} 
     PUBLIC cxx_std_17)

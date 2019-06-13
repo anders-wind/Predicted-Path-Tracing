@@ -24,44 +24,54 @@ namespace app
 void main_loop(GLFWwindow* window)
 {
     // a triangle
-    constexpr int element_size = 2;
+    constexpr int pos_size = 2;
+    constexpr int tex_size = 2;
+    constexpr int element_size = pos_size + tex_size;
     constexpr int number_of_elements = 4;
     constexpr int number_of_indices = 6;
     float positions[element_size * number_of_elements] = {
-        -1.0f, -1.0f, // 0
-        1.0f,  -1.0f, // 1
-        1.0f,  1.0f, // 2
-        -1.0f, 1.0f // 3
+        -1.0f, -1.0f, 0.0f, 0.0f, // 0
+        1.0f,  -1.0f, 1.0f, 0.0f, // 1
+        1.0f,  1.0f,  1.0f, 1.0f, // 2
+        -1.0f, 1.0f,  0.0f, 1.0f // 3
     };
     unsigned int indices[number_of_indices] = {
         0,
         1,
         2,
         // second triangle
-        0,
         2,
         3,
+        0,
     };
 
+    GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+    GL_CALL(glEnable(GL_BLEND));
     // vertex array
 
     auto va = vertex_array();
     auto vb = vertex_buffer(positions, element_size * number_of_elements * sizeof(float));
     auto ib = index_buffer(indices, number_of_indices);
     auto layout = vertex_buffer_layout();
+    auto basic_shader = shader("app/res/shaders/basic.shader");
+    auto tex = texture("app/res/textures/dummy_texture02.png");
+    auto re = renderer();
 
-    layout.push<float>(element_size);
+    layout.push<float>(pos_size); // first pos.x, pos.y
+    layout.push<float>(tex_size); // then tex.x, tex.y
     va.add_buffer(vb, layout);
 
-    auto basic_shader = shader("app/res/shaders/basic.shader");
+    basic_shader.bind();
+    const auto tex_slot = 0;
+    tex.bind(tex_slot);
+    basic_shader.set_uniform1i("u_texture", tex_slot);
 
     va.unbind();
     vb.unbind();
     ib.unbind();
     basic_shader.unbind();
+    tex.unbind();
 
-
-    auto re = renderer();
 
     /* Loop until the user closes the window */
     float red = 0.0f;
@@ -72,8 +82,11 @@ void main_loop(GLFWwindow* window)
         re.clear();
         // color
         // Draw
+        basic_shader.bind();
+
         re.draw(va, ib, basic_shader);
-        basic_shader.set_uniform("u_color", red, 0.3f, 0.8f, 1.0f);
+
+
         if (red > 1.0f || red < 0.0f)
         {
             increment *= -1;

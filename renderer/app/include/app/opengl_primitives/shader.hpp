@@ -39,13 +39,19 @@ class shader
     }
 
     // set uniforms
-    void set_uniform(const std::string& name, float v0)
+    void set_uniform1i(const std::string& name, int v0)
+    {
+        const auto location = get_uniform_location(name);
+        GL_CALL(glUniform1i(location, v0));
+    }
+
+    void set_uniform1f(const std::string& name, float v0)
     {
         const auto location = get_uniform_location(name);
         GL_CALL(glUniform1f(location, v0));
     }
 
-    void set_uniform(const std::string& name, float v0, float v1, float v2, float v3)
+    void set_uniform4f(const std::string& name, float v0, float v1, float v2, float v3)
     {
         const auto location = get_uniform_location(name);
         GL_CALL(glUniform4f(location, v0, v1, v2, v3));
