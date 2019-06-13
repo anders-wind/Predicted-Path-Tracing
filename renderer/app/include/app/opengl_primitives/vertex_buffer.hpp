@@ -1,5 +1,5 @@
 #pragma once
-#include "opengl_helpers.hpp"
+#include <app/helpers/opengl_helpers.hpp>
 
 namespace ppt
 {

@@ -1,9 +1,13 @@
-#include "app/glew_helpers.hpp"
-#include "app/glfw_helpers.hpp"
-#include "app/index_buffer.hpp"
-#include "app/opengl_helpers.hpp"
-#include "app/shader_helpers.hpp"
-#include "app/vertex_buffer.hpp"
+#include "app/helpers/glew_helpers.hpp"
+#include "app/helpers/glfw_helpers.hpp"
+#include "app/helpers/opengl_helpers.hpp"
+#include "app/helpers/shader_helpers.hpp"
+#include "app/opengl_primitives/index_buffer.hpp"
+#include "app/opengl_primitives/renderer.hpp"
+#include "app/opengl_primitives/shader.hpp"
+#include "app/opengl_primitives/texture.hpp"
+#include "app/opengl_primitives/vertex_array.hpp"
+#include "app/opengl_primitives/vertex_buffer.hpp"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <fstream>
@@ -40,63 +44,48 @@ void main_loop(GLFWwindow* window)
     };
 
     // vertex array
-    unsigned int vao;
-    GL_CALL(glGenVertexArrays(1, &vao));
-    GL_CALL(glBindVertexArray(vao));
 
-
+    auto va = vertex_array();
     auto vb = vertex_buffer(positions, element_size * number_of_elements * sizeof(float));
-
-    GL_CALL(glEnableVertexAttribArray(0));
-    GL_CALL(glVertexAttribPointer(0, element_size, GL_FLOAT, GL_FALSE, element_size * sizeof(float), (const void*)0));
-
     auto ib = index_buffer(indices, number_of_indices);
+    auto layout = vertex_buffer_layout();
 
-    auto shader_programs = parse_shader("app/res/shaders/basic.shader");
-    auto shader = create_shader(shader_programs.vertex_source, shader_programs.fragment_source);
+    layout.push<float>(element_size);
+    va.add_buffer(vb, layout);
+
+    auto basic_shader = shader("app/res/shaders/basic.shader");
+
+    va.unbind();
+    vb.unbind();
+    ib.unbind();
+    basic_shader.unbind();
 
 
-    GL_CALL(glUseProgram(shader));
+    auto re = renderer();
 
-    GL_CALL(int u_color_location = glGetUniformLocation(shader, "u_color"));
-    ASSERT(u_color_location != -1);
     /* Loop until the user closes the window */
-    float r = 0.0f;
+    float red = 0.0f;
     float increment = 0.05f;
-
-    GL_CALL(glBindVertexArray(0));
-    GL_CALL(glUseProgram(0));
-    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
-    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
-        GL_CALL(glClear(GL_COLOR_BUFFER_BIT));
-
-        // Bind
-        GL_CALL(glUseProgram(shader));
-        GL_CALL(glBindVertexArray(vao));
-        ib.bind();
-
+        re.clear();
         // color
-        GL_CALL(glUniform4f(u_color_location, r, 0.3f, 0.8f, 1.0f));
-        if (r > 1.0f || r < 0.0f)
+        // Draw
+        re.draw(va, ib, basic_shader);
+        basic_shader.set_uniform("u_color", red, 0.3f, 0.8f, 1.0f);
+        if (red > 1.0f || red < 0.0f)
         {
             increment *= -1;
         }
-        r += increment;
+        red += increment;
 
-        // Draw
-        GL_CALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
-        
         /* Swap front and back buffers */
         GL_CALL(glfwSwapBuffers(window));
 
         /* Poll for and process events */
         GL_CALL(glfwPollEvents());
     }
-    GL_CALL(glDeleteProgram(shader));
 }
 
 
