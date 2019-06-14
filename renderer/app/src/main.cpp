@@ -49,8 +49,6 @@ void main_loop(GLFWwindow* window)
         0,
     };
 
-    GL_CALL(glEnable(GL_BLEND));
-    GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     // vertex array
 
     auto va = vertex_array();
@@ -101,11 +99,17 @@ void main_loop(GLFWwindow* window)
     }
 }
 
+void setup(GLFWwindow* const window)
+{
+    ppt::app::gl_init();
+    ppt::app::glew_init();
+    ppt::app::imgui::init(window);
+}
+
 
 void shutdown()
 {
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
+    ppt::app::imgui::shutdown();
     glfwTerminate();
 }
 
@@ -116,8 +120,7 @@ int main(void)
 {
     GLFWwindow* window = ppt::app::init_window();
 
-    ppt::app::glew_init();
-    ppt::app::imgui::init(window);
+    ppt::app::setup(window);
 
     ppt::app::main_loop(window);
 

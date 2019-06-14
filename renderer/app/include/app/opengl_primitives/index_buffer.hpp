@@ -28,7 +28,7 @@ class index_buffer
 
     ~index_buffer()
     {
-        GL_CALL(glDeleteBuffers(GL_ELEMENT_ARRAY_BUFFER, &m_renderer_id));
+        GL_CALL(glDeleteBuffers(1, &m_renderer_id));
     }
 
     void bind() const

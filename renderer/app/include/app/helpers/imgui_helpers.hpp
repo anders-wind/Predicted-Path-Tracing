@@ -33,6 +33,13 @@ void init(GLFWwindow* window)
     ImGui_ImplOpenGL3_Init("#version 330");
     ImGui::StyleColorsDark();
 }
+
+void shutdown()
+{
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+}
+
 } // namespace imgui
 
 } // namespace app

@@ -9,6 +9,7 @@ namespace ppt
 namespace app
 {
 
+
 void gl_clear_errors()
 {
     while (glGetError() != GL_NO_ERROR)
@@ -40,6 +41,13 @@ void gl_error_callback()
     gl_clear_errors(); \
     x;                 \
     ASSERT(gl_check_errors(#x, __FILE__, __LINE__));
+
+
+void gl_init()
+{
+    GL_CALL(glEnable(GL_BLEND));
+    GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+}
 
 } // namespace app
 } // namespace ppt

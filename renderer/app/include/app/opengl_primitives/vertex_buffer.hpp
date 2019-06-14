@@ -24,7 +24,7 @@ class vertex_buffer
 
     ~vertex_buffer()
     {
-        GL_CALL(glDeleteBuffers(GL_ARRAY_BUFFER, &m_renderer_id));
+        GL_CALL(glDeleteBuffers(1, &m_renderer_id));
     }
 
     void bind() const
