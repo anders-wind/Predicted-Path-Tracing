@@ -42,14 +42,11 @@ class texture
         }
     }
 
-    texture(const std::vector<std::vector<std::array<unsigned char, 4>>>& image)
-      : m_renderer_id(0), m_local_buffer(nullptr), m_width(0), m_height(0), m_bpp(0)
+    texture(const std::vector<unsigned char>& image, size_t width, size_t height)
+      : m_renderer_id(0), m_local_buffer(nullptr), m_width(width), m_height(height), m_bpp(4)
     {
         GL_CALL(glGenTextures(1, &m_renderer_id));
 
-        m_height = image.size();
-        m_width = image[0].size();
-        m_bpp = 4;
         m_local_buffer = new unsigned char[m_height * m_width * m_bpp];
 
         update_local_buffer(image);
@@ -65,23 +62,23 @@ class texture
         unbind();
     }
 
-    void init_local_buffer()
+    void update_local_buffer(const std::vector<unsigned char>& image)
     {
-    }
-
-    void update_local_buffer(const std::vector<std::vector<std::array<unsigned char, 4>>>& image)
-    {
-        for (auto i = 0; i < m_height; i++)
-        {
-            auto row = m_height - i - 1;
-            for (auto j = 0; j < m_width; j++)
-            {
-                m_local_buffer[row * m_width * m_bpp + j * m_bpp + 0] = image[i][j][0];
-                m_local_buffer[row * m_width * m_bpp + j * m_bpp + 1] = image[i][j][1];
-                m_local_buffer[row * m_width * m_bpp + j * m_bpp + 2] = image[i][j][2];
-                m_local_buffer[row * m_width * m_bpp + j * m_bpp + 3] = image[i][j][3];
-            }
-        }
+        std::cout << m_width << std::endl;
+        std::cout << m_height << std::endl;
+        memcpy(&m_local_buffer[0], &image[0], m_width * m_height * m_bpp * sizeof(unsigned char));
+        // for (auto i = 0; i < m_height; i++)
+        // {
+        //     const auto row_idx = i * m_width * m_bpp;
+        //     for (auto j = 0; j < m_width; j++)
+        //     {
+        //         auto idx = row_idx + j * m_bpp;
+        //         m_local_buffer[idx] = image[idx];
+        //         m_local_buffer[idx + 1] = image[idx + 1];
+        //         m_local_buffer[idx + 2] = image[idx + 2];
+        //         m_local_buffer[idx + 3] = image[idx + 3];
+        //     }
+        // }
     }
 
     void bind(unsigned int slot = 0) const

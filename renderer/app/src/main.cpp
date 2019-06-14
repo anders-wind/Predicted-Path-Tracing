@@ -61,7 +61,7 @@ void main_loop(GLFWwindow* window, path_tracer::cuda_renderer& path_tracer)
     auto ib = index_buffer(indices, number_of_indices);
     auto layout = vertex_buffer_layout();
     auto basic_shader = shader("app/res/shaders/basic.shader");
-    auto tex = texture(rendering.get_2d_byte_representation());
+    auto tex = texture(rendering.get_byte_representation(), path_tracer.w, path_tracer.h);
 
     layout.push<float>(pos_size); // first pos.x, pos.y
     layout.push<float>(tex_size); // then tex.x, tex.y

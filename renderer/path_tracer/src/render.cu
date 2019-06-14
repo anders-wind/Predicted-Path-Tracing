@@ -72,22 +72,22 @@ std::vector<vec8> render::get_vector8_representation() const
     return h_image_matrix;
 }
 
-std::vector<std::vector<std::array<unsigned char, 4>>> render::get_2d_byte_representation() const
+std::vector<unsigned char> render::get_byte_representation() const
 {
     auto h_image_matrix = get_vector8_representation();
 
-    auto result = std::vector<std::vector<std::array<unsigned char, 4>>>(h);
+    auto result = std::vector<unsigned char>(h * w * 4);
+
     for (auto i = 0; i < h; i++)
     {
-        result[i].resize(w);
         for (auto j = 0; j < w; j++)
         {
-            auto idx = RM(i, j, w);
-            const auto e = h_image_matrix[idx].e;
-            result[i][j][0] = e[0] * 255.f;
-            result[i][j][1] = e[1] * 255.f;
-            result[i][j][2] = e[2] * 255.f;
-            result[i][j][3] = 1.0f * 255.f;
+            const auto idx = i * w * 4 + j * 4;
+            const auto& e = h_image_matrix[(h - i - 1) * w + j];
+            result[idx + 0] = e[0] * 255.f;
+            result[idx + 1] = e[1] * 255.f;
+            result[idx + 2] = e[2] * 255.f;
+            result[idx + 3] = 1.0f * 255.f;
         }
     }
     return result;

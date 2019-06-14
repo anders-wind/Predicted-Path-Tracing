@@ -55,7 +55,7 @@ class render
 
     std::vector<ppt::shared::vec8> get_vector8_representation() const;
 
-    std::vector<std::vector<std::array<unsigned char, 4>>> get_2d_byte_representation() const;
+    std::vector<unsigned char> get_byte_representation() const;
 };
 
 } // namespace path_tracer
