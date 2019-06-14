@@ -1,5 +1,6 @@
 #include "app/helpers/glew_helpers.hpp"
 #include "app/helpers/glfw_helpers.hpp"
+#include "app/helpers/imgui_helpers.hpp"
 #include "app/helpers/opengl_helpers.hpp"
 #include "app/helpers/shader_helpers.hpp"
 #include "app/opengl_primitives/index_buffer.hpp"
@@ -11,9 +12,6 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <fstream>
-#include <imgui/examples/imgui_impl_glfw.h>
-#include <imgui/examples/imgui_impl_opengl3.h>
-#include <imgui/imgui.h>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -23,34 +21,28 @@ namespace ppt
 namespace app
 {
 
-void imgui_window()
+struct gui_state
 {
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-
-
-    bool show_demo_window = true;
-    bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    bool show_demo_window = false;
+};
 
-    if (show_demo_window)
-        ImGui::ShowDemoWindow(&show_demo_window);
-
+void imgui_window(gui_state& state)
+{
+    if (state.show_demo_window)
+        ImGui::ShowDemoWindow(&state.show_demo_window);
 
     // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
-    static float f = 0.0f;
-    static int counter = 0;
-
     {
+        static float f = 0.0f;
+        static int counter = 0;
         ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
 
         ImGui::Text("This is some useful text."); // Display some text (you can use a format strings too)
-        ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
-        ImGui::Checkbox("Another Window", &show_another_window);
+        ImGui::Checkbox("Demo Window", &state.show_demo_window); // Edit bools storing our window open/close state
 
         ImGui::SliderFloat("float", &f, 0.0f, 1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
-        ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+        ImGui::ColorEdit3("clear color", (float*)&state.clear_color); // Edit 3 floats representing a color
 
         if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
             counter++;
@@ -62,7 +54,6 @@ void imgui_window()
                     ImGui::GetIO().Framerate);
         ImGui::End();
     }
-    ImGui::Render();
 }
 
 void main_loop(GLFWwindow* window)
@@ -116,12 +107,7 @@ void main_loop(GLFWwindow* window)
     basic_shader.unbind();
     tex.unbind();
 
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 330");
-    ImGui::StyleColorsDark();
-
+    auto state = gui_state();
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -136,7 +122,14 @@ void main_loop(GLFWwindow* window)
         // Draw
         re.draw(va, ib, basic_shader);
 
-        imgui_window();
+        // GUI elements
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        imgui_window(state);
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         /* Swap front and back buffers */
         GL_CALL(glfwSwapBuffers(window));
 
@@ -161,6 +154,7 @@ int main(void)
     GLFWwindow* window = ppt::app::init_window();
 
     ppt::app::glew_init();
+    ppt::app::imgui_init(window);
 
     ppt::app::main_loop(window);
 
