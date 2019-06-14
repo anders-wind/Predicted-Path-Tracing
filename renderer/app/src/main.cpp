@@ -30,10 +30,10 @@ void main_loop(GLFWwindow* window)
     constexpr int number_of_elements = 4;
     constexpr int number_of_indices = 6;
     float positions[element_size * number_of_elements] = {
-        -1.0f, -1.0f, 0.0f, 0.0f, // 0
-        1.0f,  -1.0f, 1.0f, 0.0f, // 1
-        1.0f,  1.0f,  1.0f, 1.0f, // 2
-        -1.0f, 1.0f,  0.0f, 1.0f // 3
+        -0.5f, -0.5f, 0.0f, 0.0f, // 0
+        0.5f,  -0.5f, 0.5f, 0.0f, // 1
+        0.5f,  0.5f,  0.5f, 0.5f, // 2
+        -0.5f, 0.5f,  0.0f, 0.5f // 3
     };
     unsigned int indices[number_of_indices] = {
         0,
@@ -54,7 +54,7 @@ void main_loop(GLFWwindow* window)
     auto ib = index_buffer(indices, number_of_indices);
     auto layout = vertex_buffer_layout();
     auto basic_shader = shader("app/res/shaders/basic.shader");
-    auto tex = texture("app/res/textures/dummy_texture02.png");
+    auto tex = texture("app/res/textures/dummy_texture03.png");
     auto re = renderer();
 
     layout.push<float>(pos_size); // first pos.x, pos.y
@@ -74,24 +74,15 @@ void main_loop(GLFWwindow* window)
 
 
     /* Loop until the user closes the window */
-    float red = 0.0f;
-    float increment = 0.05f;
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
         re.clear();
-        // color
-        // Draw
         basic_shader.bind();
+        tex.bind(tex_slot);
 
+        // Draw
         re.draw(va, ib, basic_shader);
-
-
-        if (red > 1.0f || red < 0.0f)
-        {
-            increment *= -1;
-        }
-        red += increment;
 
         /* Swap front and back buffers */
         GL_CALL(glfwSwapBuffers(window));

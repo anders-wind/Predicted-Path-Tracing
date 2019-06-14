@@ -22,7 +22,7 @@ class texture
     texture(const std::string& path)
       : m_renderer_id(0), m_file_path(path), m_local_buffer(nullptr), m_width(0), m_height(0), m_bpp(0)
     {
-        stbi_set_flip_vertically_on_load(1);
+        stbi_set_flip_vertically_on_load(true);
         m_local_buffer = stbi_load(path.c_str(), &m_width, &m_height, &m_bpp, 4);
 
         GL_CALL(glGenTextures(1, &m_renderer_id));
