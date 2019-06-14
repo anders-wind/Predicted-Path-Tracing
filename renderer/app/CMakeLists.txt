@@ -23,7 +23,8 @@ target_link_libraries (${MODULE_NAME}
     GLU
     glfw
     GLEW::GLEW
-    stb)
+    stb
+    imgui)
 
 target_compile_features(${MODULE_NAME} 
     PUBLIC cxx_std_17)

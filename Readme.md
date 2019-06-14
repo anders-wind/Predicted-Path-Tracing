@@ -24,5 +24,6 @@ The training module should contain a pytorch ML model as well as training defini
 
 ## Litterature
 
+- http://www.realtimerendering.com/raytracing/Ray%20Tracing%20in%20a%20Weekend.pdf
 - https://research.nvidia.com/sites/default/files/publications/dnn_denoise_author.pdf
 - https://arxiv.org/pdf/1612.03144.pdf

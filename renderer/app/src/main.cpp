@@ -45,8 +45,8 @@ void main_loop(GLFWwindow* window)
         0,
     };
 
-    GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     GL_CALL(glEnable(GL_BLEND));
+    GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     // vertex array
 
     auto va = vertex_array();
