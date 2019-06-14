@@ -54,7 +54,7 @@ void main_loop(GLFWwindow* window)
     auto ib = index_buffer(indices, number_of_indices);
     auto layout = vertex_buffer_layout();
     auto basic_shader = shader("app/res/shaders/basic.shader");
-    auto tex = texture("app/res/textures/dummy_texture03.png");
+    auto tex = texture("app/res/textures/test01_target.png");
     auto re = renderer();
 
     layout.push<float>(pos_size); // first pos.x, pos.y

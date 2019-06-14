@@ -103,7 +103,7 @@ void dataset_repository::save_ppms(const std::vector<path_tracer::render_datapoi
     for (const auto& datapoint : render_dataset)
     {
         ss << file_name;
-        ss << std::setfill('0') << std::setw(2) << i << "_";
+        ss << std::setfill('0') << std::setw(2) << i;
         save_ppm(datapoint, ss.str());
         ss.str("");
         ss.clear();
