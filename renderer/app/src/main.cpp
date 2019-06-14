@@ -15,6 +15,8 @@
 #include <GLFW/glfw3.h>
 #include <fstream>
 #include <iostream>
+#include <memory>
+#include <path_tracer/cuda_renderer.cuh>
 #include <shared/sample_service.cuh>
 #include <sstream>
 #include <string>
@@ -25,7 +27,7 @@ namespace app
 {
 
 
-void main_loop(GLFWwindow* window)
+void main_loop(GLFWwindow* window, path_tracer::cuda_renderer& path_tracer)
 {
     using namespace gui;
     // a triangle
@@ -119,11 +121,17 @@ void shutdown()
 
 int main(void)
 {
-    GLFWwindow* window = ppt::app::init_window();
+    int w = 640;
+    int h = 360;
+
+    const auto sampler = std::make_shared<ppt::shared::sample_service>();
+    auto path_tracer = ppt::path_tracer::cuda_renderer(w, h, sampler);
+
+    GLFWwindow* window = ppt::app::init_window(w, h + 20);
 
     ppt::app::setup(window);
 
-    ppt::app::main_loop(window);
+    ppt::app::main_loop(window, path_tracer);
 
     ppt::app::shutdown();
 
