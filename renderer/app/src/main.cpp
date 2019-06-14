@@ -52,7 +52,9 @@ void main_loop(GLFWwindow* window, path_tracer::cuda_renderer& path_tracer)
         0,
     };
 
-    auto rendering = path_tracer.ray_trace(10, 10);
+    auto sample_sum = 1;
+    auto inc = 1;
+    auto rendering = path_tracer.ray_trace(sample_sum, sample_sum);
 
     // vertex array
 
@@ -90,6 +92,9 @@ void main_loop(GLFWwindow* window, path_tracer::cuda_renderer& path_tracer)
         basic_shader.bind();
         tex.bind(tex_slot);
 
+        sample_sum += inc;
+        path_tracer.ray_trace(inc, sample_sum, rendering);
+        tex.update_local_buffer(rendering.get_byte_representation());
 
         // Draw
         re.draw(va, ib, basic_shader);

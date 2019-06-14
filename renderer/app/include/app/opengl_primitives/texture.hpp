@@ -49,7 +49,6 @@ class texture
 
         m_local_buffer = new unsigned char[m_height * m_width * m_bpp];
 
-        update_local_buffer(image);
 
         GL_CALL(glBindTexture(GL_TEXTURE_2D, m_renderer_id));
 
@@ -58,27 +57,14 @@ class texture
         GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
         GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
 
-        GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_local_buffer));
+        update_local_buffer(image);
         unbind();
     }
 
     void update_local_buffer(const std::vector<unsigned char>& image)
     {
-        std::cout << m_width << std::endl;
-        std::cout << m_height << std::endl;
         memcpy(&m_local_buffer[0], &image[0], m_width * m_height * m_bpp * sizeof(unsigned char));
-        // for (auto i = 0; i < m_height; i++)
-        // {
-        //     const auto row_idx = i * m_width * m_bpp;
-        //     for (auto j = 0; j < m_width; j++)
-        //     {
-        //         auto idx = row_idx + j * m_bpp;
-        //         m_local_buffer[idx] = image[idx];
-        //         m_local_buffer[idx + 1] = image[idx + 1];
-        //         m_local_buffer[idx + 2] = image[idx + 2];
-        //         m_local_buffer[idx + 3] = image[idx + 3];
-        //     }
-        // }
+        GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_local_buffer));
     }
 
     void bind(unsigned int slot = 0) const
