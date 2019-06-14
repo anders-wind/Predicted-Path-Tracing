@@ -30,6 +30,10 @@ namespace app
 void main_loop(GLFWwindow* window, path_tracer::cuda_renderer& path_tracer)
 {
     using namespace gui;
+    auto re = renderer();
+    auto state = std::make_shared<gui_state>();
+    auto gui = gui_controller(state);
+
     // a triangle
     constexpr int pos_size = 2;
     constexpr int tex_size = 2;
@@ -52,9 +56,9 @@ void main_loop(GLFWwindow* window, path_tracer::cuda_renderer& path_tracer)
         0,
     };
 
-    auto sample_sum = 1;
     auto inc = 1;
-    auto rendering = path_tracer.ray_trace(sample_sum, sample_sum);
+    state->sample_sum += inc;
+    auto rendering = path_tracer.ray_trace(inc, state->sample_sum);
 
     // vertex array
 
@@ -81,8 +85,6 @@ void main_loop(GLFWwindow* window, path_tracer::cuda_renderer& path_tracer)
     tex.unbind();
 
 
-    auto re = renderer();
-    auto gui = gui_controller(gui_state());
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
@@ -92,8 +94,8 @@ void main_loop(GLFWwindow* window, path_tracer::cuda_renderer& path_tracer)
         basic_shader.bind();
         tex.bind(tex_slot);
 
-        sample_sum += inc;
-        path_tracer.ray_trace(inc, sample_sum, rendering);
+        state->sample_sum += inc;
+        path_tracer.ray_trace(inc, state->sample_sum, rendering);
         tex.update_local_buffer(rendering.get_byte_representation());
 
         // Draw
@@ -128,8 +130,8 @@ void shutdown()
 
 int main(void)
 {
-    int w = 640;
-    int h = 360;
+    int w = 1280;
+    int h = 720;
 
     const auto sampler = std::make_shared<ppt::shared::sample_service>();
     auto path_tracer = ppt::path_tracer::cuda_renderer(w, h, sampler);
