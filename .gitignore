@@ -8,6 +8,8 @@
 **/Makefile
 **/*.so
 **/compile_commands.json
-**/ppt-runner
+**/ppt-cli
+**/ppt-app
 **/*.ppm
 **/*.ipynb
+**/*Doxy*

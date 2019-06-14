@@ -1,12 +1,12 @@
 #include <dataset_creator/dataset_repository.hpp>
-#include <fstream>
-#include <iostream>
 #include <path_tracer/cuda_renderer.cuh>
 #include <shared/sample_service.cuh>
 #include <string>
 
-int main()
+int main(int argc, char** argv)
 {
+    // Todo - some cli parameter input
+
     // settings
     int w = 640;
     int h = 360;
