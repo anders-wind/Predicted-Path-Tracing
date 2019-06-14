@@ -27,12 +27,15 @@ namespace app
 {
 
 
-void main_loop(GLFWwindow* window, path_tracer::cuda_renderer& path_tracer)
+void main_loop(GLFWwindow* window, std::shared_ptr<path_tracer::cuda_renderer> path_tracer)
 {
     using namespace gui;
     auto re = renderer();
     auto state = std::make_shared<gui_state>();
-    auto gui = gui_controller(state);
+    auto inc = 2;
+    state->sample_sum += inc;
+    auto rendering = path_tracer->ray_trace(inc, state->sample_sum);
+    auto gui = gui_controller(state, path_tracer, rendering);
 
     // a triangle
     constexpr int pos_size = 2;
@@ -56,10 +59,6 @@ void main_loop(GLFWwindow* window, path_tracer::cuda_renderer& path_tracer)
         0,
     };
 
-    auto inc = 1;
-    state->sample_sum += inc;
-    auto rendering = path_tracer.ray_trace(inc, state->sample_sum);
-
     // vertex array
 
     auto va = vertex_array();
@@ -67,7 +66,7 @@ void main_loop(GLFWwindow* window, path_tracer::cuda_renderer& path_tracer)
     auto ib = index_buffer(indices, number_of_indices);
     auto layout = vertex_buffer_layout();
     auto basic_shader = shader("app/res/shaders/basic.shader");
-    auto tex = texture(rendering.get_byte_representation(), path_tracer.w, path_tracer.h);
+    auto tex = texture(rendering->get_byte_representation(), path_tracer->w, path_tracer->h);
 
     layout.push<float>(pos_size); // first pos.x, pos.y
     layout.push<float>(tex_size); // then tex.x, tex.y
@@ -99,8 +98,8 @@ void main_loop(GLFWwindow* window, path_tracer::cuda_renderer& path_tracer)
         gui.draw();
 
         state->sample_sum += inc;
-        path_tracer.ray_trace(inc, state->sample_sum, rendering);
-        tex.update_local_buffer(rendering.get_byte_representation());
+        path_tracer->ray_trace(inc, state->sample_sum, *rendering);
+        tex.update_local_buffer(rendering->get_byte_representation());
 
 
         /* Swap front and back buffers */
@@ -134,7 +133,7 @@ int main(void)
     int h = 720;
 
     const auto sampler = std::make_shared<ppt::shared::sample_service>();
-    auto path_tracer = ppt::path_tracer::cuda_renderer(w, h, sampler);
+    auto path_tracer = std::make_shared<ppt::path_tracer::cuda_renderer>(w, h, sampler);
 
     GLFWwindow* window = ppt::app::init_window(w, h + 20);
 

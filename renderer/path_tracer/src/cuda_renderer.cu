@@ -235,12 +235,12 @@ cuda_renderer::~cuda_renderer()
     checkCudaErrors(cudaGetLastError());
 }
 
-render cuda_renderer::ray_trace(int samples, int sample_sum) const
+std::shared_ptr<render> cuda_renderer::ray_trace(int samples, int sample_sum) const
 {
     const auto timer = shared::scoped_timer("ray_trace");
 
-    auto ray_traced_image = render(w, h);
-    ray_trace(samples, sample_sum, ray_traced_image);
+    auto ray_traced_image = std::make_shared<render>(w, h);
+    ray_trace(samples, sample_sum, *ray_traced_image);
     return ray_traced_image;
 }
 
