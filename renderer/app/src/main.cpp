@@ -36,7 +36,7 @@ void imgui_window(gui_state& state)
     {
         static float f = 0.0f;
         static int counter = 0;
-        ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
+        ImGui::Begin("PPT controller"); // Create a window called "Hello, world!" and append into it.
 
         ImGui::Text("This is some useful text."); // Display some text (you can use a format strings too)
         ImGui::Checkbox("Demo Window", &state.show_demo_window); // Edit bools storing our window open/close state
@@ -123,12 +123,10 @@ void main_loop(GLFWwindow* window)
         re.draw(va, ib, basic_shader);
 
         // GUI elements
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+
+        imgui::start_frame();
         imgui_window(state);
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        imgui::end_frame();
 
         /* Swap front and back buffers */
         GL_CALL(glfwSwapBuffers(window));
@@ -154,7 +152,7 @@ int main(void)
     GLFWwindow* window = ppt::app::init_window();
 
     ppt::app::glew_init();
-    ppt::app::imgui_init(window);
+    ppt::app::imgui::init(window);
 
     ppt::app::main_loop(window);
 

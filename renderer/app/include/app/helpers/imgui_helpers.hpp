@@ -8,7 +8,24 @@ namespace ppt
 {
 namespace app
 {
-void imgui_init(GLFWwindow* window)
+
+namespace imgui
+{
+
+void start_frame()
+{
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+}
+
+void end_frame()
+{
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void init(GLFWwindow* window)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -16,5 +33,7 @@ void imgui_init(GLFWwindow* window)
     ImGui_ImplOpenGL3_Init("#version 330");
     ImGui::StyleColorsDark();
 }
+} // namespace imgui
+
 } // namespace app
 } // namespace ppt
