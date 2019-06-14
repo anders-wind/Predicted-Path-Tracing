@@ -1,3 +1,5 @@
+#include "app/gui/gui_controller.hpp"
+#include "app/gui/gui_state.hpp"
 #include "app/helpers/glew_helpers.hpp"
 #include "app/helpers/glfw_helpers.hpp"
 #include "app/helpers/imgui_helpers.hpp"
@@ -21,43 +23,10 @@ namespace ppt
 namespace app
 {
 
-struct gui_state
-{
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-    bool show_demo_window = false;
-};
-
-void imgui_window(gui_state& state)
-{
-    if (state.show_demo_window)
-        ImGui::ShowDemoWindow(&state.show_demo_window);
-
-    // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
-    {
-        static float f = 0.0f;
-        static int counter = 0;
-        ImGui::Begin("PPT controller"); // Create a window called "Hello, world!" and append into it.
-
-        ImGui::Text("This is some useful text."); // Display some text (you can use a format strings too)
-        ImGui::Checkbox("Demo Window", &state.show_demo_window); // Edit bools storing our window open/close state
-
-        ImGui::SliderFloat("float", &f, 0.0f, 1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
-        ImGui::ColorEdit3("clear color", (float*)&state.clear_color); // Edit 3 floats representing a color
-
-        if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
-            counter++;
-        ImGui::SameLine();
-        ImGui::Text("counter = %d", counter);
-
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
-                    1000.0f / ImGui::GetIO().Framerate,
-                    ImGui::GetIO().Framerate);
-        ImGui::End();
-    }
-}
 
 void main_loop(GLFWwindow* window)
 {
+    using namespace gui;
     // a triangle
     constexpr int pos_size = 2;
     constexpr int tex_size = 2;
@@ -90,7 +59,6 @@ void main_loop(GLFWwindow* window)
     auto layout = vertex_buffer_layout();
     auto basic_shader = shader("app/res/shaders/basic.shader");
     auto tex = texture("app/res/textures/test01_target.png");
-    auto re = renderer();
 
     layout.push<float>(pos_size); // first pos.x, pos.y
     layout.push<float>(tex_size); // then tex.x, tex.y
@@ -107,8 +75,9 @@ void main_loop(GLFWwindow* window)
     basic_shader.unbind();
     tex.unbind();
 
-    auto state = gui_state();
 
+    auto re = renderer();
+    auto gui = gui_controller(gui_state());
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
@@ -121,12 +90,8 @@ void main_loop(GLFWwindow* window)
 
         // Draw
         re.draw(va, ib, basic_shader);
+        gui.draw();
 
-        // GUI elements
-
-        imgui::start_frame();
-        imgui_window(state);
-        imgui::end_frame();
 
         /* Swap front and back buffers */
         GL_CALL(glfwSwapBuffers(window));
