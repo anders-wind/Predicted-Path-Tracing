@@ -94,13 +94,13 @@ void main_loop(GLFWwindow* window, path_tracer::cuda_renderer& path_tracer)
         basic_shader.bind();
         tex.bind(tex_slot);
 
-        state->sample_sum += inc;
-        path_tracer.ray_trace(inc, state->sample_sum, rendering);
-        tex.update_local_buffer(rendering.get_byte_representation());
-
         // Draw
         re.draw(va, ib, basic_shader);
         gui.draw();
+
+        state->sample_sum += inc;
+        path_tracer.ray_trace(inc, state->sample_sum, rendering);
+        tex.update_local_buffer(rendering.get_byte_representation());
 
 
         /* Swap front and back buffers */

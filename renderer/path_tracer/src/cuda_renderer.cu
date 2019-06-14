@@ -246,16 +246,23 @@ render cuda_renderer::ray_trace(int samples, int sample_sum) const
 
 void cuda_renderer::ray_trace(int samples, int sample_sum, render& ray_traced_image) const
 {
+    {
+        // const auto timer = shared::scoped_timer("ray_tracing");
 
-    cuda_methods::render_image<<<blocks, threads>>>(
-        ray_traced_image.get_color_matrix(), w, h, samples, d_camera, d_world, d_rand_state);
-    checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
+        cuda_methods::render_image<<<blocks, threads>>>(
+            ray_traced_image.get_color_matrix(), w, h, samples, d_camera, d_world, d_rand_state);
+        checkCudaErrors(cudaGetLastError());
+        checkCudaErrors(cudaDeviceSynchronize());
+    }
 
-    cuda_methods::post_process<<<blocks, threads>>>(
-        ray_traced_image.get_color_matrix(), ray_traced_image.get_image_matrix(), d_world, d_camera, w, h, sample_sum);
-    checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
+    {
+        // const auto timer = shared::scoped_timer("post process");
+
+        cuda_methods::post_process<<<blocks, threads>>>(
+            ray_traced_image.get_color_matrix(), ray_traced_image.get_image_matrix(), d_world, d_camera, w, h, sample_sum);
+        checkCudaErrors(cudaGetLastError());
+        checkCudaErrors(cudaDeviceSynchronize());
+    }
 }
 
 
