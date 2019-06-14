@@ -8,7 +8,7 @@ sudo apt-get install -y gcc-8 g++-8 build-essential cmake
 sudo apt-get install -y python3.7 pip3 ipython
 
 # Install OpenGL
-sudo apt-get install -y xorg openbox doxygen libgl-dev libxmu-dev libx11-dev libxi-dev libxrandr-dev libxinerama-dev libxcursor-dev
+sudo apt-get install -y xorg openbox doxygen libgl-dev libxmu-dev libx11-dev libxi-dev libxrandr-dev libxinerama-dev libxcursor-dev libxxf86vm-dev libsdl2-dev
 sudo apt-get install -y libglu1-mesa-dev freeglut3 freeglut3-dev mesa-common-dev libglew-dev
 
 # Install CUDA

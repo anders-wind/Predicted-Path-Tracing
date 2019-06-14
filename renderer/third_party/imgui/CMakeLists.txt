@@ -11,6 +11,7 @@ include(GNUInstallDirs)
 
 file(GLOB_RECURSE SOURCES "include/*.cpp")
 file(GLOB_RECURSE HEADERS "include/*.h")
+list(REMOVE_ITEM SOURCES "include/main.cpp")
 
 add_library(${MODULE_NAME} 
     SHARED ${SOURCES} ${HEADERS})
