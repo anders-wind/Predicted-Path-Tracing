@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
+SET(SOLUTION_NAME "ppt")
 SET(MODULE_NAME "ppt-cli")
 SET(MODULE_NAME_CONFIG "ppt-cli-config")
 message(STATUS "Project: " ${MODULE_NAME})

@@ -15,6 +15,7 @@
 #include <GLFW/glfw3.h>
 #include <fstream>
 #include <iostream>
+#include <shared/sample_service.cuh>
 #include <sstream>
 #include <string>
 

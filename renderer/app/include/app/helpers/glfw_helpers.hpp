@@ -13,7 +13,7 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-GLFWwindow* init_window()
+GLFWwindow* init_window(unsigned int w = 640, unsigned int h = 360, const std::string& name = "PPT")
 {
     GLFWwindow* window;
     glfwSetErrorCallback(glfw_error_callback);
@@ -30,7 +30,7 @@ GLFWwindow* init_window()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // 3.0+ only
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 360, "PPT", NULL, NULL);
+    window = glfwCreateWindow(w, h, name.c_str(), NULL, NULL);
     if (!window)
     {
         glfwTerminate();
