@@ -30,7 +30,7 @@ GLFWwindow* init_window()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // 3.0+ only
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "PPT", NULL, NULL);
+    window = glfwCreateWindow(640, 360, "PPT", NULL, NULL);
     if (!window)
     {
         glfwTerminate();

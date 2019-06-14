@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <cuda.h>
 #include <shared/cuda_helpers.cuh>
 #include <shared/vecs/vec3.cuh>
@@ -75,6 +76,8 @@ class render
     std::vector<vec3> get_vector3_representation() const;
 
     std::vector<vec8> get_vector8_representation() const;
+
+    std::vector<std::vector<std::array<unsigned char, 4>>> get_2d_byte_representation() const;
 };
 
 } // namespace path_tracer

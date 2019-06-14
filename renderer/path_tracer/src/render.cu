@@ -31,10 +31,7 @@ void get_vector_representation(std::vector<vec8> h_image_matrix, size_t w, size_
 std::vector<vec3> render::get_vector3_representation() const
 {
     auto colors = std::vector<vec3>(w * h);
-    auto h_image_matrix = std::vector<vec8>(w * h);
-    h_image_matrix.resize(w * h);
-    auto bytes = sizeof(vec8) * w * h;
-    checkCudaErrors(cudaMemcpy(&h_image_matrix[0], d_image_matrix, bytes, cudaMemcpyDeviceToHost));
+    auto h_image_matrix = get_vector8_representation();
     get_vector_representation<vec3>(h_image_matrix, w, h, colors);
 
     return colors;
@@ -42,7 +39,6 @@ std::vector<vec3> render::get_vector3_representation() const
 
 std::vector<vec8> render::get_vector8_representation() const
 {
-    auto colors = std::vector<vec8>(w * h);
     auto h_image_matrix = std::vector<vec8>(w * h);
     h_image_matrix.resize(w * h);
     auto bytes = sizeof(vec8) * w * h;
@@ -50,6 +46,26 @@ std::vector<vec8> render::get_vector8_representation() const
     return h_image_matrix;
 }
 
+std::vector<std::vector<std::array<unsigned char, 4>>> render::get_2d_byte_representation() const
+{
+    auto h_image_matrix = get_vector8_representation();
+
+    auto result = std::vector<std::vector<std::array<unsigned char, 4>>>(h);
+    for (auto i = 0; i < h; i++)
+    {
+        result[i].resize(w);
+        for (auto j = 0; j < w; j++)
+        {
+            auto idx = RM(i, j, w);
+            const auto e = h_image_matrix[idx].e;
+            result[i][j][0] = e[0];
+            result[i][j][1] = e[1];
+            result[i][j][2] = e[2];
+            result[i][j][3] = 1.0f;
+        }
+    }
+    return result;
+}
 
 } // namespace path_tracer
 } // namespace ppt
