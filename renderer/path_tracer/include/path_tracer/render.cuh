@@ -29,37 +29,16 @@ class render
     const size_t render_color_bytes;
     const size_t render_image_bytes;
 
-    render(int w, int h)
-      : w(w)
-      , h(h)
-      , render_color_bytes(w * h * sizeof(ppt::shared::vec3))
-      , render_image_bytes(w * h * sizeof(ppt::shared::vec8))
-    {
-        checkCudaErrors(cudaMalloc((void**)&d_color_matrix, render_color_bytes));
-        checkCudaErrors(cudaMalloc((void**)&d_image_matrix, render_image_bytes));
-    }
+    render(int w, int h);
 
     // move operator
-    render(render&& other)
-      : d_image_matrix{ other.d_image_matrix }
-      , w(w)
-      , h(h)
-      , render_color_bytes(render_color_bytes)
-      , render_image_bytes(render_image_bytes)
-    {
-        other.d_color_matrix = nullptr;
-        other.d_image_matrix = nullptr;
-    }
+    render(render&& other);
 
     render(const render& other) = delete;
     render& operator=(const render& other) = delete;
     render& operator=(render&& other) = delete;
 
-    ~render()
-    {
-        cudaFree(d_color_matrix);
-        cudaFree(d_image_matrix);
-    }
+    ~render();
 
     // todo think about how we can return as ref?
     ppt::shared::vec8* get_image_matrix()

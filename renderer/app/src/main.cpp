@@ -52,6 +52,8 @@ void main_loop(GLFWwindow* window, path_tracer::cuda_renderer& path_tracer)
         0,
     };
 
+    auto rendering = path_tracer.ray_trace(10, 10);
+
     // vertex array
 
     auto va = vertex_array();
@@ -59,7 +61,7 @@ void main_loop(GLFWwindow* window, path_tracer::cuda_renderer& path_tracer)
     auto ib = index_buffer(indices, number_of_indices);
     auto layout = vertex_buffer_layout();
     auto basic_shader = shader("app/res/shaders/basic.shader");
-    auto tex = texture("app/res/textures/test01_target.png");
+    auto tex = texture(rendering.get_2d_byte_representation());
 
     layout.push<float>(pos_size); // first pos.x, pos.y
     layout.push<float>(tex_size); // then tex.x, tex.y

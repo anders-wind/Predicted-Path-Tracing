@@ -14,6 +14,32 @@ using vec8 = ppt::shared::vec8;
 #define RM(row, col, w) row* w + col
 #define CM(row, col, h) col* h + row
 
+render::render(int w, int h)
+  : w(w)
+  , h(h)
+  , render_color_bytes(w * h * sizeof(ppt::shared::vec3))
+  , render_image_bytes(w * h * sizeof(ppt::shared::vec8))
+{
+    checkCudaErrors(cudaMalloc((void**)&d_color_matrix, render_color_bytes));
+    checkCudaErrors(cudaMalloc((void**)&d_image_matrix, render_image_bytes));
+}
+
+render::render(render&& other)
+  : d_image_matrix{ other.d_image_matrix }
+  , w(w)
+  , h(h)
+  , render_color_bytes(render_color_bytes)
+  , render_image_bytes(render_image_bytes)
+{
+    other.d_color_matrix = nullptr;
+    other.d_image_matrix = nullptr;
+}
+
+render::~render()
+{
+    cudaFree(d_color_matrix);
+    cudaFree(d_image_matrix);
+}
 
 template <typename T>
 void get_vector_representation(std::vector<vec8> h_image_matrix, size_t w, size_t h, std::vector<T>& colors)
@@ -58,10 +84,10 @@ std::vector<std::vector<std::array<unsigned char, 4>>> render::get_2d_byte_repre
         {
             auto idx = RM(i, j, w);
             const auto e = h_image_matrix[idx].e;
-            result[i][j][0] = e[0];
-            result[i][j][1] = e[1];
-            result[i][j][2] = e[2];
-            result[i][j][3] = 1.0f;
+            result[i][j][0] = e[0] * 255.f;
+            result[i][j][1] = e[1] * 255.f;
+            result[i][j][2] = e[2] * 255.f;
+            result[i][j][3] = 1.0f * 255.f;
         }
     }
     return result;
