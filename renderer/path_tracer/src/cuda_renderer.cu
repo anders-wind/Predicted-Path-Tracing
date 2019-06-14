@@ -235,32 +235,29 @@ cuda_renderer::~cuda_renderer()
     checkCudaErrors(cudaGetLastError());
 }
 
-render cuda_renderer::ray_trace(int samples) const
+render cuda_renderer::ray_trace(int samples, int sample_sum) const
 {
     const auto timer = shared::scoped_timer("ray_trace");
 
     auto ray_traced_image = render(w, h);
-    auto* color_matrix = ray_traced_image.get_color_matrix();
-    auto* image_matrix = ray_traced_image.get_image_matrix();
-
-    cuda_methods::render_image<<<blocks, threads>>>(color_matrix, w, h, samples, d_camera, d_world, d_rand_state);
-    checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
-    cuda_methods::post_process<<<blocks, threads>>>(color_matrix, image_matrix, d_world, d_camera, w, h, samples);
-    checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
+    ray_trace(samples, sample_sum, ray_traced_image);
     return ray_traced_image;
 }
 
-void cuda_renderer::update_world()
+void cuda_renderer::ray_trace(int samples, int sample_sum, render& ray_traced_image) const
 {
-    checkCudaErrors(cudaDeviceSynchronize());
-    cuda_methods::free_world<<<1, 1>>>(d_world, d_camera);
-    checkCudaErrors(cudaDeviceSynchronize());
+
+    cuda_methods::render_image<<<blocks, threads>>>(
+        ray_traced_image.get_color_matrix(), w, h, samples, d_camera, d_world, d_rand_state);
     checkCudaErrors(cudaGetLastError());
-    cuda_methods::create_random_world<<<1, 1>>>(d_list, d_world, d_camera, 13, 2, 2, d_rand_state);
+    checkCudaErrors(cudaDeviceSynchronize());
+
+    cuda_methods::post_process<<<blocks, threads>>>(
+        ray_traced_image.get_color_matrix(), ray_traced_image.get_image_matrix(), d_world, d_camera, w, h, sample_sum);
     checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
 }
+
 
 std::vector<path_tracer::render_datapoint> cuda_renderer::ray_trace_datapoints(size_t number_of_images)
 {
@@ -268,13 +265,14 @@ std::vector<path_tracer::render_datapoint> cuda_renderer::ray_trace_datapoints(s
     auto ray_traced_image = render(w, h);
     auto results = std::vector<path_tracer::render_datapoint>();
     results.reserve(number_of_images);
+
     for (auto i = 0; i < number_of_images; i++)
     {
         std::cout << "Rendering " << (i + 1) << "/" << number_of_images << std::endl;
+
         update_world();
         results.push_back(ray_trace_datapoint(ray_traced_image));
-        cuda_methods::reset_image<<<blocks, threads>>>(ray_traced_image.get_color_matrix(), w, h);
-        checkCudaErrors(cudaDeviceSynchronize());
+        reset_image(ray_traced_image);
     }
 
     return results;
@@ -292,29 +290,38 @@ path_tracer::render_datapoint cuda_renderer::ray_trace_datapoint() const
 path_tracer::render_datapoint cuda_renderer::ray_trace_datapoint(render& ray_traced_image) const
 {
     auto result = path_tracer::render_datapoint(w, h);
-    auto* color_matrix = ray_traced_image.get_color_matrix();
-    auto* image_matrix = ray_traced_image.get_image_matrix();
-
-    auto samples = _sampler->get_samples_in_pow(4, 1000, 8);
+    auto sample_population = _sampler->get_samples_in_pow(4, 1000, 8);
     auto sample_sum = 0;
     for (auto i = 0; i < 4; i++)
     {
-        auto sample = samples[i];
-        sample_sum += sample;
+        auto samples = sample_population[i];
+        const auto timer_intern = shared::scoped_timer(" _samples: " + std::to_string(samples));
 
-        const auto timer_intern = shared::scoped_timer(" _samples: " + std::to_string(sample));
+        sample_sum += samples;
 
-        cuda_methods::render_image<<<blocks, threads>>>(color_matrix, w, h, sample, d_camera, d_world, d_rand_state);
-        checkCudaErrors(cudaGetLastError());
-        checkCudaErrors(cudaDeviceSynchronize());
-
-        cuda_methods::post_process<<<blocks, threads>>>(color_matrix, image_matrix, d_world, d_camera, w, h, sample_sum);
-        checkCudaErrors(cudaGetLastError());
-        checkCudaErrors(cudaDeviceSynchronize());
+        ray_trace(samples, sample_sum, ray_traced_image);
 
         result.set_result(ray_traced_image, i);
     }
     return result;
 }
+
+
+void cuda_renderer::update_world()
+{
+    checkCudaErrors(cudaDeviceSynchronize());
+    cuda_methods::free_world<<<1, 1>>>(d_world, d_camera);
+    checkCudaErrors(cudaDeviceSynchronize());
+    checkCudaErrors(cudaGetLastError());
+    cuda_methods::create_random_world<<<1, 1>>>(d_list, d_world, d_camera, 13, 2, 2, d_rand_state);
+    checkCudaErrors(cudaGetLastError());
+}
+
+void cuda_renderer::reset_image(render& ray_traced_image) const
+{
+    cuda_methods::reset_image<<<blocks, threads>>>(ray_traced_image.get_color_matrix(), w, h);
+    checkCudaErrors(cudaDeviceSynchronize());
+}
+
 } // namespace path_tracer
 } // namespace ppt

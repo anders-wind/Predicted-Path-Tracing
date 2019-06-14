@@ -43,15 +43,18 @@ class cuda_renderer
     ~cuda_renderer();
 
     public: // Methods
-    render ray_trace(int samples) const;
-
-    void update_world();
+    render ray_trace(int samples, int sample_sum) const;
+    void ray_trace(int samples, int sample_sum, render& ray_traced_image) const;
 
     std::vector<path_tracer::render_datapoint> ray_trace_datapoints(size_t number_of_images);
 
     path_tracer::render_datapoint ray_trace_datapoint() const;
 
     path_tracer::render_datapoint ray_trace_datapoint(render& ray_traced_image) const;
+
+    private:
+    void reset_image(render& ray_traced_image) const;
+    void update_world();
 };
 
 } // namespace path_tracer
