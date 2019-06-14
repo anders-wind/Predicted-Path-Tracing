@@ -30,10 +30,10 @@ void main_loop(GLFWwindow* window)
     constexpr int number_of_elements = 4;
     constexpr int number_of_indices = 6;
     float positions[element_size * number_of_elements] = {
-        -0.5f, -0.5f, 0.0f, 0.0f, // 0
-        0.5f,  -0.5f, 0.5f, 0.0f, // 1
-        0.5f,  0.5f,  0.5f, 0.5f, // 2
-        -0.5f, 0.5f,  0.0f, 0.5f // 3
+        -1.0f, -1.0f, 0.0f, 0.0f, // 0
+        1.0f,  -1.0f, 1.0f, 0.0f, // 1
+        1.0f,  1.0f,  1.0f, 1.0f, // 2
+        -1.0f, 1.0f,  0.0f, 1.0f // 3
     };
     unsigned int indices[number_of_indices] = {
         0,
