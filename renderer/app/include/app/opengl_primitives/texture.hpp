@@ -35,11 +35,6 @@ class texture
 
         GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_local_buffer));
         unbind();
-
-        if (m_local_buffer) // free it again
-        {
-            stbi_image_free(m_local_buffer);
-        }
     }
 
     texture(const std::vector<unsigned char>& image, size_t width, size_t height)
@@ -59,6 +54,14 @@ class texture
 
         update_local_buffer(image);
         unbind();
+    }
+
+    ~texture()
+    {
+        if (m_local_buffer) // free it again
+        {
+            delete[] m_local_buffer;
+        }
     }
 
     void update_local_buffer(const std::vector<unsigned char>& image)
