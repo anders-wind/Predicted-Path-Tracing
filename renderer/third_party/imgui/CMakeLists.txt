@@ -27,6 +27,8 @@ target_include_directories(${MODULE_NAME}
 target_compile_definitions(${MODULE_NAME} 
     PRIVATE -D_EXPORT)
     
+target_link_libraries(${MODULE_NAME} glfw)
+
 # install(
 #     TARGETS ${MODULE_NAME}
 #     EXPORT ${MODULE_NAME_CONFIG}
