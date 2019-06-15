@@ -14,6 +14,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <fstream>
+#include <future>
 #include <iostream>
 #include <memory>
 #include <path_tracer/cuda_renderer.cuh>
@@ -32,7 +33,7 @@ void main_loop(GLFWwindow* window, std::shared_ptr<path_tracer::cuda_renderer> p
     using namespace gui;
     auto re = renderer();
     auto state = std::make_shared<gui_state>();
-    auto inc = 2;
+    constexpr auto inc = 2;
     state->sample_sum += inc;
     auto rendering = path_tracer->ray_trace(inc, state->sample_sum);
     auto gui = gui_controller(state, path_tracer, rendering);
@@ -83,6 +84,13 @@ void main_loop(GLFWwindow* window, std::shared_ptr<path_tracer::cuda_renderer> p
     basic_shader.unbind();
     tex.unbind();
 
+    auto t = std::thread([state, path_tracer, rendering] {
+        while (true)
+        {
+            state->sample_sum += inc;
+            path_tracer->ray_trace(inc, state->sample_sum, *rendering);
+        }
+    });
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -96,9 +104,6 @@ void main_loop(GLFWwindow* window, std::shared_ptr<path_tracer::cuda_renderer> p
         // Draw
         re.draw(va, ib, basic_shader);
         gui.draw();
-
-        state->sample_sum += inc;
-        path_tracer->ray_trace(inc, state->sample_sum, *rendering);
         tex.update_local_buffer(rendering->get_byte_representation());
 
 
