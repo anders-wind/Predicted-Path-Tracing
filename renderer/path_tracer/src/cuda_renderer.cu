@@ -191,9 +191,9 @@ __global__ void create_random_world(hitable** d_list,
 
         *d_world = new hitable_list(d_list, hitables_size);
         const auto look_from = vec3(0, 0, 0);
-        const auto look_at = vec3(0, 0, 1);
+        const auto look_at = vec3(0, 0, -4);
         const auto focus_dist = (look_from - look_at).length();
-        *d_camera = camera_factory().make_16_9_camera(look_from, look_at, 110, 0.1, focus_dist);
+        *d_camera = camera_factory().make_16_9_camera(look_from, look_at, 110, 0.2, focus_dist);
     }
 }
 
