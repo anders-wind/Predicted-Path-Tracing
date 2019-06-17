@@ -37,7 +37,7 @@ struct plane : public hitable
             return false;
         }
 
-        const float t = dot(_normal, (_pos + r._origin)) / divider;
+        const float t = dot(_normal, (_pos - r._origin)) / divider;
         if (t < 0.0f)
         {
             return false;
