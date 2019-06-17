@@ -59,9 +59,9 @@ class render
 
     std::vector<unsigned char> get_byte_representation() const;
 
-    shared::scoped_lock get_scoped_lock()
+    std::unique_ptr<shared::scoped_lock> get_scoped_lock()
     {
-        return shared::scoped_lock(lock);
+        return std::make_unique<shared::scoped_lock>(lock);
     }
 };
 

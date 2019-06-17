@@ -37,7 +37,7 @@ void main_loop(GLFWwindow* window, std::shared_ptr<path_tracer::cuda_renderer> p
     constexpr auto inc = 1;
     state->sample_sum += inc;
     auto rendering = path_tracer->ray_trace(inc, state->sample_sum);
-    const auto gui = gui_controller(state, path_tracer, rendering);
+    auto gui = gui_controller(state, path_tracer, rendering);
 
     // a triangle
     constexpr int pos_size = 2;
