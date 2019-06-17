@@ -40,7 +40,7 @@ struct metal : public material
     const vec3 albedo;
     const float fuzz;
 
-    __device__ metal(const vec3& a, float f) : albedo(a), fuzz(f < 1 ? f : 1)
+    __device__ metal(const vec3& a, float f) : albedo(a), fuzz(f < 1.0 ? f : 1.0)
     {
     }
 
@@ -63,9 +63,9 @@ struct dielectric : public material
 
     __device__ inline float schlick(float cosine) const
     {
-        float r0 = (1 - _ref_idx) / (1 + _ref_idx);
+        float r0 = (1.0 - _ref_idx) / (1.0 + _ref_idx);
         r0 = r0 * r0;
-        return r0 + (1 - r0) * pow((1 - cosine), 5);
+        return r0 + (1.0 - r0) * pow((1.0 - cosine), 5.0);
     }
 
     __device__ bool
