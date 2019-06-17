@@ -14,8 +14,6 @@ struct hitable_list : public hitable
     hitable** _hitables;
     size_t num_elements;
 
-    void** d_this;
-
     public:
     __device__ __host__ hitable_list(hitable** list, size_t num_elements)
     {
@@ -52,6 +50,11 @@ struct hitable_list : public hitable
             }
         }
         return hit_anything;
+    }
+
+    __device__ __host__ virtual bool bounding_box(float t0, float t1, aabb& box) const
+    {
+        return true;
     }
 };
 

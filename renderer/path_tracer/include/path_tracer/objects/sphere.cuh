@@ -1,6 +1,6 @@
 #pragma once
 
-#include "path_tracer/hitable.cuh"
+#include "hitable.cuh"
 #include "path_tracer/ray.cuh"
 #include <math.h>
 #include <memory>
@@ -62,6 +62,12 @@ struct sphere : public hitable
         }
         return false;
     }
+
+    __device__ __host__ virtual bool bounding_box(float t0, float t1, aabb& box) const
+    {
+        return true;
+    }
+
 
     __device__ vec3 normal(const vec3& position) const
     {

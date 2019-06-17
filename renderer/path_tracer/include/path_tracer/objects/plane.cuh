@@ -1,6 +1,6 @@
 #pragma once
 
-#include "path_tracer/hitable.cuh"
+#include "hitable.cuh"
 #include "path_tracer/material.cuh"
 #include "path_tracer/ray.cuh"
 #include <math.h>
@@ -48,6 +48,11 @@ struct plane : public hitable
         out.p = r.point_at_parameter(t);
         out.normal = _normal;
 
+        return true;
+    }
+
+    __device__ __host__ virtual bool bounding_box(float t0, float t1, aabb& box) const
+    {
         return true;
     }
 };

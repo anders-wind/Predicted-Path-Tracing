@@ -1,5 +1,5 @@
 #pragma once
-#include "hitable.cuh"
+#include "path_tracer/objects/hitable.cuh"
 #include "ray.cuh"
 #include <shared/random_helpers.cuh>
 #include <shared/vecs/vec3.cuh>

@@ -152,6 +152,7 @@ create_small_world(hitable** d_list, hitable** d_world, camera* d_camera, int hi
 __global__ void
 create_world(hitable** d_list, hitable** d_world, camera* d_camera, int hitables_size, curandState* rand_state)
 {
+    // Based on the final image of raytracinginaweekend
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
         auto local_rand_state = rand_state[0];

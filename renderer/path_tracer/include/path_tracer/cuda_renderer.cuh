@@ -1,8 +1,9 @@
 #pragma once
 #include "camera.cuh"
-#include "hitable.cuh"
-#include "hitable_list.cuh"
 #include "material.cuh"
+#include "objects/aabb.cuh"
+#include "objects/hitable.cuh"
+#include "objects/hitable_list.cuh"
 #include "objects/plane.cuh"
 #include "objects/sphere.cuh"
 #include "ray.cuh"

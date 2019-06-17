@@ -1,5 +1,5 @@
 #pragma once
-#include "ray.cuh"
+#include "path_tracer/ray.cuh"
 
 namespace ppt
 {
@@ -8,6 +8,7 @@ namespace path_tracer
 
 // forward decleration
 struct material;
+class aabb;
 
 struct hit_record
 {
@@ -20,6 +21,7 @@ struct hit_record
 struct hitable
 {
     __device__ __host__ virtual bool hit(const ray& r, float t_min, float t_max, hit_record& out) const = 0;
+    __device__ __host__ virtual bool bounding_box(float t0, float t1, aabb& box) const = 0;
 };
 
 } // namespace path_tracer
