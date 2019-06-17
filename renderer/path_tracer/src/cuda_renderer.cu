@@ -127,22 +127,82 @@ __global__ void reset_image(vec3* color_matrix, int max_x, int max_y)
     color_matrix[pixel_index] = vec3(0, 0, 0);
 }
 
-__global__ void create_world(hitable** d_list, hitable** d_world, camera* d_camera, int hitables_size)
+__global__ void
+create_small_world(hitable** d_list, hitable** d_world, camera* d_camera, int hitables_size, curandState* rand_state)
 {
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
-        d_list[0] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.6, 0.8, 0.6)));
-        // d_list[0] = new plane(vec3(0, -0.5, 0), vec3(0, 1, 0), new lambertian(vec3(0.5, 0.4, 0.3)));
+        // d_list[0] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.6, 0.8, 0.6)));
+        d_list[0] = new plane(vec3(0, -0.5, 0), vec3(0, 1, 0), new lambertian(vec3(0.5, 0.4, 0.3)));
         d_list[1] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.1, 0.2, 0.5)));
         d_list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2), 0.0));
         d_list[3] = new sphere(vec3(-1, 0.0, -1), 0.5, new dielectric(1.5f));
         d_list[4] = new sphere(vec3(-1, 0.0, -1), -0.45, new dielectric(1.5f));
 
         *d_world = new hitable_list(d_list, hitables_size);
-        const auto look_from = vec3(13, 2, 5);
+        const auto look_from = vec3(-13, 1, 8);
         const auto look_at = vec3(0, 0, -1);
-        const auto focus_dist = (look_from - look_at).length();
-        *d_camera = camera_factory().make_16_9_camera(look_from, look_at, 10, 2, focus_dist);
+        const auto focus_dist = 16;
+        const auto fov = 8;
+        const auto aperture = 0.5;
+        *d_camera = camera_factory().make_16_9_camera(look_from, look_at, fov, aperture, focus_dist);
+    }
+}
+
+__global__ void
+create_world(hitable** d_list, hitable** d_world, camera* d_camera, int hitables_size, curandState* rand_state)
+{
+    if (threadIdx.x == 0 && blockIdx.x == 0)
+    {
+        auto local_rand_state = rand_state[0];
+        d_list[0] = new sphere(vec3(0, -1000, 0), 1000, new lambertian(vec3(0.5, 0.5, 0.5)));
+
+        int i = 1;
+        for (int a = -11; a < 11; a++)
+        {
+            for (int b = -11; b < 11; b++)
+            {
+                float choose_mat = curand_uniform(&local_rand_state);
+                vec3 center(a + 0.9 * curand_uniform(&local_rand_state), 0.2, b + 0.9 * curand_uniform(&local_rand_state));
+                if ((center - vec3(4, 0.2, 0)).length() > 0.9)
+                {
+                    if (choose_mat < 0.8)
+                    { // diffuse
+                        d_list[i++] = new sphere(
+                            center,
+                            0.2,
+                            new lambertian(
+                                vec3(curand_uniform(&local_rand_state) * curand_uniform(&local_rand_state),
+                                     curand_uniform(&local_rand_state) * curand_uniform(&local_rand_state),
+                                     curand_uniform(&local_rand_state) * curand_uniform(&local_rand_state))));
+                    }
+                    else if (choose_mat < 0.95)
+                    { // metal
+                        d_list[i++] =
+                            new sphere(center,
+                                       0.2,
+                                       new metal(vec3(0.5 * (1 + curand_uniform(&local_rand_state)),
+                                                      0.5 * (1 + curand_uniform(&local_rand_state)),
+                                                      0.5 * (1 + curand_uniform(&local_rand_state))),
+                                                 0.5 * curand_uniform(&local_rand_state)));
+                    }
+                    else
+                    { // glass
+                        d_list[i++] = new sphere(center, 0.2, new dielectric(1.5));
+                    }
+                }
+            }
+        }
+
+        d_list[i++] = new sphere(vec3(0, 1, 0), 1.0, new dielectric(1.5));
+        d_list[i++] = new sphere(vec3(-4, 1, 0), 1.0, new lambertian(vec3(0.4, 0.2, 0.1)));
+        d_list[i++] = new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
+
+        *d_world = new hitable_list(d_list, hitables_size);
+        const auto look_from = vec3(13, 2, 3);
+        const auto look_at = vec3(0, 0, 0);
+        const auto focus_dist = 10.0f;
+        *d_camera = camera_factory().make_16_9_camera(look_from, look_at, 20, 0.1, focus_dist);
     }
 }
 
@@ -219,7 +279,7 @@ cuda_renderer::cuda_renderer(int w, int h, std::shared_ptr<shared::sample_servic
 
     const auto timer = shared::scoped_timer("cuda_renderer");
 
-    int hitables_size = 5;
+    int hitables_size = 5; // 485 for large
     checkCudaErrors(cudaMalloc((void**)&d_rand_state, w * h * sizeof(curandState)));
     checkCudaErrors(cudaMalloc((void**)&d_list, hitables_size * sizeof(hitable*)));
     checkCudaErrors(cudaMalloc((void**)&d_world, sizeof(hitable*)));
@@ -232,7 +292,7 @@ cuda_renderer::cuda_renderer(int w, int h, std::shared_ptr<shared::sample_servic
     cuda_methods::render_init<<<blocks, threads>>>(w, h, 0, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
-    cuda_methods::create_world<<<1, 1>>>(d_list, d_world, d_camera, hitables_size);
+    cuda_methods::create_small_world<<<1, 1>>>(d_list, d_world, d_camera, hitables_size, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 }
