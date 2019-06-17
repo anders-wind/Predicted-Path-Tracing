@@ -51,7 +51,7 @@ struct plane : public hitable
         return true;
     }
 
-    __device__ __host__ virtual bool bounding_box(float t0, float t1, aabb& box) const
+    __device__ __host__ virtual bool bounding_box(float t0, float t1, aabb& box) const override
     {
         return true;
     }

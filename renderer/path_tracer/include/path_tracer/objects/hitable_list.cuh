@@ -52,8 +52,34 @@ struct hitable_list : public hitable
         return hit_anything;
     }
 
-    __device__ __host__ virtual bool bounding_box(float t0, float t1, aabb& box) const
+    __device__ __host__ virtual bool bounding_box(float t0, float t1, aabb& box) const override
     {
+        if (num_elements <= 0)
+        {
+            return false;
+        }
+
+        aabb temp_box;
+        bool first_true = _hitables[0]->bounding_box(t0, t1, temp_box);
+        if (!first_true)
+        {
+            return false;
+        }
+        else
+        {
+            box = temp_box;
+        }
+        for (auto i = 1; i < num_elements; i++)
+        {
+            if (_hitables[i]->bounding_box(t0, t1, temp_box))
+            {
+                box = aabb(box, temp_box);
+            }
+            else
+            {
+                return false;
+            }
+        }
         return true;
     }
 };

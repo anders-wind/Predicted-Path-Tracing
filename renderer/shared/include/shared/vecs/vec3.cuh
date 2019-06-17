@@ -174,7 +174,19 @@ struct vec3
         e[2] *= k;
         return *this;
     }
+
+    __host__ __device__ inline static vec3 min(const vec3& v1, const vec3& v2)
+    {
+        return vec3(std::fmin(v1[0], v2[0]), std::fmin(v1[1], v2[1]), std::fmin(v1[2], v2[2]));
+    }
+
+
+    __host__ __device__ inline static vec3 max(const vec3& v1, const vec3& v2)
+    {
+        return vec3(std::fmax(v1[0], v2[0]), std::fmax(v1[1], v2[1]), std::fmax(v1[2], v2[2]));
+    }
 };
+
 
 __host__ __device__ inline vec3 operator+(const vec3& v1, const vec3& v2)
 {

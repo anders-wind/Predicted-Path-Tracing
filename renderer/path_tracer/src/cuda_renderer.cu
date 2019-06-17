@@ -132,14 +132,15 @@ create_small_world(hitable** d_list, hitable** d_world, camera* d_camera, int hi
 {
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
-        // d_list[0] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.6, 0.8, 0.6)));
-        d_list[0] = new plane(vec3(0, -0.5, 0), vec3(0, 1, 0), new lambertian(vec3(0.5, 0.4, 0.3)));
+        d_list[0] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.6, 0.8, 0.6)));
+        // d_list[0] = new plane(vec3(0, -0.5, 0), vec3(0, 1, 0), new lambertian(vec3(0.5, 0.4, 0.3)));
         d_list[1] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.1, 0.2, 0.5)));
         d_list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2), 0.0));
         d_list[3] = new sphere(vec3(-1, 0.0, -1), 0.5, new dielectric(1.5f));
         d_list[4] = new sphere(vec3(-1, 0.0, -1), -0.45, new dielectric(1.5f));
 
-        *d_world = new hitable_list(d_list, hitables_size);
+        *d_world = new bvh_node(d_list, hitables_size);
+        // *d_world = new hitable_list(d_list, hitables_size);
         const auto look_from = vec3(-13, 1, 8);
         const auto look_at = vec3(0, 0, -1);
         const auto focus_dist = 16;
@@ -199,7 +200,8 @@ create_world(hitable** d_list, hitable** d_world, camera* d_camera, int hitables
         d_list[i++] = new sphere(vec3(-4, 1, 0), 1.0, new lambertian(vec3(0.4, 0.2, 0.1)));
         d_list[i++] = new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
 
-        *d_world = new hitable_list(d_list, hitables_size);
+        *d_world = new bvh_node(d_list, hitables_size);
+        // *d_world = new hitable_list(d_list, hitables_size);
         const auto look_from = vec3(13, 2, 3);
         const auto look_at = vec3(0, 0, 0);
         const auto focus_dist = 10.0f;
@@ -250,7 +252,7 @@ __global__ void create_random_world(hitable** d_list,
                                    mat);
         }
 
-        *d_world = new hitable_list(d_list, hitables_size);
+        *d_world = new bvh_node(d_list, hitables_size);
         const auto look_from = vec3(0, 0, 0);
         const auto look_at = vec3(0, 0, -4);
         const auto focus_dist = (look_from - look_at).length();

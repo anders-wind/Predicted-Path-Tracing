@@ -2,6 +2,7 @@
 #include "camera.cuh"
 #include "material.cuh"
 #include "objects/aabb.cuh"
+#include "objects/bvh_node.cuh"
 #include "objects/hitable.cuh"
 #include "objects/hitable_list.cuh"
 #include "objects/plane.cuh"
