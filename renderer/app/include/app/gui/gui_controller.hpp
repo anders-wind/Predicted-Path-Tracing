@@ -16,19 +16,19 @@ namespace gui
 class gui_controller
 {
     private:
-    std::shared_ptr<gui_state> state;
-    std::shared_ptr<path_tracer::cuda_renderer> path_tracer;
-    std::shared_ptr<path_tracer::render> render;
+    const std::shared_ptr<gui_state> state;
+    const std::shared_ptr<path_tracer::cuda_renderer> path_tracer;
+    const std::shared_ptr<path_tracer::render> render;
 
     public:
-    gui_controller(std::shared_ptr<gui_state> state,
-                   std::shared_ptr<path_tracer::cuda_renderer> path_tracer,
-                   std::shared_ptr<path_tracer::render> render)
+    gui_controller(const std::shared_ptr<gui_state>& state,
+                   const std::shared_ptr<path_tracer::cuda_renderer>& path_tracer,
+                   const std::shared_ptr<path_tracer::render>& render)
       : state(state), path_tracer(path_tracer), render(render)
     {
     }
 
-    void draw()
+    void draw() const
     {
         imgui::start_frame();
         basic_window();
@@ -36,39 +36,7 @@ class gui_controller
     }
 
     private:
-    void add_reset_button()
-    {
-        if (ImGui::Button("Reset")) // Buttons return true when clicked (most widgets return true when edited/activated)
-        {
-            auto lock = render->get_scoped_lock();
-
-            state->sample_sum = 0;
-            path_tracer->reset_image(*render);
-        }
-        ImGui::SameLine();
-        ImGui::Text("sample_sum = %d", state->sample_sum);
-    }
-
-    void add_fps()
-    {
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
-                    1000.0f / ImGui::GetIO().Framerate,
-                    ImGui::GetIO().Framerate);
-    }
-
-    void add_update_world_button()
-    {
-        if (ImGui::Button("Update World")) // Buttons return true when clicked (most widgets return true when edited/activated)
-        {
-            auto lock = render->get_scoped_lock();
-
-            state->sample_sum = 0;
-            path_tracer->reset_image(*render);
-            path_tracer->update_world();
-        }
-    }
-
-    void basic_window()
+    void basic_window() const
     {
         if (state->show_demo_window)
             ImGui::ShowDemoWindow(&state->show_demo_window);
@@ -85,6 +53,38 @@ class gui_controller
             add_reset_button();
 
             ImGui::End();
+        }
+    }
+
+    void add_reset_button() const
+    {
+        if (ImGui::Button("Reset")) // Buttons return true when clicked (most widgets return true when edited/activated)
+        {
+            auto lock = render->get_scoped_lock();
+
+            state->sample_sum = 0;
+            path_tracer->reset_image(*render);
+        }
+        ImGui::SameLine();
+        ImGui::Text("sample_sum = %d", state->sample_sum);
+    }
+
+    void add_fps() const
+    {
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
+                    1000.0f / ImGui::GetIO().Framerate,
+                    ImGui::GetIO().Framerate);
+    }
+
+    void add_update_world_button() const
+    {
+        if (ImGui::Button("Update World")) // Buttons return true when clicked (most widgets return true when edited/activated)
+        {
+            auto lock = render->get_scoped_lock();
+
+            state->sample_sum = 0;
+            path_tracer->reset_image(*render);
+            path_tracer->update_world();
         }
     }
 };
