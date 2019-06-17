@@ -130,7 +130,7 @@ __global__ void create_world(hitable** d_list, hitable** d_world, camera* d_came
         d_list[4] = new sphere(vec3(-1, 0.0, -1), -0.45, new dielectric(1.5f));
 
         *d_world = new hitable_list(d_list, hitables_size);
-        *d_camera = camera_factory().make_16_9_camera(vec3(-2, 2, 1), vec3(0, 0, -1), vec3(0, 1, 0), 110);
+        *d_camera = camera_factory().make_16_9_camera(vec3(-2, 2, 1), vec3(0, 0, -1), vec3(0, 1, 0), 30);
     }
 }
 
@@ -151,19 +151,14 @@ __global__ void create_random_world(hitable** d_list,
         {
             if (i == 0)
             {
-                d_list[i] = new plane(vec3(0, -3, 0),
-                                      vec3(0, 1, 0),
-                                      new lambertian(vec3(curand_uniform(local_rand),
-                                                          curand_uniform(local_rand),
-                                                          curand_uniform(local_rand))));
+                d_list[i] = new plane(vec3(0, -3, 0), vec3(0, 1, 0), new lambertian(RANDVEC3(local_rand)));
                 continue;
             }
 
             material* mat;
             if (number_of_reflection < reflection)
             {
-                mat = new metal(vec3(curand_uniform(local_rand), curand_uniform(local_rand), curand_uniform(local_rand)),
-                                curand_uniform(local_rand));
+                mat = new metal(RANDVEC3(local_rand), curand_uniform(local_rand));
                 number_of_reflection++;
             }
             else if (number_of_refraction < refraction)
@@ -173,8 +168,7 @@ __global__ void create_random_world(hitable** d_list,
             }
             else
             {
-                mat = new lambertian(
-                    vec3(curand_uniform(local_rand), curand_uniform(local_rand), curand_uniform(local_rand)));
+                mat = new lambertian(RANDVEC3(local_rand));
             }
             d_list[i] = new sphere(vec3((curand_uniform(local_rand) - 0.5) * 14,
                                         (curand_uniform(local_rand) - 0.5) * 8,
@@ -184,7 +178,7 @@ __global__ void create_random_world(hitable** d_list,
         }
 
         *d_world = new hitable_list(d_list, hitables_size);
-        *d_camera = camera_factory().make_16_9_camera(vec3(-2, 2, 1), vec3(0, 0, -1), vec3(0, 1, 0), 110);
+        *d_camera = camera_factory().make_16_9_camera(vec3(0, 0, 0), vec3(0, 0, -1), vec3(0, 1, 0), 110);
     }
 }
 
