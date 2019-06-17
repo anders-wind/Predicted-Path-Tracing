@@ -11,18 +11,20 @@ namespace app
 {
 namespace gui
 {
-struct gui_controller
+
+
+class gui_controller
 {
     private:
     std::shared_ptr<gui_state> state;
-    std::shared_ptr<path_tracer::cuda_renderer> renderer;
+    std::shared_ptr<path_tracer::cuda_renderer> path_tracer;
     std::shared_ptr<path_tracer::render> render;
 
     public:
     gui_controller(std::shared_ptr<gui_state> state,
-                   std::shared_ptr<path_tracer::cuda_renderer> renderer,
+                   std::shared_ptr<path_tracer::cuda_renderer> path_tracer,
                    std::shared_ptr<path_tracer::render> render)
-      : state(state), renderer(renderer), render(render)
+      : state(state), path_tracer(path_tracer), render(render)
     {
     }
 
@@ -38,8 +40,10 @@ struct gui_controller
     {
         if (ImGui::Button("Reset")) // Buttons return true when clicked (most widgets return true when edited/activated)
         {
+            auto lock = render->get_scoped_lock();
+
             state->sample_sum = 0;
-            renderer->reset_image(*render);
+            path_tracer->reset_image(*render);
         }
         ImGui::SameLine();
         ImGui::Text("sample_sum = %d", state->sample_sum);
@@ -56,9 +60,11 @@ struct gui_controller
     {
         if (ImGui::Button("Update World")) // Buttons return true when clicked (most widgets return true when edited/activated)
         {
+            auto lock = render->get_scoped_lock();
+
             state->sample_sum = 0;
-            renderer->reset_image(*render);
-            renderer->update_world();
+            path_tracer->reset_image(*render);
+            path_tracer->update_world();
         }
     }
 

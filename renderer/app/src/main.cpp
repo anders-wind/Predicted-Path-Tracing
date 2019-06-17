@@ -19,6 +19,7 @@
 #include <memory>
 #include <path_tracer/cuda_renderer.cuh>
 #include <shared/sample_service.cuh>
+#include <shared/scoped_thread.cuh>
 #include <sstream>
 #include <string>
 
@@ -33,7 +34,7 @@ void main_loop(GLFWwindow* window, std::shared_ptr<path_tracer::cuda_renderer> p
     using namespace gui;
     auto re = renderer();
     auto state = std::make_shared<gui_state>();
-    constexpr auto inc = 2;
+    constexpr auto inc = 1;
     state->sample_sum += inc;
     auto rendering = path_tracer->ray_trace(inc, state->sample_sum);
     auto gui = gui_controller(state, path_tracer, rendering);
@@ -84,18 +85,20 @@ void main_loop(GLFWwindow* window, std::shared_ptr<path_tracer::cuda_renderer> p
     basic_shader.unbind();
     tex.unbind();
 
-    auto t = std::thread([state, path_tracer, rendering] {
-        while (true)
+    auto render_thread_handle = true;
+    auto t = shared::scoped_thread(std::thread([state, path_tracer, rendering, &render_thread_handle] {
+        while (render_thread_handle)
         {
+            auto lock = rendering->get_scoped_lock();
             state->sample_sum += inc;
             path_tracer->ray_trace(inc, state->sample_sum, *rendering);
+            std::this_thread::yield();
         }
-    });
+    }));
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
-
         /* Render here */
         re.clear();
         basic_shader.bind();
@@ -113,6 +116,8 @@ void main_loop(GLFWwindow* window, std::shared_ptr<path_tracer::cuda_renderer> p
         /* Poll for and process events */
         GL_CALL(glfwPollEvents());
     }
+
+    render_thread_handle = false;
 }
 
 void setup(GLFWwindow* const window)

@@ -11,7 +11,7 @@
 #include <shared/cuda_helpers.cuh>
 #include <shared/random_helpers.cuh>
 #include <shared/sample_service.cuh>
-#include <shared/scoped_timer.cuh>
+#include <shared/scoped_lock.cuh>
 #include <shared/vecs/vec3.cuh>
 #include <shared/vecs/vec8.cuh>
 #include <vector>

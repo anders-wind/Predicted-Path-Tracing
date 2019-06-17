@@ -2,6 +2,7 @@
 #include <array>
 #include <cuda.h>
 #include <shared/cuda_helpers.cuh>
+#include <shared/scoped_lock.cuh>
 #include <shared/vecs/vec3.cuh>
 #include <shared/vecs/vec5.cuh>
 #include <shared/vecs/vec8.cuh>
@@ -22,6 +23,7 @@ class render
     private:
     ppt::shared::vec3* d_color_matrix;
     ppt::shared::vec8* d_image_matrix;
+    std::shared_ptr<std::mutex> lock = std::make_shared<std::mutex>();
 
     public:
     const size_t w;
@@ -56,6 +58,11 @@ class render
     std::vector<ppt::shared::vec8> get_vector8_representation() const;
 
     std::vector<unsigned char> get_byte_representation() const;
+
+    shared::scoped_lock get_scoped_lock()
+    {
+        return shared::scoped_lock(lock);
+    }
 };
 
 } // namespace path_tracer
