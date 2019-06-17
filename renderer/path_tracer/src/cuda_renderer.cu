@@ -55,7 +55,7 @@ render_image(vec3* image_matrix, int max_x, int max_y, int samples, camera* cam,
     {
         float u = float(col + curand_normal(&local_rand_state)) / float(max_x);
         float v = float(max_y - row + curand_normal(&local_rand_state)) / float(max_y);
-        ray r = local_camera.get_ray(u, v);
+        ray r = local_camera.get_ray(u, v, &local_rand_state);
         pix += color(r, world, &local_rand_state, local_camera._min_depth, local_camera._max_depth);
     }
 
@@ -63,20 +63,26 @@ render_image(vec3* image_matrix, int max_x, int max_y, int samples, camera* cam,
     image_matrix[pixel_index] = pix;
 }
 
-__device__ hit_record depth_map(hitable** world, camera* cam, int col, int row, int max_x, int max_y)
+__device__ hit_record depth_map(hitable** world, camera* cam, int col, int row, int max_x, int max_y, curandState* rand_state)
 {
     hit_record rec;
     float u = float(col) / float(max_x);
     float v = float(max_y - row) / float(max_y);
     const camera local_camera(*cam);
 
-    ray r = local_camera.get_ray(u, v);
+    ray r = local_camera.get_ray(u, v, rand_state);
     (*world)->hit(r, local_camera._min_depth, local_camera._max_depth, rec);
     return rec;
 }
 
-__global__ void
-post_process(vec3* image_matrix, vec8* out_image_matrix, hitable** world, camera* camera, int max_x, int max_y, int samples)
+__global__ void post_process(vec3* image_matrix,
+                             vec8* out_image_matrix,
+                             hitable** world,
+                             camera* camera,
+                             int max_x,
+                             int max_y,
+                             int samples,
+                             curandState* rand_state)
 {
     int row = threadIdx.x + blockIdx.x * blockDim.x;
     int col = threadIdx.y + blockIdx.y * blockDim.y;
@@ -84,11 +90,13 @@ post_process(vec3* image_matrix, vec8* out_image_matrix, hitable** world, camera
         return;
 
     int pixel_index = RM(row, col, max_x);
+    curandState local_rand_state = rand_state[pixel_index];
+
     auto in_pixel = image_matrix[pixel_index];
     auto norm_rgb = (vec3(in_pixel.e) / float(samples)).v_sqrt();
 
     auto sample_precision = __logf(samples) / 16.0f; // 2^16=65536 is our (arbitrarily) choosen max number of samples
-    auto hit = depth_map(world, camera, col, row, max_x, max_y);
+    auto hit = depth_map(world, camera, col, row, max_x, max_y, &local_rand_state);
     auto depth = sqrtf(fabs(hit.t)) / sqrtf(camera->_max_depth);
 
     out_image_matrix[pixel_index] =
@@ -124,13 +132,17 @@ __global__ void create_world(hitable** d_list, hitable** d_world, camera* d_came
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
         d_list[0] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.6, 0.8, 0.6)));
+        // d_list[0] = new plane(vec3(0, -0.5, 0), vec3(0, 1, 0), new lambertian(vec3(0.5, 0.4, 0.3)));
         d_list[1] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.1, 0.2, 0.5)));
         d_list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2), 0.0));
         d_list[3] = new sphere(vec3(-1, 0.0, -1), 0.5, new dielectric(1.5f));
         d_list[4] = new sphere(vec3(-1, 0.0, -1), -0.45, new dielectric(1.5f));
 
         *d_world = new hitable_list(d_list, hitables_size);
-        *d_camera = camera_factory().make_16_9_camera(vec3(-2, 2, 1), vec3(0, 0, -1), vec3(0, 1, 0), 30);
+        const auto look_from = vec3(13, 2, 5);
+        const auto look_at = vec3(0, 0, -1);
+        const auto focus_dist = (look_from - look_at).length();
+        *d_camera = camera_factory().make_16_9_camera(look_from, look_at, 10, 2, focus_dist);
     }
 }
 
@@ -178,7 +190,10 @@ __global__ void create_random_world(hitable** d_list,
         }
 
         *d_world = new hitable_list(d_list, hitables_size);
-        *d_camera = camera_factory().make_16_9_camera(vec3(0, 0, 0), vec3(0, 0, -1), vec3(0, 1, 0), 110);
+        const auto look_from = vec3(0, 0, 0);
+        const auto look_at = vec3(0, 0, 1);
+        const auto focus_dist = (look_from - look_at).length();
+        *d_camera = camera_factory().make_16_9_camera(look_from, look_at, 110, 0.1, focus_dist);
     }
 }
 
@@ -252,8 +267,14 @@ void cuda_renderer::ray_trace(int samples, int sample_sum, render& ray_traced_im
     {
         // const auto timer = shared::scoped_timer("post process");
 
-        cuda_methods::post_process<<<blocks, threads>>>(
-            ray_traced_image.get_color_matrix(), ray_traced_image.get_image_matrix(), d_world, d_camera, w, h, sample_sum);
+        cuda_methods::post_process<<<blocks, threads>>>(ray_traced_image.get_color_matrix(),
+                                                        ray_traced_image.get_image_matrix(),
+                                                        d_world,
+                                                        d_camera,
+                                                        w,
+                                                        h,
+                                                        sample_sum,
+                                                        d_rand_state);
         checkCudaErrors(cudaGetLastError());
         checkCudaErrors(cudaDeviceSynchronize());
     }
