@@ -123,14 +123,14 @@ __global__ void create_world(hitable** d_list, hitable** d_world, camera* d_came
 {
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
-        d_list[0] = new plane(vec3(0, -0.5, 0), vec3(0, 1, 0), new lambertian(vec3(0.6, 0.8, 0.6)));
+        d_list[0] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.6, 0.8, 0.6)));
         d_list[1] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.1, 0.2, 0.5)));
         d_list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2), 0.0));
         d_list[3] = new sphere(vec3(-1, 0.0, -1), 0.5, new dielectric(1.5f));
         d_list[4] = new sphere(vec3(-1, 0.0, -1), -0.45, new dielectric(1.5f));
 
         *d_world = new hitable_list(d_list, hitables_size);
-        *d_camera = camera_factory().make_16_9_camera();
+        *d_camera = camera_factory().make_16_9_camera(vec3(-2, 2, 1), vec3(0, 0, -1), vec3(0, 1, 0), 110);
     }
 }
 
@@ -184,7 +184,7 @@ __global__ void create_random_world(hitable** d_list,
         }
 
         *d_world = new hitable_list(d_list, hitables_size);
-        *d_camera = camera_factory().make_16_9_camera();
+        *d_camera = camera_factory().make_16_9_camera(vec3(-2, 2, 1), vec3(0, 0, -1), vec3(0, 1, 0), 110);
     }
 }
 

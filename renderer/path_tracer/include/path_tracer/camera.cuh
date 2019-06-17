@@ -57,29 +57,49 @@ class camera_factory
     float max_depth = 10000.0f;
     camera_factory() = default;
 
-    __host__ __device__ camera make_16_9_camera() const
+    __host__ __device__ camera make_16_9_camera(const vec3 look_from, const vec3 look_at, const vec3 v_up, float vfov) const
     {
-        const auto lower_left_corner = vec3(-8.0, -4.5, -2.5);
-        const auto horizontal = vec3(16, 0.0, 0.0);
-        const auto vertical = vec3(0.0, 9.0, 0.0);
+        vec3 u, v, w;
+        const float ratio = (16.0f / 9.0f);
+        const float theta = vfov * M_PI / 180.0f;
+        const float half_height = std::tan(theta / 2);
+        const float half_width = ratio * half_height;
+
+        w = unit_vector(look_from - look_at);
+        u = unit_vector(cross(v_up, w));
+        v = cross(w, u);
+
+        const auto origin = look_from;
+        auto lower_left_corner = vec3(-half_width, -half_height, -1.0f);
+        lower_left_corner = look_from - (half_width * u) - (half_height * v) - w;
+
+        const auto horizontal = (2.0f * half_width) * u;
+        const auto vertical = (2.0f * half_height) * v;
+        return camera(lower_left_corner, horizontal, vertical, origin, min_depth, max_depth);
+    }
+
+    __host__ __device__ camera make_4_3_camera(float vfov) const
+    {
+        const float ratio = (4.0f / 3.0f);
+        const float theta = vfov * M_PI / 180.0f;
+        const float half_height = std::tan(theta / 2);
+        const float half_width = ratio * half_height;
+        const auto lower_left_corner = vec3(-half_width, -half_height, -1.0);
+        const auto horizontal = vec3(2 * half_width, 0.0, 0.0);
+        const auto vertical = vec3(0.0, 2 * half_height, 0.0);
         const auto origin = vec3(0.0, 0.0, 0.0);
         return camera(lower_left_corner, horizontal, vertical, origin, min_depth, max_depth);
     }
 
-    __host__ __device__ camera make_4_3_camera() const
+    __host__ __device__ camera make_square_camera(float vfov) const
     {
-        const auto lower_left_corner = vec3(-2.0, -1.5, -1.5);
-        const auto horizontal = vec3(4, 0.0, 0.0);
-        const auto vertical = vec3(0.0, 3.0, 0.0);
-        const auto origin = vec3(0.0, 0.0, 0.0);
-        return camera(lower_left_corner, horizontal, vertical, origin, min_depth, max_depth);
-    }
-
-    __host__ __device__ camera make_square_camera() const
-    {
-        const auto lower_left_corner = vec3(-2.0, -2.0, -1.5);
-        const auto horizontal = vec3(4, 0.0, 0.0);
-        const auto vertical = vec3(0.0, 4.0, 0.0);
+        const float ratio = (1.0f / 1.0f);
+        const float theta = vfov * M_PI / 180.0f;
+        const float half_height = std::tan(theta / 2);
+        const float half_width = ratio * half_height;
+        const auto lower_left_corner = vec3(-half_width, -half_height, -1.0);
+        const auto horizontal = vec3(2 * half_width, 0.0, 0.0);
+        const auto vertical = vec3(0.0, 2 * half_height, 0.0);
         const auto origin = vec3(0.0, 0.0, 0.0);
         return camera(lower_left_corner, horizontal, vertical, origin, min_depth, max_depth);
     }
