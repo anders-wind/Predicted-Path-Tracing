@@ -132,10 +132,13 @@ create_small_world(hitable** d_list, hitable** d_world, camera* d_camera, int hi
 {
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
-        d_list[0] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.6, 0.8, 0.6)));
+        d_list[0] =
+            new sphere(vec3(0, -100.5, -1), 100, new lambertian(new constant_texture(vec3(0.6, 0.8, 0.6))));
         // d_list[0] = new plane(vec3(0, -0.5, 0), vec3(0, 1, 0), new lambertian(vec3(0.5, 0.4, 0.3)));
-        d_list[1] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.1, 0.2, 0.5)));
-        d_list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2), 0.0));
+        d_list[1] =
+            new sphere(vec3(0, 0, -1), 0.5, new lambertian(new constant_texture(vec3(0.1, 0.2, 0.5))));
+        d_list[2] =
+            new sphere(vec3(1, 0, -1), 0.5, new metal(new constant_texture(vec3(0.8, 0.6, 0.2)), 0.0));
         d_list[3] = new sphere(vec3(-1, 0.0, -1), 0.5, new dielectric(1.5f));
         d_list[4] = new sphere(vec3(-1, 0.0, -1), -0.45, new dielectric(1.5f));
 
@@ -157,7 +160,8 @@ create_world(hitable** d_list, hitable** d_world, camera* d_camera, int hitables
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
         auto local_rand_state = rand_state[0];
-        d_list[0] = new sphere(vec3(0, -1000, 0), 1000, new lambertian(vec3(0.5, 0.5, 0.5)));
+        d_list[0] =
+            new sphere(vec3(0, -1000, 0), 1000, new lambertian(new constant_texture(vec3(0.5, 0.5, 0.5))));
 
         int i = 1;
         for (int a = -11; a < 11; a++)
@@ -170,17 +174,19 @@ create_world(hitable** d_list, hitable** d_world, camera* d_camera, int hitables
                 {
                     if (choose_mat < 0.8)
                     { // diffuse
-                        d_list[i++] = new sphere(center,
-                                                 0.2,
-                                                 new lambertian(vec3(RANDVEC3(&local_rand_state) *
-                                                                     RANDVEC3(&local_rand_state))));
+                        d_list[i++] =
+                            new sphere(center,
+                                       0.2,
+                                       new lambertian(new constant_texture(vec3(
+                                           RANDVEC3(&local_rand_state) * RANDVEC3(&local_rand_state)))));
                     }
                     else if (choose_mat < 0.95)
                     { // metal
-                        d_list[i++] = new sphere(center,
-                                                 0.2,
-                                                 new metal((RANDVEC3(&local_rand_state) + 1) * 0.5,
-                                                           0.5 * curand_uniform(&local_rand_state)));
+                        d_list[i++] =
+                            new sphere(center,
+                                       0.2,
+                                       new metal(new constant_texture((RANDVEC3(&local_rand_state) + 1) * 0.5),
+                                                 0.5 * curand_uniform(&local_rand_state)));
                     }
                     else
                     { // glass
@@ -191,8 +197,10 @@ create_world(hitable** d_list, hitable** d_world, camera* d_camera, int hitables
         }
 
         d_list[i++] = new sphere(vec3(0, 1, 0), 1.0, new dielectric(1.5));
-        d_list[i++] = new sphere(vec3(-4, 1, 0), 1.0, new lambertian(vec3(0.4, 0.2, 0.1)));
-        d_list[i++] = new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
+        d_list[i++] =
+            new sphere(vec3(-4, 1, 0), 1.0, new lambertian(new constant_texture(vec3(0.4, 0.2, 0.1))));
+        d_list[i++] =
+            new sphere(vec3(4, 1, 0), 1.0, new metal(new constant_texture(vec3(0.7, 0.6, 0.5)), 0.0));
 
         *d_world = new bvh_node(d_list, hitables_size);
         //*d_world = new hitable_list(d_list, hitables_size);
@@ -220,14 +228,16 @@ __global__ void create_random_world(hitable** d_list,
         {
             if (i == 0)
             {
-                d_list[i] = new plane(vec3(0, -3, 0), vec3(0, 1, 0), new lambertian(RANDVEC3(local_rand)));
+                d_list[i] = new plane(vec3(0, -3, 0),
+                                      vec3(0, 1, 0),
+                                      new lambertian(new constant_texture(RANDVEC3(local_rand))));
                 continue;
             }
 
             material* mat;
             if (number_of_reflection < reflection)
             {
-                mat = new metal(RANDVEC3(local_rand), curand_uniform(local_rand));
+                mat = new metal(new constant_texture(RANDVEC3(local_rand)), curand_uniform(local_rand));
                 number_of_reflection++;
             }
             else if (number_of_refraction < refraction)
@@ -237,7 +247,7 @@ __global__ void create_random_world(hitable** d_list,
             }
             else
             {
-                mat = new lambertian(RANDVEC3(local_rand));
+                mat = new lambertian(new constant_texture(RANDVEC3(local_rand)));
             }
             d_list[i] = new sphere(vec3((curand_uniform(local_rand) - 0.5) * 14,
                                         (curand_uniform(local_rand) - 0.5) * 8,

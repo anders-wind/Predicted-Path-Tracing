@@ -1,6 +1,7 @@
 #pragma once
 #include "path_tracer/objects/hitable.cuh"
 #include "ray.cuh"
+#include "texture.cuh"
 #include <shared/random_helpers.cuh>
 #include <shared/vecs/vec3.cuh>
 
@@ -18,30 +19,50 @@ struct material
                                     curandState* local_rand_state) const = 0;
 };
 
+struct diffuse_light : public material
+{
+    __device__ virtual bool
+    scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, curandState* local_rand_state) const
+    {
+        return false;
+    }
+};
+
 struct lambertian : public material
 {
-    vec3 albedo;
-    __device__ lambertian(const vec3& a) : albedo(a)
+    const texture* albedo;
+    __device__ lambertian(texture* a) : albedo(a)
     {
     }
+
+    __device__ ~lambertian()
+    {
+        delete albedo;
+    }
+
 
     __device__ bool
     scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, curandState* local_rand_state) const override
     {
         vec3 target = rec.p + rec.normal + shared::random_in_unit_sphere(local_rand_state) / 1.2f;
         scattered = ray(rec.p, target - rec.p);
-        attenuation = albedo;
+        attenuation = albedo->value(0, 0, rec.p);
         return true;
     }
 };
 
 struct metal : public material
 {
-    const vec3 albedo;
+    const texture* albedo;
     const float fuzz;
 
-    __device__ metal(const vec3& a, float f) : albedo(a), fuzz(f < 1.0 ? f : 1.0)
+    __device__ metal(texture* a, float f) : albedo(a), fuzz(f < 1.0 ? f : 1.0)
     {
+    }
+
+    __device__ ~metal()
+    {
+        delete albedo;
     }
 
     __device__ bool
@@ -49,7 +70,7 @@ struct metal : public material
     {
         vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
         scattered = ray(rec.p, reflected + shared::random_in_unit_sphere(local_rand_state) * fuzz);
-        attenuation = albedo;
+        attenuation = albedo->value(0, 0, rec.p);
         return dot(scattered.direction(), rec.normal) > 0;
     }
 };
