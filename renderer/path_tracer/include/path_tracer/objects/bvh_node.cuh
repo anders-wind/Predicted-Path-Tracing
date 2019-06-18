@@ -1,5 +1,6 @@
 #pragma once
 #include "hitable.cuh"
+#include "hitable_list.cuh"
 namespace ppt
 {
 namespace path_tracer
@@ -20,22 +21,28 @@ class bvh_node : public hitable
     __device__ __host__ bvh_node(hitable** l, int n, int axis = 0)
     {
         box_bubble_sort(l, n, axis % 3);
+        const int half = n / 2;
 
-        switch (n)
+        if (n == 1)
         {
-        case 1:
             left = right = l[0];
-            break;
-        case 2:
+        }
+        else if (n == 2)
+        {
             left = l[0];
             right = l[1];
-            break;
-        default:
-            const int half = n / 2;
+        }
+        else if (n < 25)
+        {
+            left = new hitable_list(l, half);
+            right = new hitable_list(l + half, half);
+        }
+        else
+        {
             left = new bvh_node(l, half, axis + 1);
             right = new bvh_node(l + half, n - half, axis + 1);
-            break;
         }
+
         aabb box_left, box_right;
         if (!left->bounding_box(0, 0, box_left) || !right->bounding_box(0, 0, box_right))
         {
@@ -44,7 +51,19 @@ class bvh_node : public hitable
         box = aabb(box_left, box_right);
         printf("min: %f, %f, %f\n", box.min()[0], box.min()[1], box.min()[2]);
         printf("max: %f, %f, %f\n", box.max()[0], box.max()[1], box.max()[2]);
-        printf("\n");
+        printf("n: %d\n\n", n);
+    }
+
+    __device__ __host__ ~bvh_node()
+    {
+        if (left)
+        {
+            delete left;
+        }
+        if (right)
+        {
+            delete right;
+        }
     }
 
     __device__ __host__ bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const override

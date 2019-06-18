@@ -282,7 +282,7 @@ cuda_renderer::cuda_renderer(int w, int h, std::shared_ptr<shared::sample_servic
 
     const auto timer = shared::scoped_timer("cuda_renderer");
 
-    int hitables_size = 5; // 485 for large
+    int hitables_size = 485; // 485 for large
     checkCudaErrors(cudaMalloc((void**)&d_rand_state, w * h * sizeof(curandState)));
     checkCudaErrors(cudaMalloc((void**)&d_list, hitables_size * sizeof(hitable*)));
     checkCudaErrors(cudaMalloc((void**)&d_world, sizeof(hitable*)));
@@ -295,7 +295,7 @@ cuda_renderer::cuda_renderer(int w, int h, std::shared_ptr<shared::sample_servic
     cuda_methods::render_init<<<blocks, threads>>>(w, h, 0, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
-    cuda_methods::create_small_world<<<1, 1>>>(d_list, d_world, d_camera, hitables_size, d_rand_state);
+    cuda_methods::create_world<<<1, 1>>>(d_list, d_world, d_camera, hitables_size, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 }

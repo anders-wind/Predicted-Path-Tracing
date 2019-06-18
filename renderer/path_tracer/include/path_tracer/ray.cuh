@@ -18,11 +18,11 @@ struct ray
       : _origin(origin), _direction(direction)
     {
     }
-    __device__ __host__ vec3 origin() const
+    __device__ __host__ const vec3& origin() const
     {
         return _origin;
     }
-    __device__ __host__ vec3 direction() const
+    __device__ __host__ const vec3& direction() const
     {
         return _direction;
     }

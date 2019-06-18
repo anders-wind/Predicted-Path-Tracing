@@ -7,11 +7,11 @@ namespace ppt
 namespace path_tracer
 {
 // todo bench if these are faster than std::fmax()
-inline float ffmin(float a, float b)
+__device__ __host__ inline float ffmin(float a, float b)
 {
     return a < b ? a : b;
 }
-inline float ffmax(float a, float b)
+__device__ __host__ inline float ffmax(float a, float b)
 {
     return a > b ? a : b;
 }
@@ -35,16 +35,15 @@ class aabb
     }
 
     __device__ __host__ aabb(const aabb& box0, const aabb& box1)
+      : _min(vec3::min(box0._min, box1._min)), _max(vec3::max(box0._max, box1._max))
     {
-        _min = vec3::min(box0._min, box1._min);
-        _max = vec3::max(box0._max, box1._max);
     }
 
-    __device__ __host__ vec3 min() const
+    __device__ __host__ const vec3& min() const
     {
         return _min;
     }
-    __device__ __host__ vec3 max() const
+    __device__ __host__ const vec3& max() const
     {
         return _max;
     }
@@ -58,10 +57,11 @@ class aabb
         for (auto a = 0; a < 3; a++)
         {
             // concept:
-            float t0 = std::fmin((_min[a] - origin[a]) / direction[a], (_max[a] - origin[a]) / direction[a]);
-            float t1 = std::fmax((_min[a] - origin[a]) / direction[a], (_max[a] - origin[a]) / direction[a]);
-            t_min = std::fmax(t0, t_min);
-            t_min = std::fmin(t1, t_max);
+            float t0 = ffmin((_min[a] - origin[a]) / direction[a], (_max[a] - origin[a]) / direction[a]);
+            float t1 = ffmax((_min[a] - origin[a]) / direction[a], (_max[a] - origin[a]) / direction[a]);
+
+            t_min = ffmax(t0, t_min);
+            t_max = ffmin(t1, t_max);
 
             // performance improved
             // float inv_d = 1.0f / direction[a];
@@ -78,7 +78,7 @@ class aabb
             // t_min = t0 > t_min ? t0 : t_min;
             // t_max = t1 < t_max ? t1 : t_max;
 
-            hit_anything &= t_max <= t_min;
+            hit_anything = hit_anything && (t_max > t_min);
         }
         return hit_anything;
     }
