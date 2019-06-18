@@ -247,6 +247,7 @@ __global__ void create_random_world(hitable** d_list,
         }
 
         *d_world = new bvh_node(d_list, hitables_size);
+        // *d_world = new hitable_list(d_list, hitables_size);
         const auto look_from = vec3(0, 0, 0);
         const auto look_at = vec3(0, 0, -4);
         const auto focus_dist = (look_from - look_at).length();

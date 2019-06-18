@@ -61,6 +61,12 @@ struct camera
     {
     }
 
+
+    __device__ ray get_ray(float u, float v) const
+    {
+        return ray(_origin, _lower_left_corner + (_horizontal * u) + (_vertical * v) - _origin);
+    }
+
     __device__ ray get_ray(float u, float v, curandState* local_rand_state) const
     {
         const auto rd = shared::random_in_unit_disk(local_rand_state) * _lens_radius;
