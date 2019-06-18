@@ -18,7 +18,7 @@ class bvh_node : public hitable
     aabb box;
 
     public:
-    __device__ __host__ bvh_node(hitable** l, int n, int axis = 0)
+    __device__ bvh_node(hitable** l, int n, int axis = 0)
     {
         box_bubble_sort(l, n, axis % 3);
         const int half = n / 2;
@@ -49,12 +49,12 @@ class bvh_node : public hitable
             printf("no bounding box in bvh_node construction\n");
         }
         box = aabb(box_left, box_right);
-        printf("min: %f, %f, %f\n", box.min()[0], box.min()[1], box.min()[2]);
-        printf("max: %f, %f, %f\n", box.max()[0], box.max()[1], box.max()[2]);
-        printf("n: %d\n\n", n);
+        // printf("min: %f, %f, %f\n", box.min()[0], box.min()[1], box.min()[2]);
+        // printf("max: %f, %f, %f\n", box.max()[0], box.max()[1], box.max()[2]);
+        // printf("n: %d\n\n", n);
     }
 
-    __device__ __host__ ~bvh_node()
+    __device__ ~bvh_node()
     {
         if (left)
         {
@@ -66,7 +66,7 @@ class bvh_node : public hitable
         }
     }
 
-    __device__ __host__ bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const override
+    __device__ bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const override
     {
         if (box.hit(r, t_min, t_max))
         {
@@ -92,7 +92,7 @@ class bvh_node : public hitable
         return false;
     }
 
-    __device__ __host__ virtual bool bounding_box(float t0, float t1, aabb& b) const override
+    __device__ virtual bool bounding_box(float, float, aabb& b) const override
     {
         b = this->box;
         return true;

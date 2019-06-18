@@ -161,7 +161,10 @@ create_world(hitable** d_list, hitable** d_world, camera* d_camera, int hitables
     {
         auto local_rand_state = rand_state[0];
         d_list[0] =
-            new sphere(vec3(0, -1000, 0), 1000, new lambertian(new constant_texture(vec3(0.5, 0.5, 0.5))));
+            new sphere(vec3(0, -1000, 0),
+                       1000,
+                       new lambertian(new checker_texture(new constant_texture(vec3(0.2, 0.3, 0.1)),
+                                                          new constant_texture(vec3(0.9, 0.9, 0.9)))));
 
         int i = 1;
         for (int a = -11; a < 11; a++)

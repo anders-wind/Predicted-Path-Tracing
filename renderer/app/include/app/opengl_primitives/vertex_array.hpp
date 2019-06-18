@@ -40,7 +40,7 @@ class vertex_array
         vb.bind();
         const auto& elements = layout.get_elements();
         intptr_t offset = 0;
-        for (auto i = 0; i < elements.size(); i++)
+        for (auto i = 0; i < static_cast<int>(elements.size()); i++)
         {
             const auto& element = elements[i];
             GL_CALL(glEnableVertexAttribArray(i));

@@ -10,12 +10,15 @@ class texture
 {
     public:
     __device__ virtual vec3 value(float u, float v, const vec3& p) const = 0;
+    __device__ virtual ~texture()
+    {
+    }
 };
 
 class constant_texture : public texture
 {
     private:
-    vec3 color;
+    const vec3 color;
 
     public:
     // constant_texture() = default;
@@ -23,9 +26,40 @@ class constant_texture : public texture
     {
     }
 
-    __device__ virtual vec3 value(float u, float v, const vec3& p) const override
+    __device__ virtual vec3 value(float, float, const vec3&) const override
     {
         return color;
+    }
+};
+
+class checker_texture : public texture
+{
+    private:
+    const texture* const even;
+    const texture* const odd;
+
+    public:
+    // constant_texture() = default;
+    __device__ checker_texture(texture* t0, texture* t1) : even(t0), odd(t1)
+    {
+    }
+    __device__ ~checker_texture()
+    {
+        delete even;
+        delete odd;
+    }
+
+    __device__ virtual vec3 value(float u, float v, const vec3& p) const override
+    {
+        float sines = sin(10 * p[0]) * sin(10 * p[1]) * sin(10 * p[2]);
+        if (sines < 0)
+        {
+            return odd->value(u, v, p);
+        }
+        else
+        {
+            return even->value(u, v, p);
+        }
     }
 };
 

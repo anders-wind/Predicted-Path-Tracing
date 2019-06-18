@@ -15,32 +15,32 @@ struct hitable_list : public hitable
     size_t num_elements;
 
     public:
-    __device__ __host__ hitable_list(hitable** list, size_t num_elements)
+    __device__ hitable_list(hitable** list, size_t num_elements)
     {
         _hitables = list;
         this->num_elements = num_elements;
     }
 
-    __device__ __host__ ~hitable_list()
+    __device__ ~hitable_list()
     {
-        for (auto i = 0; i < num_elements; i++)
+        for (auto i = 0; i < static_cast<int>(num_elements); i++)
         {
             delete _hitables[i];
         }
         delete _hitables;
     }
 
-    __device__ __host__ int get_num_elements() const
+    __device__ int get_num_elements() const
     {
         return num_elements;
     }
 
-    __device__ __host__ bool hit(const ray& r, float t_min, float t_max, hit_record& out) const override
+    __device__ bool hit(const ray& r, float t_min, float t_max, hit_record& out) const override
     {
         hit_record temp_closest;
         auto hit_anything = false;
         out.t = t_max;
-        for (auto i = 0; i < num_elements; i++)
+        for (auto i = 0; i < static_cast<int>(num_elements); i++)
         {
             const auto& hitable = _hitables[i];
             if (hitable->hit(r, t_min, out.t, temp_closest))
@@ -52,7 +52,7 @@ struct hitable_list : public hitable
         return hit_anything;
     }
 
-    __device__ __host__ virtual bool bounding_box(float t0, float t1, aabb& box) const override
+    __device__ virtual bool bounding_box(float t0, float t1, aabb& box) const override
     {
         if (num_elements <= 0)
         {
@@ -69,7 +69,7 @@ struct hitable_list : public hitable
         {
             box = temp_box;
         }
-        for (auto i = 1; i < num_elements; i++)
+        for (auto i = 1; i < static_cast<int>(num_elements); i++)
         {
             if (_hitables[i]->bounding_box(t0, t1, temp_box))
             {

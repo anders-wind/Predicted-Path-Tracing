@@ -28,7 +28,7 @@ struct sphere : public hitable
         delete _material;
     }
 
-    __device__ __host__ bool hit(const ray& r, float t_min, float t_max, hit_record& out) const override
+    __device__ bool hit(const ray& r, float t_min, float t_max, hit_record& out) const override
     {
         vec3 oc = r.origin() - _center;
         const auto a = dot(r.direction(), r.direction());
@@ -63,16 +63,10 @@ struct sphere : public hitable
         return false;
     }
 
-    __device__ __host__ virtual bool bounding_box(float t0, float t1, aabb& box) const override
+    __device__ virtual bool bounding_box(float, float, aabb& box) const override
     {
         box = aabb(_center - _radius, _center + _radius);
         return true;
-    }
-
-
-    __device__ vec3 normal(const vec3& position) const
-    {
-        return _center - position;
     }
 };
 

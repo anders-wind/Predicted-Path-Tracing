@@ -17,16 +17,20 @@ struct material
                                     vec3& attenuation,
                                     ray& scattered,
                                     curandState* local_rand_state) const = 0;
+
+    __device__ virtual ~material(){
+
+    };
 };
 
-struct diffuse_light : public material
-{
-    __device__ virtual bool
-    scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, curandState* local_rand_state) const
-    {
-        return false;
-    }
-};
+// struct diffuse_light : public material
+// {
+//     __device__ virtual bool
+//     scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, curandState* local_rand_state) const
+//     {
+//         return false;
+//     }
+// };
 
 struct lambertian : public material
 {
@@ -42,7 +46,7 @@ struct lambertian : public material
 
 
     __device__ bool
-    scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, curandState* local_rand_state) const override
+    scatter(const ray&, const hit_record& rec, vec3& attenuation, ray& scattered, curandState* local_rand_state) const override
     {
         vec3 target = rec.p + rec.normal + shared::random_in_unit_sphere(local_rand_state) / 1.2f;
         scattered = ray(rec.p, target - rec.p);

@@ -17,7 +17,7 @@ class shader
     std::unordered_map<std::string, int> m_uniform_location_cache;
 
     public:
-    shader(const std::string& file_path) : file_path(file_path), m_renderer_id(0)
+    shader(const std::string& file_path) : m_renderer_id(0), file_path(file_path)
     {
         auto shader_programs = parse_shader(file_path);
         m_renderer_id = create_shader(shader_programs.vertex_source, shader_programs.fragment_source);

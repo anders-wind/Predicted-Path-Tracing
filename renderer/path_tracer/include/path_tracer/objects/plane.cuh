@@ -29,7 +29,7 @@ struct plane : public hitable
         delete _material;
     }
 
-    __device__ __host__ bool hit(const ray& r, float t_min, float t_max, hit_record& out) const override
+    __device__ bool hit(const ray& r, float, float, hit_record& out) const override
     {
         const float divider = dot(r._direction, _normal);
         if (divider == 0.0f)
@@ -51,7 +51,7 @@ struct plane : public hitable
         return true;
     }
 
-    __device__ __host__ virtual bool bounding_box(float t0, float t1, aabb& box) const override
+    __device__ virtual bool bounding_box(float, float, aabb&) const override
     {
         return false;
     }

@@ -34,10 +34,10 @@ struct camera
                                const vec3& w,
                                float min_depth,
                                float max_depth)
-      : _lower_left_corner(lower_left_corner)
+      : _origin(origin)
+      , _lower_left_corner(lower_left_corner)
       , _horizontal(horizontal)
       , _vertical(vertical)
-      , _origin(origin)
       , _lens_radius(lens_radius)
       , _u(u)
       , _v(v)
@@ -48,16 +48,16 @@ struct camera
     }
 
     __host__ __device__ camera(const camera& other)
-      : _lower_left_corner(other._lower_left_corner)
+      : _origin(other._origin)
+      , _lower_left_corner(other._lower_left_corner)
       , _horizontal(other._horizontal)
       , _vertical(other._vertical)
-      , _origin(other._origin)
       , _lens_radius(other._lens_radius)
       , _u(other._u)
       , _v(other._v)
       , _w(other._w)
-      , _max_depth(other._max_depth)
       , _min_depth(other._min_depth)
+      , _max_depth(other._max_depth)
     {
     }
 
