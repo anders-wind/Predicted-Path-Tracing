@@ -68,16 +68,16 @@ class noise_texture : public texture
 {
     private:
     shared::perlin noise;
+    float scale;
 
     public:
-    // constant_texture() = default;
-    __device__ noise_texture()
+    __device__ noise_texture(float sc) : scale(sc)
     {
     }
 
     __device__ virtual vec3 value(float, float, const vec3& p) const override
     {
-        return vec3(1) * noise.noise(p);
+        return vec3(1) * noise.noise(scale * 10 * p);
     }
 };
 

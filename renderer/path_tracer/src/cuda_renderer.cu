@@ -141,9 +141,8 @@ create_small_world(hitable** d_list, hitable** d_world, camera* d_camera, int hi
 {
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
-        d_list[0] =
-            new sphere(vec3(0, -100.5, -1), 100, new lambertian(new constant_texture(vec3(0.6, 0.8, 0.6))));
-        // d_list[0] = new plane(vec3(0, -0.5, 0), vec3(0, 1, 0), new lambertian(vec3(0.5, 0.4, 0.3)));
+        // d_list[0] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(new noise_texture(1.0f)));
+        d_list[0] = new plane(vec3(0, -0.5, 0), vec3(0, 1, 0), new lambertian(new noise_texture(1.0f)));
         d_list[1] =
             new sphere(vec3(0, 0, -1), 0.5, new lambertian(new constant_texture(vec3(0.1, 0.2, 0.5))));
         d_list[2] =
@@ -171,7 +170,7 @@ create_world(hitable** d_list, hitable** d_world, camera* d_camera, int hitables
         auto local_rand_state = rand_state[0];
         auto checker = new checker_texture(new constant_texture(vec3(0.2, 0.3, 0.1)),
                                            new constant_texture(vec3(0.9, 0.9, 0.9)));
-        auto noise = new noise_texture();
+        auto noise = new noise_texture(2.0f);
         d_list[0] = new sphere(vec3(0, -1000, 0), 1000, new lambertian(noise));
 
         int i = 1;
@@ -238,7 +237,7 @@ __global__ void create_random_world(hitable** d_list,
         {
             if (i == 0)
             {
-                auto noise = new noise_texture();
+                auto noise = new noise_texture(2.0f);
                 d_list[i] = new plane(vec3(0, -3, 0), vec3(0, 1, 0), new lambertian(noise));
                 continue;
             }
@@ -296,7 +295,7 @@ cuda_renderer::cuda_renderer(int w, int h, std::shared_ptr<shared::sample_servic
 
     const auto timer = shared::scoped_timer("cuda_renderer");
 
-    int hitables_size = 485; // 485 for large
+    int hitables_size = 5; // 485 for large
     checkCudaErrors(cudaMalloc((void**)&d_rand_state, w * h * sizeof(curandState)));
     checkCudaErrors(cudaMalloc((void**)&d_list, hitables_size * sizeof(hitable*)));
     checkCudaErrors(cudaMalloc((void**)&d_world, sizeof(hitable*)));
@@ -309,7 +308,7 @@ cuda_renderer::cuda_renderer(int w, int h, std::shared_ptr<shared::sample_servic
     cuda_methods::render_init<<<blocks, threads>>>(w, h, 0, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
-    cuda_methods::create_world<<<1, 1>>>(d_list, d_world, d_camera, hitables_size, d_rand_state);
+    cuda_methods::create_small_world<<<1, 1>>>(d_list, d_world, d_camera, hitables_size, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 }
