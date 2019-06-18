@@ -3,7 +3,7 @@
 #include <shared/sample_service.cuh>
 #include <string>
 
-int main(int argc, char** argv)
+int main(int, char**)
 {
     // Todo - some cli parameter input
 

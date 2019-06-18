@@ -1,4 +1,5 @@
 #pragma once
+#include <shared/perlin.cuh>
 #include <shared/vecs/vec3.cuh>
 
 namespace ppt

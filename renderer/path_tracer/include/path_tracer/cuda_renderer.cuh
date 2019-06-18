@@ -11,6 +11,7 @@
 #include "render.cuh"
 #include "render_datapoint.cuh"
 #include <shared/cuda_helpers.cuh>
+#include <shared/perlin.cuh>
 #include <shared/random_helpers.cuh>
 #include <shared/sample_service.cuh>
 #include <shared/scoped_lock.cuh>

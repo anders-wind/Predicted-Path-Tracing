@@ -110,6 +110,13 @@ __global__ void render_init(int max_x, int max_y, int offset, curandState* rand_
     int col = threadIdx.y + blockIdx.y * blockDim.y;
     if ((col >= max_x) || (row >= max_y))
         return;
+    if (row == 0 && col == 0)
+    {
+        shared::ranfloat = shared::perlin_generate(rand_state);
+        shared::perm_x = shared::perlin_generate_perm(rand_state);
+        shared::perm_y = shared::perlin_generate_perm(rand_state);
+        shared::perm_z = shared::perlin_generate_perm(rand_state);
+    }
 
     int pixel_index = RM(row, col, max_x);
     // Each thread gets same seed, a different sequence number, no offset
