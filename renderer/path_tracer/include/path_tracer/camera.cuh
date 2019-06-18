@@ -80,8 +80,8 @@ constexpr float radian = M_PI / 180.0f;
 class camera_factory
 {
     public:
-    float min_depth = 0.00001f;
-    float max_depth = 10000.0f;
+    float min_depth;
+    float max_depth;
 
     __host__ __device__ camera_factory(float min_depth = 0.00001f, float max_depth = 10000.0f)
       : min_depth(min_depth)

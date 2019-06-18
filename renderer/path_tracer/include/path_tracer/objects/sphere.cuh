@@ -36,7 +36,7 @@ struct sphere : public hitable
         const auto c = dot(oc, oc) - _radius * _radius;
         const auto discriminant = b * b - a * c;
 
-        if (discriminant > 0)
+        if (discriminant > 0.0f)
         {
             auto temp = (-b - sqrt(b * b - a * c)) / a;
             if (temp < t_max && temp > t_min)
@@ -54,10 +54,10 @@ struct sphere : public hitable
             {
                 out.t = temp;
                 out.p = r.point_at_parameter(temp);
-                out.normal = (out.p - _center) / _radius;
+                out.normal = (_center - out.p) / _radius;
                 out.mat_ptr = _material;
                 out.normal.make_unit_vector();
-                return true;
+                return false;
             }
         }
         return false;
