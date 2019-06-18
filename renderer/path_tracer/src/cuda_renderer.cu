@@ -170,23 +170,17 @@ create_world(hitable** d_list, hitable** d_world, camera* d_camera, int hitables
                 {
                     if (choose_mat < 0.8)
                     { // diffuse
-                        d_list[i++] = new sphere(
-                            center,
-                            0.2,
-                            new lambertian(
-                                vec3(curand_uniform(&local_rand_state) * curand_uniform(&local_rand_state),
-                                     curand_uniform(&local_rand_state) * curand_uniform(&local_rand_state),
-                                     curand_uniform(&local_rand_state) * curand_uniform(&local_rand_state))));
+                        d_list[i++] = new sphere(center,
+                                                 0.2,
+                                                 new lambertian(vec3(RANDVEC3(&local_rand_state) *
+                                                                     RANDVEC3(&local_rand_state))));
                     }
                     else if (choose_mat < 0.95)
                     { // metal
-                        d_list[i++] =
-                            new sphere(center,
-                                       0.2,
-                                       new metal(vec3(0.5 * (1 + curand_uniform(&local_rand_state)),
-                                                      0.5 * (1 + curand_uniform(&local_rand_state)),
-                                                      0.5 * (1 + curand_uniform(&local_rand_state))),
-                                                 0.5 * curand_uniform(&local_rand_state)));
+                        d_list[i++] = new sphere(center,
+                                                 0.2,
+                                                 new metal((RANDVEC3(&local_rand_state) + 1) * 0.5,
+                                                           0.5 * curand_uniform(&local_rand_state)));
                     }
                     else
                     { // glass
@@ -201,7 +195,7 @@ create_world(hitable** d_list, hitable** d_world, camera* d_camera, int hitables
         d_list[i++] = new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
 
         *d_world = new bvh_node(d_list, hitables_size);
-        // *d_world = new hitable_list(d_list, hitables_size);
+        //*d_world = new hitable_list(d_list, hitables_size);
         const auto look_from = vec3(13, 2, 3);
         const auto look_at = vec3(0, 0, 0);
         const auto focus_dist = 10.0f;
