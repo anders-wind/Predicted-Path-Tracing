@@ -29,7 +29,7 @@ struct plane : public hitable
         delete _material;
     }
 
-    __device__ bool hit(const ray& r, float, float, hit_record& out) const override
+    __device__ bool hit(const ray& r, float t_min, float t_max, hit_record& out) const override
     {
         const float divider = dot(r._direction, _normal);
         if (divider == 0.0f)
@@ -38,7 +38,7 @@ struct plane : public hitable
         }
 
         const float t = dot(_normal, (_pos - r._origin)) / divider;
-        if (t < 0.0f)
+        if (t < 0.0f || t < t_min || t > t_max)
         {
             return false;
         }
@@ -51,9 +51,10 @@ struct plane : public hitable
         return true;
     }
 
-    __device__ virtual bool bounding_box(float, float, aabb&) const override
+    __device__ virtual bool bounding_box(float, float, aabb& box) const override
     {
-        return false;
+        box = aabb(vec3(-10000.0f), vec3(10000.0f));
+        return true;
     }
 };
 } // namespace path_tracer
