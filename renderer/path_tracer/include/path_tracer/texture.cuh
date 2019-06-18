@@ -64,5 +64,23 @@ class checker_texture : public texture
     }
 };
 
+class noise_texture : public texture
+{
+    private:
+    shared::perlin noise;
+
+    public:
+    // constant_texture() = default;
+    __device__ noise_texture()
+    {
+    }
+
+    __device__ virtual vec3 value(float, float, const vec3& p) const override
+    {
+        return vec3(1) * noise.noise(p);
+    }
+};
+
+
 } // namespace path_tracer
 } // namespace ppt

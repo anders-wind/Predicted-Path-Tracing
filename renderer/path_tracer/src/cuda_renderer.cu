@@ -110,17 +110,19 @@ __global__ void render_init(int max_x, int max_y, int offset, curandState* rand_
     int col = threadIdx.y + blockIdx.y * blockDim.y;
     if ((col >= max_x) || (row >= max_y))
         return;
-    if (row == 0 && col == 0)
-    {
-        shared::ranfloat = shared::perlin_generate(rand_state);
-        shared::perm_x = shared::perlin_generate_perm(rand_state);
-        shared::perm_y = shared::perlin_generate_perm(rand_state);
-        shared::perm_z = shared::perlin_generate_perm(rand_state);
-    }
 
     int pixel_index = RM(row, col, max_x);
     // Each thread gets same seed, a different sequence number, no offset
     curand_init(row, col, offset, &rand_state[pixel_index]);
+
+    auto local_rand_state = rand_state[0];
+    if (row == 0 && col == 0)
+    {
+        shared::ranfloat = shared::perlin_generate(&local_rand_state);
+        shared::perm_x = shared::perlin_generate_perm(&local_rand_state);
+        shared::perm_y = shared::perlin_generate_perm(&local_rand_state);
+        shared::perm_z = shared::perlin_generate_perm(&local_rand_state);
+    }
 }
 
 __global__ void reset_image(vec3* color_matrix, int max_x, int max_y)
@@ -167,11 +169,10 @@ create_world(hitable** d_list, hitable** d_world, camera* d_camera, int hitables
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
         auto local_rand_state = rand_state[0];
-        d_list[0] =
-            new sphere(vec3(0, -1000, 0),
-                       1000,
-                       new lambertian(new checker_texture(new constant_texture(vec3(0.2, 0.3, 0.1)),
-                                                          new constant_texture(vec3(0.9, 0.9, 0.9)))));
+        auto checker = new checker_texture(new constant_texture(vec3(0.2, 0.3, 0.1)),
+                                           new constant_texture(vec3(0.9, 0.9, 0.9)));
+        auto noise = new noise_texture();
+        d_list[0] = new sphere(vec3(0, -1000, 0), 1000, new lambertian(noise));
 
         int i = 1;
         for (int a = -11; a < 11; a++)
@@ -207,8 +208,7 @@ create_world(hitable** d_list, hitable** d_world, camera* d_camera, int hitables
         }
 
         d_list[i++] = new sphere(vec3(0, 1, 0), 1.0, new dielectric(1.5));
-        d_list[i++] =
-            new sphere(vec3(-4, 1, 0), 1.0, new lambertian(new constant_texture(vec3(0.4, 0.2, 0.1))));
+        d_list[i++] = new sphere(vec3(-4, 1, 0), 1.0, new lambertian(checker));
         d_list[i++] =
             new sphere(vec3(4, 1, 0), 1.0, new metal(new constant_texture(vec3(0.7, 0.6, 0.5)), 0.0));
 

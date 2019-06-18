@@ -16,7 +16,7 @@ __device__ static int* perm_z;
 class perlin
 {
     public:
-    __device__ float noise(const vec3& p)
+    __device__ float noise(const vec3& p) const
     {
         // float u = p[0] - floor(p[0]);
         // float v = p[1] - floor(p[1]);
@@ -42,7 +42,7 @@ __device__ float* perlin_generate(curandState* curand_state)
 
 __device__ void permute(int* p, int n, curandState* curand_state)
 {
-    for (auto i = n - 1; i > 0; i--)
+    for (auto i = n - 1; i >= 0; i--)
     {
         int target = int(curand_uniform(curand_state) * (i + 1));
         int tmp = p[i];
