@@ -118,7 +118,7 @@ __global__ void render_init(int max_x, int max_y, int offset, curandState* rand_
     auto local_rand_state = rand_state[0];
     if (row == 0 && col == 0)
     {
-        shared::ranfloat = shared::perlin_generate(&local_rand_state);
+        shared::ranvec = shared::perlin_generate(&local_rand_state);
         shared::perm_x = shared::perlin_generate_perm(&local_rand_state);
         shared::perm_y = shared::perlin_generate_perm(&local_rand_state);
         shared::perm_z = shared::perlin_generate_perm(&local_rand_state);

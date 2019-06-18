@@ -7,8 +7,11 @@ namespace ppt
 {
 namespace shared
 {
-__device__ inline float trilinear_interp(float c[2][2][2], float u, float v, float w)
+__device__ inline float trilinear_interp(vec3 c[2][2][2], float u, float v, float w)
 {
+    const auto uu = u * u * (3 - 2 * u);
+    const auto vv = v * v * (3 - 2 * v);
+    const auto ww = w * w * (3 - 2 * w);
     float accum = 0.0f;
     for (auto i = 0; i < 2; i++)
     {
@@ -16,17 +19,18 @@ __device__ inline float trilinear_interp(float c[2][2][2], float u, float v, flo
         {
             for (auto k = 0; k < 2; k++)
             {
-                accum += (i * u + (1.0f - i) * (1.0f - u)) * //
-                         (j * v + (1.0f - j) * (1.0f - v)) * //
-                         (k * w + (1.0f - k) * (1.0f - w)) * //
-                         c[i][j][k];
+                auto weight = vec3(u - i, v - i, w - k);
+                accum += (i * uu + (1.0f - i) * (1.0f - uu)) * //
+                         (j * vv + (1.0f - j) * (1.0f - vv)) * //
+                         (k * ww + (1.0f - k) * (1.0f - ww)) * //
+                         dot(c[i][j][k], weight);
             }
         }
     }
     return accum;
 }
 
-__device__ static float* ranfloat;
+__device__ static vec3* ranvec;
 __device__ static int* perm_x;
 __device__ static int* perm_y;
 __device__ static int* perm_z;
@@ -39,13 +43,10 @@ class perlin
         float u = p[0] - floor(p[0]);
         float v = p[1] - floor(p[1]);
         float w = p[2] - floor(p[2]);
-        u = u * u * (3 - 2 * u);
-        v = v * v * (3 - 2 * v);
-        w = w * w * (3 - 2 * w);
         int i = int(4 * p[0]) & 255;
         int j = int(4 * p[1]) & 255;
         int k = int(4 * p[2]) & 255;
-        float c[2][2][2];
+        vec3 c[2][2][2];
         for (auto di = 0; di < 2; di++)
         {
             const auto i_p = perm_x[(i + di) & 255];
@@ -55,7 +56,7 @@ class perlin
                 for (auto dk = 0; dk < 2; dk++)
                 {
                     const auto k_p = perm_z[(k + dk) & 255];
-                    c[di][dj][dk] = ranfloat[i_p ^ j_p ^ k_p];
+                    c[di][dj][dk] = ranvec[i_p ^ j_p ^ k_p];
                 }
             }
         }
@@ -64,13 +65,15 @@ class perlin
 };
 
 
-__device__ float* perlin_generate(curandState* curand_state)
+__device__ vec3* perlin_generate(curandState* curand_state)
 {
     constexpr int size = 256;
-    float* p = new float[size];
+    auto p = new vec3[size];
     for (auto i = 0; i < size; i++)
     {
-        p[i] = curand_uniform(curand_state);
+        p[i] = unit_vector(vec3(-1 + 2 * curand_uniform(curand_state),
+                                -1 + 2 * curand_uniform(curand_state),
+                                -1 + 2 * curand_uniform(curand_state)));
     }
     return p;
 }
@@ -89,7 +92,7 @@ __device__ void permute(int* p, int n, curandState* curand_state)
 __device__ int* perlin_generate_perm(curandState* curand_state)
 {
     constexpr int size = 256;
-    int* p = new int[size];
+    auto p = new int[size];
     for (int i = 0; i < size; i++)
     {
         p[i] = i;
