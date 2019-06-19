@@ -23,11 +23,34 @@ namespace cuda_methods
 {
 
 
+__device__ vec3 color_rec(const ray& r, hitable** world, curandState* local_rand_state, float min_depth, float max_depth, int depth)
+{
+    hit_record rec;
+    if ((*world)->hit(r, min_depth, max_depth, rec))
+    {
+        ray scattered;
+        vec3 attenuation;
+        vec3 emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+        if (depth < 6 && rec.mat_ptr->scatter(r, rec, attenuation, scattered, local_rand_state))
+        {
+            return emitted +
+                   attenuation * color_rec(scattered, world, local_rand_state, min_depth, max_depth, depth + 1);
+        }
+        else
+        {
+            return emitted;
+        }
+    }
+    else
+    {
+        return vec3(0.0f);
+    }
+}
+
 __device__ vec3 color(const ray& r, hitable** world, curandState* local_rand_state, float min_depth, float max_depth)
 {
     ray cur_ray = r;
     hit_record rec;
-    // vec3 cur_emitted = vec3(0.0f);
     vec3 cur_attenuation = vec3(1.0f);
 
     for (int i = 0; i < 5; i++)
@@ -68,7 +91,7 @@ render_image(vec3* image_matrix, int max_x, int max_y, int samples, camera* cam,
         float v = float(max_y - row + curand_normal(&local_rand_state)) / float(max_y);
         ray r = local_camera.get_ray(u, v, &local_rand_state);
         pix += vec3::clamp_max(
-            color(r, world, &local_rand_state, local_camera._min_depth, local_camera._max_depth));
+            color_rec(r, world, &local_rand_state, local_camera._min_depth, local_camera._max_depth, 0));
     }
 
     rand_state[pixel_index] = local_rand_state;
