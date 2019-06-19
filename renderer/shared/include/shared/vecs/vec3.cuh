@@ -185,6 +185,20 @@ struct vec3
     {
         return vec3(std::fmax(v1[0], v2[0]), std::fmax(v1[1], v2[1]), std::fmax(v1[2], v2[2]));
     }
+
+    __host__ __device__ inline static vec3 clamp_max(const vec3& v, float max = 1.0)
+    {
+        return vec3::min(vec3(max), v);
+    }
+
+    __host__ __device__ inline static vec3 clamp_min(const vec3& v, float min = 0.0)
+    {
+        return vec3::max(vec3(min), v);
+    }
+    __host__ __device__ inline static vec3 clamp(const vec3& v, float min = 0.0, float max = 1.0)
+    {
+        return clamp_min(clamp_max(v, max), min);
+    }
 };
 
 

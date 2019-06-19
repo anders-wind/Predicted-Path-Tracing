@@ -12,25 +12,47 @@ namespace path_tracer
 
 struct material
 {
+    __device__ virtual ~material(){
+
+    };
+
     __device__ virtual bool scatter(const ray& r_in,
                                     const hit_record& rec,
                                     vec3& attenuation,
                                     ray& scattered,
                                     curandState* local_rand_state) const = 0;
 
-    __device__ virtual ~material(){
-
-    };
+    __device__ virtual vec3 emitted(float, float, const vec3&) const
+    {
+        return vec3(0, 0, 0);
+    }
 };
 
-// struct diffuse_light : public material
-// {
-//     __device__ virtual bool
-//     scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, curandState* local_rand_state) const
-//     {
-//         return false;
-//     }
-// };
+struct diffuse_light : public material
+{
+    private:
+    const texture* emit;
+
+    public:
+    __device__ diffuse_light(texture* a) : emit(a)
+    {
+    }
+
+    __device__ ~diffuse_light()
+    {
+        delete emit;
+    }
+
+    __device__ virtual bool scatter(const ray&, const hit_record&, vec3&, ray&, curandState*) const override
+    {
+        return false;
+    }
+
+    __device__ virtual vec3 emitted(float u, float v, const vec3& p) const override
+    {
+        return emit->value(u, v, p);
+    }
+};
 
 struct lambertian : public material
 {

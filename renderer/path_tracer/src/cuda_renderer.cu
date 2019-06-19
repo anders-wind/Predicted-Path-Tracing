@@ -1,7 +1,20 @@
 #include "path_tracer/cuda_renderer.cuh"
+#include "path_tracer/material.cuh"
+#include "path_tracer/objects/aabb.cuh"
+#include "path_tracer/objects/bvh_node.cuh"
+#include "path_tracer/objects/hitable_list.cuh"
+#include "path_tracer/objects/plane.cuh"
+#include "path_tracer/objects/sphere.cuh"
+#include "path_tracer/objects/xy_rect.cuh"
+#include "path_tracer/ray.cuh"
 #include <cuda.h>
 #include <curand_kernel.h>
 #include <device_launch_parameters.h>
+#include <shared/perlin.cuh>
+#include <shared/random_helpers.cuh>
+#include <shared/vecs/vec3.cuh>
+#include <shared/vecs/vec8.cuh>
+
 namespace ppt
 {
 namespace path_tracer
@@ -13,10 +26,11 @@ namespace cuda_methods
 __device__ vec3 color(const ray& r, hitable** world, curandState* local_rand_state, float min_depth, float max_depth)
 {
     ray cur_ray = r;
-    vec3 cur_attenuation = vec3(1.0f, 1.0f, 1.0f);
     hit_record rec;
+    // vec3 cur_emitted = vec3(0.0f);
+    vec3 cur_attenuation = vec3(1.0f);
 
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 5; i++)
     {
         if (!(*world)->hit(cur_ray, min_depth, max_depth, rec))
         {
@@ -25,17 +39,14 @@ __device__ vec3 color(const ray& r, hitable** world, curandState* local_rand_sta
 
         ray scattered;
         vec3 attenuation;
+        vec3 emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
         if (rec.mat_ptr->scatter(cur_ray, rec, attenuation, scattered, local_rand_state))
         {
             cur_attenuation *= attenuation;
             cur_ray = scattered;
         }
     }
-
-    vec3 unit_direction = unit_vector(cur_ray.direction());
-    float t = 0.5f * (unit_direction.y() + 1.0f);
-    vec3 c = vec3(1.0, 1.0, 1.0) * (1.0f - t) + vec3(0.5, 0.7, 1.0) * t;
-    return c * cur_attenuation;
+    return cur_attenuation;
 }
 
 __global__ void
@@ -56,7 +67,8 @@ render_image(vec3* image_matrix, int max_x, int max_y, int samples, camera* cam,
         float u = float(col + curand_normal(&local_rand_state)) / float(max_x);
         float v = float(max_y - row + curand_normal(&local_rand_state)) / float(max_y);
         ray r = local_camera.get_ray(u, v, &local_rand_state);
-        pix += color(r, world, &local_rand_state, local_camera._min_depth, local_camera._max_depth);
+        pix += vec3::clamp_max(
+            color(r, world, &local_rand_state, local_camera._min_depth, local_camera._max_depth));
     }
 
     rand_state[pixel_index] = local_rand_state;
@@ -141,21 +153,23 @@ create_small_world(hitable** d_list, hitable** d_world, camera* d_camera, int hi
 {
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
-        // d_list[0] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(new noise_texture(10.0f)));
-        d_list[0] = new plane(vec3(0, -0.5, 0), vec3(0, 1, 0), new lambertian(new noise_texture(1.0f)));
+        d_list[0] = new sphere(vec3(0, -100.5, 0), 100, new lambertian(new noise_texture(10.0f)));
+        // d_list[0] = new plane(vec3(0, -0.5, 0), vec3(0, 1, 0), new lambertian(new noise_texture(1.0f)));
         d_list[1] =
             new sphere(vec3(0, 0, -1), 0.5, new lambertian(new constant_texture(vec3(0.1, 0.2, 0.5))));
         d_list[2] =
             new sphere(vec3(1, 0, -1), 0.5, new metal(new constant_texture(vec3(0.8, 0.6, 0.2)), 0.0));
         d_list[3] = new sphere(vec3(-1, 0.0, -1), 0.5, new dielectric(1.5f));
         d_list[4] = new sphere(vec3(-1, 0.0, -1), -0.45, new dielectric(1.5f));
+        d_list[5] = new xy_rect(1, 3, 1, 3, -1, new diffuse_light(new constant_texture(4.0f)));
+
 
         *d_world = new bvh_node(d_list, hitables_size);
         // *d_world = new hitable_list(d_list, hitables_size);
-        const auto look_from = vec3(-13, 1, 8);
+        const auto look_from = vec3(3, 1, 8);
         const auto look_at = vec3(0, 0, -1);
-        const auto focus_dist = 16;
-        const auto fov = 8;
+        const auto focus_dist = 9;
+        const auto fov = 20;
         const auto aperture = 0.3;
         *d_camera = camera_factory().make_16_9_camera(look_from, look_at, fov, aperture, focus_dist);
     }
@@ -295,7 +309,7 @@ cuda_renderer::cuda_renderer(int w, int h, std::shared_ptr<shared::sample_servic
 
     const auto timer = shared::scoped_timer("cuda_renderer");
 
-    int hitables_size = 5; // 485 for large
+    int hitables_size = 6; // 485 for large
     checkCudaErrors(cudaMalloc((void**)&d_rand_state, w * h * sizeof(curandState)));
     checkCudaErrors(cudaMalloc((void**)&d_list, hitables_size * sizeof(hitable*)));
     checkCudaErrors(cudaMalloc((void**)&d_world, sizeof(hitable*)));

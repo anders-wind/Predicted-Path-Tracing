@@ -1,22 +1,10 @@
 #pragma once
 #include "camera.cuh"
-#include "material.cuh"
-#include "objects/aabb.cuh"
-#include "objects/bvh_node.cuh"
 #include "objects/hitable.cuh"
-#include "objects/hitable_list.cuh"
-#include "objects/plane.cuh"
-#include "objects/sphere.cuh"
-#include "ray.cuh"
 #include "render.cuh"
 #include "render_datapoint.cuh"
 #include <shared/cuda_helpers.cuh>
-#include <shared/perlin.cuh>
-#include <shared/random_helpers.cuh>
 #include <shared/sample_service.cuh>
-#include <shared/scoped_lock.cuh>
-#include <shared/vecs/vec3.cuh>
-#include <shared/vecs/vec8.cuh>
 #include <vector>
 
 namespace ppt

@@ -52,7 +52,7 @@ void dataset_repository::save_datapoint(const path_tracer::render_datapoint& ren
     save_to_file(get_file_path(target_file_name), render_datapoint.get_target_string());
 
     datapoint_ss << target_file_name;
-    for (auto i = 0; i < render_datapoint.renders_size(); i++)
+    for (auto i = 0; i < static_cast<int>(render_datapoint.renders_size()); i++)
     {
         auto render_file_name = get_file_name(file_name, false, i, ".csv");
         save_to_file(get_file_path(render_file_name), render_datapoint.get_render_string(i));

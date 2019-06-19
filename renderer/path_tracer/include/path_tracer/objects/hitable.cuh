@@ -13,6 +13,8 @@ class aabb;
 struct hit_record
 {
     float t;
+    float u;
+    float v;
     vec3 p;
     vec3 normal = vec3(0.0f);
     material* mat_ptr;

@@ -103,9 +103,9 @@ class render_datapoint
         std::stringstream ss;
         ss << "P3\n" << w << " " << h << "\n255\n";
 
-        for (int i = 0; i < h; i++)
+        for (int i = 0; i < static_cast<int>(h); i++)
         {
-            for (int j = 0; j < w; j++)
+            for (int j = 0; j < static_cast<int>(w); j++)
             {
                 auto color = colors[RM(i, j, w)];
                 ss << static_cast<unsigned int>(color.e[0] * 255.99) << " "
