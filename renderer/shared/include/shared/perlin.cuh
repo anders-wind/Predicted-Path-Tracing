@@ -19,7 +19,7 @@ __device__ inline float trilinear_interp(vec3 c[2][2][2], float u, float v, floa
         {
             for (auto k = 0; k < 2; k++)
             {
-                auto weight = vec3(u - i, v - i, w - k);
+                auto weight = vec3(u - i, v - j, w - k);
                 accum += (i * uu + (1.0f - i) * (1.0f - uu)) * //
                          (j * vv + (1.0f - j) * (1.0f - vv)) * //
                          (k * ww + (1.0f - k) * (1.0f - ww)) * //
@@ -40,12 +40,12 @@ class perlin
     public:
     __device__ float noise(const vec3& p) const
     {
-        float u = p[0] - floor(p[0]);
-        float v = p[1] - floor(p[1]);
-        float w = p[2] - floor(p[2]);
-        int i = int(4 * p[0]) & 255;
-        int j = int(4 * p[1]) & 255;
-        int k = int(4 * p[2]) & 255;
+        int i = floor(p[0]);
+        int j = floor(p[1]);
+        int k = floor(p[2]);
+        float u = p[0] - i;
+        float v = p[1] - j;
+        float w = p[2] - k;
         vec3 c[2][2][2];
         for (auto di = 0; di < 2; di++)
         {
@@ -62,6 +62,20 @@ class perlin
         }
         return trilinear_interp(c, u, v, w);
     }
+
+    __device__ float turb(const vec3& p, int depth = 7) const
+    {
+        auto accum = 0.0f;
+        auto temp_p = p;
+        float weight = 1.0;
+        for (auto i = 0; i < depth; i++)
+        {
+            accum += weight * noise(p);
+            weight *= 0.5;
+            temp_p *= 2;
+        }
+        return std::fabs(accum);
+    }
 };
 
 
@@ -71,9 +85,7 @@ __device__ vec3* perlin_generate(curandState* curand_state)
     auto p = new vec3[size];
     for (auto i = 0; i < size; i++)
     {
-        p[i] = unit_vector(vec3(-1 + 2 * curand_uniform(curand_state),
-                                -1 + 2 * curand_uniform(curand_state),
-                                -1 + 2 * curand_uniform(curand_state)));
+        p[i] = unit_vector(RANDVEC3(curand_state) * 2 - 1);
     }
     return p;
 }

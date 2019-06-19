@@ -141,7 +141,7 @@ create_small_world(hitable** d_list, hitable** d_world, camera* d_camera, int hi
 {
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
-        // d_list[0] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(new noise_texture(1.0f)));
+        // d_list[0] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(new noise_texture(10.0f)));
         d_list[0] = new plane(vec3(0, -0.5, 0), vec3(0, 1, 0), new lambertian(new noise_texture(1.0f)));
         d_list[1] =
             new sphere(vec3(0, 0, -1), 0.5, new lambertian(new constant_texture(vec3(0.1, 0.2, 0.5))));
@@ -156,7 +156,7 @@ create_small_world(hitable** d_list, hitable** d_world, camera* d_camera, int hi
         const auto look_at = vec3(0, 0, -1);
         const auto focus_dist = 16;
         const auto fov = 8;
-        const auto aperture = 0.5;
+        const auto aperture = 0.3;
         *d_camera = camera_factory().make_16_9_camera(look_from, look_at, fov, aperture, focus_dist);
     }
 }
@@ -170,7 +170,7 @@ create_world(hitable** d_list, hitable** d_world, camera* d_camera, int hitables
         auto local_rand_state = rand_state[0];
         auto checker = new checker_texture(new constant_texture(vec3(0.2, 0.3, 0.1)),
                                            new constant_texture(vec3(0.9, 0.9, 0.9)));
-        auto noise = new noise_texture(2.0f);
+        auto noise = new noise_texture(10.0f);
         d_list[0] = new sphere(vec3(0, -1000, 0), 1000, new lambertian(noise));
 
         int i = 1;
@@ -237,7 +237,7 @@ __global__ void create_random_world(hitable** d_list,
         {
             if (i == 0)
             {
-                auto noise = new noise_texture(2.0f);
+                auto noise = new noise_texture(10.0f);
                 d_list[i] = new plane(vec3(0, -3, 0), vec3(0, 1, 0), new lambertian(noise));
                 continue;
             }
