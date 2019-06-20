@@ -7,7 +7,9 @@
 #include "path_tracer/objects/hitable_list.cuh"
 #include "path_tracer/objects/plane.cuh"
 #include "path_tracer/objects/rect.cuh"
+#include "path_tracer/objects/rotate.cuh"
 #include "path_tracer/objects/sphere.cuh"
+#include "path_tracer/objects/translate.cuh"
 #include "path_tracer/ray.cuh"
 #include <cuda.h>
 #include <curand_kernel.h>
@@ -173,18 +175,24 @@ create_cornell_box(hitable** d_list, hitable** d_world, camera* d_camera, int hi
     {
         int i = 0;
         material* red = new lambertian(new constant_texture(vec3(0.65f, 0.05f, 0.05f)));
+        material* metal = new lambertian(new constant_texture(vec3(0.73f)));
         material* white = new lambertian(new constant_texture(vec3(0.73f)));
         material* green = new lambertian(new constant_texture(vec3(0.12f, 0.45f, 0.15f)));
         material* light = new diffuse_light(new constant_texture(vec3(15.0f)));
 
+        // room
         d_list[i++] = new flip_normals(new yz_rect(0, 555, 0, 555, 555, green));
         d_list[i++] = new yz_rect(0, 555, 0, 555, 0, red);
         d_list[i++] = new xz_rect(213, 343, 227, 332, 554, light);
         d_list[i++] = new flip_normals(new xz_rect(0, 555, 0, 555, 555, white));
         d_list[i++] = new xz_rect(0, 555, 0, 555, 0, white);
         d_list[i++] = new flip_normals(new xy_rect(0, 555, 0, 555, 555, white));
-        d_list[i++] = new box(vec3(130, 0, 65), vec3(295, 165, 230), white);
-        d_list[i++] = new box(vec3(265, 0, 295), vec3(430, 330, 460), white);
+
+        // boxes
+        d_list[i++] =
+            new translate(new rotate_y(new box(vec3(0.0f), vec3(165.0f), white), -18), vec3(130, 0, 65));
+        d_list[i++] = new translate(new rotate_y(new box(vec3(0.0f), vec3(165, 330, 165), white), 15),
+                                    vec3(265, 0, 295));
 
         *d_world = new bvh_node(d_list, hitables_size);
         // *d_world = new hitable_list(d_list, hitables_size);

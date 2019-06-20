@@ -29,9 +29,13 @@ target_include_directories(${MODULE_NAME}
 
 target_compile_definitions(${MODULE_NAME} 
     PRIVATE -D_EXPORT)
+
+target_compile_options(${MODULE_NAME} PRIVATE --expt-relaxed-constexpr)
     
 set_target_properties(${MODULE_NAME}
     PROPERTIES CUDA_SEPARABLE_COMPILATION ON POSITION_INDEPENDENT_CODE ON)
+
+add_definitions()
 
 install(
     TARGETS ${MODULE_NAME}
