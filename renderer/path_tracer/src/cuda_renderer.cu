@@ -25,26 +25,20 @@ namespace cuda_methods
 
 __device__ vec3 color_rec(const ray& r, hitable** world, curandState* local_rand_state, float min_depth, float max_depth, int depth)
 {
+    vec3 emitted(0.00001f); // ambience
+    vec3 attenuation;
     hit_record rec;
+    ray scattered;
     if ((*world)->hit(r, min_depth, max_depth, rec))
     {
-        ray scattered;
-        vec3 attenuation;
-        vec3 emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
-        if (depth < 6 && rec.mat_ptr->scatter(r, rec, attenuation, scattered, local_rand_state))
+        emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+        if (depth >= 0 && rec.mat_ptr->scatter(r, rec, attenuation, scattered, local_rand_state))
         {
             return emitted +
-                   attenuation * color_rec(scattered, world, local_rand_state, min_depth, max_depth, depth + 1);
-        }
-        else
-        {
-            return emitted;
+                   attenuation * color_rec(scattered, world, local_rand_state, min_depth, max_depth, depth - 1);
         }
     }
-    else
-    {
-        return vec3(0.0f);
-    }
+    return emitted;
 }
 
 __device__ vec3 color(const ray& r, hitable** world, curandState* local_rand_state, float min_depth, float max_depth)
@@ -91,7 +85,7 @@ render_image(vec3* image_matrix, int max_x, int max_y, int samples, camera* cam,
         float v = float(max_y - row + curand_normal(&local_rand_state)) / float(max_y);
         ray r = local_camera.get_ray(u, v, &local_rand_state);
         pix += vec3::clamp_max(
-            color_rec(r, world, &local_rand_state, local_camera._min_depth, local_camera._max_depth, 0));
+            color_rec(r, world, &local_rand_state, local_camera._min_depth, local_camera._max_depth, 25));
     }
 
     rand_state[pixel_index] = local_rand_state;
@@ -178,22 +172,20 @@ create_small_world(hitable** d_list, hitable** d_world, camera* d_camera, int hi
     {
         d_list[0] = new sphere(vec3(0, -100.5, 0), 100, new lambertian(new noise_texture(10.0f)));
         // d_list[0] = new plane(vec3(0, -0.5, 0), vec3(0, 1, 0), new lambertian(new noise_texture(1.0f)));
-        d_list[1] =
-            new sphere(vec3(0, 0, -1), 0.5, new lambertian(new constant_texture(vec3(0.1, 0.2, 0.5))));
-        d_list[2] =
-            new sphere(vec3(1, 0, -1), 0.5, new metal(new constant_texture(vec3(0.8, 0.6, 0.2)), 0.0));
+        d_list[1] = new sphere(vec3(0, 2, 0), 2, new lambertian(new constant_texture(vec3(0.1, 0.2, 0.5))));
+        d_list[2] = new sphere(vec3(0, 7, 0), 2, new diffuse_light(new constant_texture(vec3(4))));
         d_list[3] = new sphere(vec3(-1, 0.0, -1), 0.5, new dielectric(1.5f));
         d_list[4] = new sphere(vec3(-1, 0.0, -1), -0.45, new dielectric(1.5f));
-        d_list[5] = new xy_rect(1, 3, 1, 3, -1, new diffuse_light(new constant_texture(4.0f)));
+        d_list[5] = new xy_rect(3, 5, 1, 3, -2, new diffuse_light(new constant_texture(9.0f)));
 
 
         *d_world = new bvh_node(d_list, hitables_size);
         // *d_world = new hitable_list(d_list, hitables_size);
-        const auto look_from = vec3(3, 1, 8);
-        const auto look_at = vec3(0, 0, -1);
-        const auto focus_dist = 9;
-        const auto fov = 20;
-        const auto aperture = 0.3;
+        const auto look_from = vec3(13, 4, 8);
+        const auto look_at = vec3(1, 2, 0);
+        const auto focus_dist = 13;
+        const auto fov = 45;
+        const auto aperture = 0.1;
         *d_camera = camera_factory().make_16_9_camera(look_from, look_at, fov, aperture, focus_dist);
     }
 }
