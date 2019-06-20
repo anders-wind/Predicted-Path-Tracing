@@ -85,7 +85,7 @@ __device__ vec3* perlin_generate(curandState* curand_state)
     auto p = new vec3[size];
     for (auto i = 0; i < size; i++)
     {
-        p[i] = unit_vector(RANDVEC3(curand_state) * 2 - 1);
+        p[i] = vec3::unit_vector(RANDVEC3(curand_state) * 2 - 1);
     }
     return p;
 }

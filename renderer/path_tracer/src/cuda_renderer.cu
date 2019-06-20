@@ -1,11 +1,13 @@
 #include "path_tracer/cuda_renderer.cuh"
 #include "path_tracer/material.cuh"
 #include "path_tracer/objects/aabb.cuh"
+#include "path_tracer/objects/box.cuh"
 #include "path_tracer/objects/bvh_node.cuh"
+#include "path_tracer/objects/flip_normals.cuh"
 #include "path_tracer/objects/hitable_list.cuh"
 #include "path_tracer/objects/plane.cuh"
+#include "path_tracer/objects/rect.cuh"
 #include "path_tracer/objects/sphere.cuh"
-#include "path_tracer/objects/xy_rect.cuh"
 #include "path_tracer/ray.cuh"
 #include <cuda.h>
 #include <curand_kernel.h>
@@ -84,8 +86,7 @@ render_image(vec3* image_matrix, int max_x, int max_y, int samples, camera* cam,
         float u = float(col + curand_normal(&local_rand_state)) / float(max_x);
         float v = float(max_y - row + curand_normal(&local_rand_state)) / float(max_y);
         ray r = local_camera.get_ray(u, v, &local_rand_state);
-        pix += vec3::clamp_max(
-            color_rec(r, world, &local_rand_state, local_camera._min_depth, local_camera._max_depth, 25));
+        pix += color_rec(r, world, &local_rand_state, local_camera._min_depth, local_camera._max_depth, 5);
     }
 
     rand_state[pixel_index] = local_rand_state;
@@ -122,7 +123,7 @@ __global__ void post_process(vec3* image_matrix,
     curandState local_rand_state = rand_state[pixel_index];
 
     auto in_pixel = image_matrix[pixel_index];
-    auto norm_rgb = (vec3(in_pixel.e) / float(samples)).v_sqrt();
+    auto norm_rgb = (vec3::clamp(vec3(in_pixel.e) / float(samples))).v_sqrt();
 
     auto sample_precision = __logf(samples) / 16.0f; // 2^16=65536 is our (arbitrarily) choosen max number of samples
     auto hit = depth_map(world, camera, col, row, max_x, max_y, &local_rand_state);
@@ -163,6 +164,37 @@ __global__ void reset_image(vec3* color_matrix, int max_x, int max_y)
 
     int pixel_index = RM(row, col, max_x);
     color_matrix[pixel_index] = vec3(0, 0, 0);
+}
+
+__global__ void
+create_cornell_box(hitable** d_list, hitable** d_world, camera* d_camera, int hitables_size, curandState* rand_state)
+{
+    if (threadIdx.x == 0 && blockIdx.x == 0)
+    {
+        int i = 0;
+        material* red = new lambertian(new constant_texture(vec3(0.65f, 0.05f, 0.05f)));
+        material* white = new lambertian(new constant_texture(vec3(0.73f)));
+        material* green = new lambertian(new constant_texture(vec3(0.12f, 0.45f, 0.15f)));
+        material* light = new diffuse_light(new constant_texture(vec3(15.0f)));
+
+        d_list[i++] = new flip_normals(new yz_rect(0, 555, 0, 555, 555, green));
+        d_list[i++] = new yz_rect(0, 555, 0, 555, 0, red);
+        d_list[i++] = new xz_rect(213, 343, 227, 332, 554, light);
+        d_list[i++] = new flip_normals(new xz_rect(0, 555, 0, 555, 555, white));
+        d_list[i++] = new xz_rect(0, 555, 0, 555, 0, white);
+        d_list[i++] = new flip_normals(new xy_rect(0, 555, 0, 555, 555, white));
+        d_list[i++] = new box(vec3(130, 0, 65), vec3(295, 165, 230), white);
+        d_list[i++] = new box(vec3(265, 0, 295), vec3(430, 330, 460), white);
+
+        *d_world = new bvh_node(d_list, hitables_size);
+        // *d_world = new hitable_list(d_list, hitables_size);
+        const auto look_from = vec3(278, 278, -800);
+        const auto look_at = vec3(278, 278, 0);
+        const auto focus_dist = 10;
+        const auto aperture = 0.01;
+        const auto fov = 40;
+        *d_camera = camera_factory().make_16_9_camera(look_from, look_at, fov, aperture, focus_dist);
+    }
 }
 
 __global__ void
@@ -324,7 +356,7 @@ cuda_renderer::cuda_renderer(int w, int h, std::shared_ptr<shared::sample_servic
 
     const auto timer = shared::scoped_timer("cuda_renderer");
 
-    int hitables_size = 6; // 485 for large
+    int hitables_size = 8; // 485 for large, 8 for cornell
     checkCudaErrors(cudaMalloc((void**)&d_rand_state, w * h * sizeof(curandState)));
     checkCudaErrors(cudaMalloc((void**)&d_list, hitables_size * sizeof(hitable*)));
     checkCudaErrors(cudaMalloc((void**)&d_world, sizeof(hitable*)));
@@ -337,7 +369,7 @@ cuda_renderer::cuda_renderer(int w, int h, std::shared_ptr<shared::sample_servic
     cuda_methods::render_init<<<blocks, threads>>>(w, h, 0, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
-    cuda_methods::create_small_world<<<1, 1>>>(d_list, d_world, d_camera, hitables_size, d_rand_state);
+    cuda_methods::create_cornell_box<<<1, 1>>>(d_list, d_world, d_camera, hitables_size, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 }

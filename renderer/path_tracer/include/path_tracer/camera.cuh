@@ -133,8 +133,8 @@ class camera_factory
         const float half_height = std::tan(theta / 2.0f);
         const float half_width = ratio * half_height;
 
-        w = unit_vector(look_from - look_at);
-        u = unit_vector(cross(v_up, w));
+        w = vec3::unit_vector(look_from - look_at);
+        u = vec3::unit_vector(cross(v_up, w));
         v = cross(w, u);
 
         const auto origin = look_from;

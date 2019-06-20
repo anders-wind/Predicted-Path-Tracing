@@ -94,7 +94,7 @@ struct metal : public material
     __device__ bool
     scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, curandState* local_rand_state) const override
     {
-        vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
+        vec3 reflected = reflect(vec3::unit_vector(r_in.direction()), rec.normal);
         scattered = ray(rec.p, reflected + shared::random_in_unit_sphere(local_rand_state) * fuzz);
         attenuation = albedo->value(0, 0, rec.p);
         return dot(scattered.direction(), rec.normal) > 0;

@@ -195,9 +195,20 @@ struct vec3
     {
         return vec3::max(vec3(min), v);
     }
+
     __host__ __device__ inline static vec3 clamp(const vec3& v, float min = 0.0, float max = 1.0)
     {
         return clamp_min(clamp_max(v, max), min);
+    }
+
+    __host__ __device__ inline vec3 operator/(const vec3& v2)
+    {
+        return vec3(e[0] / v2[0], e[1] / v2[1], e[2] / v2[2]);
+    }
+
+    __host__ __device__ inline static vec3 unit_vector(vec3 v)
+    {
+        return v / v.length();
     }
 };
 
@@ -217,10 +228,6 @@ __host__ __device__ inline vec3 operator*(const vec3& v1, const vec3& v2)
     return vec3(v1[0] * v2[0], v1[1] * v2[1], v1[2] * v2[2]);
 }
 
-__host__ __device__ inline vec3 operator/(const vec3& v1, const vec3& v2)
-{
-    return vec3(v1[0] / v2[0], v1[1] / v2[1], v1[2] / v2[2]);
-}
 
 __host__ __device__ inline vec3 cross(const vec3& v1, const vec3& v2)
 {
@@ -252,11 +259,6 @@ __host__ __device__ inline vec3 operator/(const vec3& v1, const float t)
     return vec3(v1[0] / t, v1[1] / t, v1[2] / t);
 }
 
-__host__ __device__ inline vec3 unit_vector(vec3 v)
-{
-    return v / v.length();
-}
-
 __host__ __device__ inline vec3 reflect(const vec3& v, const vec3& n)
 {
     return v - n * (2 * dot(v, n));
@@ -264,7 +266,7 @@ __host__ __device__ inline vec3 reflect(const vec3& v, const vec3& n)
 
 __host__ __device__ inline bool refract(const vec3& v, const vec3& n, float ni_over_nt, vec3& refracted)
 {
-    vec3 uv = unit_vector(v);
+    vec3 uv = vec3::unit_vector(v);
     auto dt = dot(uv, n);
     auto discriminant = 1.0f - ni_over_nt * ni_over_nt * (1.0f - dt * dt);
     if (discriminant > 0.0f)

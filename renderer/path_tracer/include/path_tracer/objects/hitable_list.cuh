@@ -1,6 +1,5 @@
 #pragma once
 #include "hitable.cuh"
-#include <memory>
 #include <vector>
 
 namespace ppt
