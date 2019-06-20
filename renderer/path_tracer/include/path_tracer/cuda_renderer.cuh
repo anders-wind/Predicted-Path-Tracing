@@ -19,11 +19,12 @@ class cuda_renderer
     hitable** d_list;
     hitable** d_world;
     camera* d_camera;
+
     const std::shared_ptr<shared::sample_service> _sampler;
 
     public:
-    int num_threads_x = 16;
-    int num_threads_y = 16;
+    int num_threads_x = 8;
+    int num_threads_y = 8;
     const dim3 blocks;
     const dim3 threads;
     const size_t w;

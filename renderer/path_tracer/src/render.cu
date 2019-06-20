@@ -19,26 +19,37 @@ render::render(int w, int h)
   , h(h)
   , render_color_bytes(w * h * sizeof(ppt::shared::vec3))
   , render_image_bytes(w * h * sizeof(ppt::shared::vec8))
+  , sample_bytes(w * h * sizeof(unsigned int))
+  , variance_bytes(w * h * sizeof(float))
 {
     checkCudaErrors(cudaMalloc((void**)&d_color_matrix, render_color_bytes));
     checkCudaErrors(cudaMalloc((void**)&d_image_matrix, render_image_bytes));
+    checkCudaErrors(cudaMalloc((void**)&d_samples, sample_bytes));
+    checkCudaErrors(cudaMalloc((void**)&d_variance, variance_bytes));
 }
 
 render::render(render&& other)
-  : d_image_matrix{ other.d_image_matrix }
+  : d_image_matrix(std::move(other.d_image_matrix))
+  , d_color_matrix(std::move(other.d_color_matrix))
   , w(w)
   , h(h)
   , render_color_bytes(render_color_bytes)
   , render_image_bytes(render_image_bytes)
+  , sample_bytes(sample_bytes)
+  , variance_bytes(variance_bytes)
 {
     other.d_color_matrix = nullptr;
     other.d_image_matrix = nullptr;
+    other.d_samples = nullptr;
+    other.d_variance = nullptr;
 }
 
 render::~render()
 {
     cudaFree(d_color_matrix);
     cudaFree(d_image_matrix);
+    cudaFree(d_samples);
+    cudaFree(d_variance);
 }
 
 template <typename T>
