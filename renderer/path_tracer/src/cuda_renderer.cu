@@ -431,7 +431,7 @@ void cuda_renderer::ray_trace(int samples, int sample_sum, render& ray_traced_im
 {
     {
         // const auto timer = shared::scoped_timer("ray_tracing");
-        constexpr int reduce_factor = 5;
+        constexpr int reduce_factor = 3;
         const dim3 blocks_decrease =
             dim3(h / (reduce_factor * num_threads_y) + 1, w / (reduce_factor * num_threads_x) + 1);
 
