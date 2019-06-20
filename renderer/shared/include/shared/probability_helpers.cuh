@@ -17,7 +17,12 @@ namespace shared
 
 __device__ __host__ inline float calc_mean(const float* const values, int n)
 {
-    float sum;
+    if (n == 0)
+    {
+        return 0;
+    }
+
+    float sum = 0.0f;
     for (auto i = 0; i < n; i++)
     {
         sum += values[i];
@@ -29,6 +34,11 @@ __device__ __host__ inline float calc_mean(const float* const values, int n)
 
 __device__ __host__ inline float calc_variance(const float* const values, int n)
 {
+    if (n == 0)
+    {
+        return 0;
+    }
+
     const auto mean = calc_mean(values, n);
     auto vari = 0.0f;
     for (auto i = 0; i < n; i++)

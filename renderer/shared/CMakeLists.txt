@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 SET(SOLUTION_NAME "ppt")
 SET(MODULE_NAME "ppt-shared")
+SET(MODULE_NAME_TEST "ppt-shared-tests")
 SET(MODULE_NAME_CONFIG "ppt-shared-config")
 message(STATUS "Project: " ${MODULE_NAME})
 
@@ -10,6 +11,7 @@ project(${MODULE_NAME}
 
 include(GNUInstallDirs)
 
+file(GLOB_RECURSE TESTS "tests/*.cpp")
 file(GLOB_RECURSE SOURCES "src/*.cu" "src/*.cpp")
 file(GLOB_RECURSE HEADERS "include/*.cuh" "include/*.hpp")
 
@@ -44,3 +46,12 @@ install(
 install(
     DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${SOLUTION_NAME})
+
+
+
+# TESTS
+add_executable(${MODULE_NAME_TEST} ${TESTS})
+target_link_libraries(${MODULE_NAME_TEST} ${MODULE_NAME} Catch2::Catch2)
+# include(CTest)
+# include(Catch)
+# catch_discover_tests(${MODULE_NAME_TEST})
