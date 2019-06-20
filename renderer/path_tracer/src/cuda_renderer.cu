@@ -70,11 +70,20 @@ __device__ vec3 color(const ray& r, hitable** world, curandState* local_rand_sta
     return cur_attenuation;
 }
 
-__global__ void
-render_image(vec3* image_matrix, int max_x, int max_y, int samples, camera* cam, hitable** world, curandState* rand_state)
+__global__ void render_image(vec3* image_matrix,
+                             int* samples,
+                             int max_x,
+                             int max_y,
+                             int samples_for_pixel,
+                             int sample_decrease_factor,
+                             camera* cam,
+                             hitable** world,
+                             curandState* rand_state)
 {
-    int row = threadIdx.x + blockIdx.x * blockDim.x;
-    int col = threadIdx.y + blockIdx.y * blockDim.y;
+    int row = (threadIdx.x + blockIdx.x * blockDim.x) *
+              (((sample_decrease_factor) * (1.0f + curand_uniform(rand_state))));
+    int col = (threadIdx.y + blockIdx.y * blockDim.y) *
+              (((sample_decrease_factor) * (1.0f + curand_uniform(rand_state))));
     if ((col >= max_x) || (row >= max_y))
         return;
 
@@ -83,7 +92,7 @@ render_image(vec3* image_matrix, int max_x, int max_y, int samples, camera* cam,
 
     vec3 pix = vec3(image_matrix[pixel_index].e);
     const camera local_camera(*cam);
-    for (int s = 0; s < samples; s++)
+    for (int s = 0; s < samples_for_pixel; s++)
     {
         float u = float(col + curand_normal(&local_rand_state)) / float(max_x);
         float v = float(max_y - row + curand_normal(&local_rand_state)) / float(max_y);
@@ -91,6 +100,7 @@ render_image(vec3* image_matrix, int max_x, int max_y, int samples, camera* cam,
         pix += color_rec(r, world, &local_rand_state, local_camera._min_depth, local_camera._max_depth, 5);
     }
 
+    samples[pixel_index] += samples_for_pixel;
     rand_state[pixel_index] = local_rand_state;
     image_matrix[pixel_index] = pix;
 }
@@ -111,9 +121,9 @@ __global__ void post_process(vec3* image_matrix,
                              vec8* out_image_matrix,
                              hitable** world,
                              camera* camera,
+                             int* samples,
                              int max_x,
                              int max_y,
-                             int samples,
                              curandState* rand_state)
 {
     int row = threadIdx.x + blockIdx.x * blockDim.x;
@@ -125,9 +135,11 @@ __global__ void post_process(vec3* image_matrix,
     curandState local_rand_state = rand_state[pixel_index];
 
     auto in_pixel = image_matrix[pixel_index];
-    auto norm_rgb = (vec3::clamp(vec3(in_pixel.e) / float(samples))).v_sqrt();
+    auto samples_for_pixel = samples[pixel_index];
+    auto norm_rgb = (vec3::clamp(vec3(in_pixel.e) / float(samples_for_pixel))).v_sqrt();
 
-    auto sample_precision = __logf(samples) / 16.0f; // 2^16=65536 is our (arbitrarily) choosen max number of samples
+    auto sample_precision = __logf(samples_for_pixel) /
+                            16.0f; // 2^16=65536 is our (arbitrarily) choosen max number of samples
     auto hit = depth_map(world, camera, col, row, max_x, max_y, &local_rand_state);
     auto depth = sqrtf(fabs(hit.t)) / sqrtf(camera->_max_depth);
 
@@ -135,7 +147,7 @@ __global__ void post_process(vec3* image_matrix,
         vec8(norm_rgb, sample_precision, depth, hit.normal[0], hit.normal[1], hit.normal[2]);
 }
 
-__global__ void post_process_fast(vec3* image_matrix, vec8* out_image_matrix, int max_x, int max_y, int samples)
+__global__ void post_process_fast(vec3* image_matrix, vec8* out_image_matrix, int* samples, int max_x, int max_y)
 {
     int row = threadIdx.x + blockIdx.x * blockDim.x;
     int col = threadIdx.y + blockIdx.y * blockDim.y;
@@ -143,9 +155,10 @@ __global__ void post_process_fast(vec3* image_matrix, vec8* out_image_matrix, in
         return;
 
     int pixel_index = RM(row, col, max_x);
+    auto samples_for_pixel = samples[pixel_index];
 
     auto in_pixel = image_matrix[pixel_index];
-    auto norm_rgb = (vec3::clamp(vec3(in_pixel.e) / float(samples))).v_sqrt();
+    auto norm_rgb = (vec3::clamp(vec3(in_pixel.e) / float(samples_for_pixel))).v_sqrt();
 
     out_image_matrix[pixel_index] = vec8(norm_rgb, 0, 0, 0, 0, 0);
 }
@@ -171,7 +184,7 @@ __global__ void render_init(int max_x, int max_y, int offset, curandState* rand_
     }
 }
 
-__global__ void reset_image(vec3* color_matrix, int max_x, int max_y)
+__global__ void reset_image(vec3* color_matrix, int* samples, int max_x, int max_y)
 {
     int row = threadIdx.x + blockIdx.x * blockDim.x;
     int col = threadIdx.y + blockIdx.y * blockDim.y;
@@ -180,6 +193,7 @@ __global__ void reset_image(vec3* color_matrix, int max_x, int max_y)
 
     int pixel_index = RM(row, col, max_x);
     color_matrix[pixel_index] = vec3(0, 0, 0);
+    samples[pixel_index] = 0;
 }
 
 __global__ void
@@ -416,9 +430,19 @@ void cuda_renderer::ray_trace(int samples, int sample_sum, render& ray_traced_im
 {
     {
         // const auto timer = shared::scoped_timer("ray_tracing");
+        constexpr int reduce_factor = 3;
+        const dim3 blocks_decrease =
+            dim3(h / (reduce_factor * num_threads_y) + 1, w / (reduce_factor * num_threads_x) + 1);
 
-        cuda_methods::render_image<<<blocks, threads>>>(
-            ray_traced_image.get_color_matrix(), w, h, samples, d_camera, d_world, d_rand_state);
+        cuda_methods::render_image<<<blocks_decrease, threads>>>(ray_traced_image.get_color_matrix(),
+                                                                 ray_traced_image.get_sample_matrix(),
+                                                                 w,
+                                                                 h,
+                                                                 samples,
+                                                                 reduce_factor,
+                                                                 d_camera,
+                                                                 d_world,
+                                                                 d_rand_state);
         checkCudaErrors(cudaGetLastError());
         checkCudaErrors(cudaDeviceSynchronize());
     }
@@ -428,8 +452,11 @@ void cuda_renderer::ray_trace(int samples, int sample_sum, render& ray_traced_im
 
         if (fast)
         {
-            cuda_methods::post_process_fast<<<blocks, threads>>>(
-                ray_traced_image.get_color_matrix(), ray_traced_image.get_image_matrix(), w, h, sample_sum);
+            cuda_methods::post_process_fast<<<blocks, threads>>>(ray_traced_image.get_color_matrix(),
+                                                                 ray_traced_image.get_image_matrix(),
+                                                                 ray_traced_image.get_sample_matrix(),
+                                                                 w,
+                                                                 h);
         }
         else
         {
@@ -437,9 +464,9 @@ void cuda_renderer::ray_trace(int samples, int sample_sum, render& ray_traced_im
                                                             ray_traced_image.get_image_matrix(),
                                                             d_world,
                                                             d_camera,
+                                                            ray_traced_image.get_sample_matrix(),
                                                             w,
                                                             h,
-                                                            sample_sum,
                                                             d_rand_state);
         }
         checkCudaErrors(cudaGetLastError());
@@ -508,7 +535,10 @@ void cuda_renderer::update_world()
 
 void cuda_renderer::reset_image(render& ray_traced_image) const
 {
-    cuda_methods::reset_image<<<blocks, threads>>>(ray_traced_image.get_color_matrix(), w, h);
+    cuda_methods::reset_image<<<blocks, threads>>>(ray_traced_image.get_color_matrix(),
+                                                   ray_traced_image.get_sample_matrix(),
+                                                   w,
+                                                   h);
     checkCudaErrors(cudaDeviceSynchronize());
 }
 

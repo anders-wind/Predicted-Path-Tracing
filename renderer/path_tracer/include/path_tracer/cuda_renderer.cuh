@@ -19,6 +19,7 @@ class cuda_renderer
     hitable** d_list;
     hitable** d_world;
     camera* d_camera;
+
     const std::shared_ptr<shared::sample_service> _sampler;
 
     public:
