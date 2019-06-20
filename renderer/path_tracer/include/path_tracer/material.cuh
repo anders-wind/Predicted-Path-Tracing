@@ -94,10 +94,10 @@ struct metal : public material
     __device__ bool
     scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, curandState* local_rand_state) const override
     {
-        vec3 reflected = reflect(vec3::unit_vector(r_in.direction()), rec.normal);
+        vec3 reflected = vec3::reflect(vec3::unit_vector(r_in.direction()), rec.normal);
         scattered = ray(rec.p, reflected + shared::random_in_unit_sphere(local_rand_state) * fuzz);
         attenuation = albedo->value(0, 0, rec.p);
-        return dot(scattered.direction(), rec.normal) > 0;
+        return vec3::dot(scattered.direction(), rec.normal) > 0;
     }
 };
 
@@ -120,24 +120,24 @@ struct dielectric : public material
     {
         vec3 outward_normal;
         vec3 refracted;
-        vec3 reflected = reflect(r_in.direction(), rec.normal);
+        vec3 reflected = vec3::reflect(r_in.direction(), rec.normal);
         attenuation = vec3(1.0, 1.0, 1.0);
         float reflect_prob, ni_over_nt, cosine;
 
-        if (dot(r_in.direction(), rec.normal) > 0.0f)
+        if (vec3::dot(r_in.direction(), rec.normal) > 0.0f)
         {
             outward_normal = -rec.normal;
             ni_over_nt = _ref_idx;
-            cosine = _ref_idx * dot(r_in.direction(), rec.normal) / r_in.direction().length();
+            cosine = _ref_idx * vec3::dot(r_in.direction(), rec.normal) / r_in.direction().length();
         }
         else
         {
             outward_normal = rec.normal;
             ni_over_nt = 1.0f / _ref_idx;
-            cosine = -dot(r_in.direction(), rec.normal) / r_in.direction().length();
+            cosine = -vec3::dot(r_in.direction(), rec.normal) / r_in.direction().length();
         }
 
-        if (refract(r_in.direction(), outward_normal, ni_over_nt, refracted))
+        if (vec3::refract(r_in.direction(), outward_normal, ni_over_nt, refracted))
         {
             reflect_prob = schlick(cosine);
         }

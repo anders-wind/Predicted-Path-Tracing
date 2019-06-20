@@ -175,6 +175,19 @@ struct vec3
         return *this;
     }
 
+    __host__ __device__ inline float sum() const
+    {
+        return (e[0] + e[1] + e[2]);
+    }
+
+    __host__ __device__ inline float average() const
+    {
+        return sum() / 3.0f;
+    }
+
+
+    // STATICS
+
     __host__ __device__ inline static vec3 min(const vec3& v1, const vec3& v2)
     {
         return vec3(std::fmin(v1[0], v2[0]), std::fmin(v1[1], v2[1]), std::fmin(v1[2], v2[2]));
@@ -201,81 +214,131 @@ struct vec3
         return clamp_min(clamp_max(v, max), min);
     }
 
-    __host__ __device__ inline vec3 operator/(const vec3& v2)
+    __host__ __device__ inline static vec3 unit_vector(const vec3& v)
+    {
+        return v / v.length();
+    }
+
+    __host__ __device__ inline static vec3 cross(const vec3& v1, const vec3& v2)
+    {
+        return vec3(v1[1] * v2[2] - v1[2] * v2[1], v1[2] * v2[0] - v1[0] * v2[2], v1[0] * v2[1] - v1[1] * v2[0]);
+    }
+
+    __host__ __device__ inline static float dot(const vec3& v1, const vec3& v2)
+    {
+        return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+    }
+
+    __host__ __device__ inline static vec3 reflect(const vec3& v, const vec3& n)
+    {
+        return v - n * (2 * vec3::dot(v, n));
+    }
+
+    __host__ __device__ inline static bool refract(const vec3& v, const vec3& n, float ni_over_nt, vec3& refracted)
+    {
+        vec3 uv = vec3::unit_vector(v);
+        auto dt = vec3::dot(uv, n);
+        auto discriminant = 1.0f - ni_over_nt * ni_over_nt * (1.0f - dt * dt);
+        if (discriminant > 0.0f)
+        {
+            refracted = (uv - n * dt) * ni_over_nt - n * sqrt(discriminant);
+            return true;
+        }
+        return false;
+    }
+
+    __host__ __device__ inline vec3 operator+(const vec3& v2) const
+    {
+        return vec3(e[0] + v2[0], e[1] + v2[1], e[2] + v2[2]);
+    }
+
+    __host__ __device__ inline vec3 operator-(const vec3& v2) const
+    {
+        return vec3(e[0] - v2[0], e[1] - v2[1], e[2] - v2[2]);
+    }
+
+    __host__ __device__ inline vec3 operator*(const vec3& v2) const
+    {
+        return vec3(e[0] * v2[0], e[1] * v2[1], e[2] * v2[2]);
+    }
+
+    __host__ __device__ inline vec3 operator/(const vec3& v2) const
     {
         return vec3(e[0] / v2[0], e[1] / v2[1], e[2] / v2[2]);
     }
 
-    __host__ __device__ inline static vec3 unit_vector(vec3 v)
+    __host__ __device__ inline vec3 operator+(const float t) const
     {
-        return v / v.length();
+        return vec3(e[0] + t, e[1] + t, e[2] + t);
+    }
+
+    __host__ __device__ inline vec3 operator-(const float t) const
+    {
+        return vec3(e[0] - t, e[1] - t, e[2] - t);
+    }
+
+    __host__ __device__ inline vec3 operator*(const float t) const
+    {
+        return vec3(e[0] * t, e[1] * t, e[2] * t);
+    }
+
+    __host__ __device__ inline vec3 operator/(const float t) const
+    {
+        return vec3(e[0] / t, e[1] / t, e[2] / t);
     }
 };
 
-
-__host__ __device__ inline vec3 operator+(const vec3& v1, const vec3& v2)
+__host__ __device__ inline vec3 operator+(const float t, const vec3& v)
 {
-    return vec3(v1[0] + v2[0], v1[1] + v2[1], v1[2] + v2[2]);
+    return v + t;
 }
 
-__host__ __device__ inline vec3 operator-(const vec3& v1, const vec3& v2)
+__host__ __device__ inline vec3 operator*(const float t, const vec3& v)
 {
-    return vec3(v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2]);
-}
-
-__host__ __device__ inline vec3 operator*(const vec3& v1, const vec3& v2)
-{
-    return vec3(v1[0] * v2[0], v1[1] * v2[1], v1[2] * v2[2]);
+    return v * t;
 }
 
 
-__host__ __device__ inline vec3 cross(const vec3& v1, const vec3& v2)
-{
-    return vec3(v1[1] * v2[2] - v1[2] * v2[1], v1[2] * v2[0] - v1[0] * v2[2], v1[0] * v2[1] - v1[1] * v2[0]);
-}
+// __host__ __device__ inline vec3 operator+(const vec3& v1, const vec3& v2)
+// {
+//     return v1.operator+(v2);
+// }
 
-__host__ __device__ inline float dot(const vec3& v1, const vec3& v2)
-{
-    return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
-}
+// __host__ __device__ inline vec3 operator-(const vec3& v1, const vec3& v2)
+// {
+//     return v1.operator-(v2);
+// }
 
-__host__ __device__ inline vec3 operator+(const vec3& v1, const float t)
-{
-    return vec3(v1[0] + t, v1[1] + t, v1[2] + t);
-}
+// __host__ __device__ inline vec3 operator*(const vec3& v1, const vec3& v2)
+// {
+//     return v1.operator*(v2);
+// }
 
-__host__ __device__ inline vec3 operator-(const vec3& v1, const float t)
-{
-    return vec3(v1[0] - t, v1[1] - t, v1[2] - t);
-}
+// __host__ __device__ inline vec3 operator/(const vec3& v1, const vec3& v2)
+// {
+//     return v1.operator/(v2);
+// }
 
-__host__ __device__ inline vec3 operator*(const vec3& v1, const float t)
-{
-    return vec3(v1[0] * t, v1[1] * t, v1[2] * t);
-}
+// __host__ __device__ inline vec3 operator+(const vec3& v1, const float t)
+// {
+//     return v1.operator+(t);
+// }
 
-__host__ __device__ inline vec3 operator/(const vec3& v1, const float t)
-{
-    return vec3(v1[0] / t, v1[1] / t, v1[2] / t);
-}
+// __host__ __device__ inline vec3 operator-(const vec3& v1, const float t)
+// {
+//     return v1.operator-(t);
+// }
 
-__host__ __device__ inline vec3 reflect(const vec3& v, const vec3& n)
-{
-    return v - n * (2 * dot(v, n));
-}
+// __host__ __device__ inline vec3 operator*(const vec3& v1, const float t)
+// {
+//     return v1.operator*(t);
+// }
 
-__host__ __device__ inline bool refract(const vec3& v, const vec3& n, float ni_over_nt, vec3& refracted)
-{
-    vec3 uv = vec3::unit_vector(v);
-    auto dt = dot(uv, n);
-    auto discriminant = 1.0f - ni_over_nt * ni_over_nt * (1.0f - dt * dt);
-    if (discriminant > 0.0f)
-    {
-        refracted = (uv - n * dt) * ni_over_nt - n * sqrt(discriminant);
-        return true;
-    }
-    return false;
-}
+// __host__ __device__ inline vec3 operator/(const vec3& v1, const float t)
+// {
+//     return v1.operator/(t);
+// }
+
 
 inline std::istream& operator>>(std::istream& is, vec3& t)
 {
@@ -289,48 +352,6 @@ inline std::ostream& operator<<(std::ostream& is, vec3& t)
     return is;
 }
 
-// Specific versions
-
-struct rgb : public vec3
-{
-    __host__ __device__ rgb(){};
-    __host__ __device__ rgb(float e0, float e1, float e2)
-    {
-        e[0] = e0;
-        e[1] = e1;
-        e[2] = e2;
-    }
-    __host__ __device__ rgb(const vec3& v)
-    {
-        e[0] = v[0];
-        e[1] = v[1];
-        e[2] = v[2];
-    }
-    __host__ __device__ inline float r() const
-    {
-        return e[0];
-    }
-    __host__ __device__ inline void r(float v)
-    {
-        e[0] = v;
-    }
-    __host__ __device__ inline float g()
-    {
-        return e[1];
-    }
-    __host__ __device__ inline void g(float v)
-    {
-        e[1] = v;
-    }
-    __host__ __device__ inline float b()
-    {
-        return e[2];
-    }
-    __host__ __device__ inline void b(float v)
-    {
-        e[2] = v;
-    }
-};
 
 } // namespace shared
 } // namespace ppt

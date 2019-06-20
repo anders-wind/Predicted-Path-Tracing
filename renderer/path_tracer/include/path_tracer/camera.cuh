@@ -134,8 +134,8 @@ class camera_factory
         const float half_width = ratio * half_height;
 
         w = vec3::unit_vector(look_from - look_at);
-        u = vec3::unit_vector(cross(v_up, w));
-        v = cross(w, u);
+        u = vec3::unit_vector(vec3::cross(v_up, w));
+        v = vec3::cross(w, u);
 
         const auto origin = look_from;
         const auto lower_left_corner = look_from - (half_width * focus_dist * u) -

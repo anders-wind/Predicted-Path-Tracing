@@ -30,7 +30,7 @@ __device__ vec3 random_in_unit_disk(curandState* local_rand_state)
     do
     {
         p = (RANDVEC2(local_rand_state) * 2.0f) - vec3(1.0f, 1.0f, 0.0f);
-    } while (dot(p, p) >= 1.0f);
+    } while (vec3::dot(p, p) >= 1.0f);
     return p;
 }
 

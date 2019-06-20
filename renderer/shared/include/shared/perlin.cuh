@@ -23,7 +23,7 @@ __device__ inline float trilinear_interp(vec3 c[2][2][2], float u, float v, floa
                 accum += (i * uu + (1.0f - i) * (1.0f - uu)) * //
                          (j * vv + (1.0f - j) * (1.0f - vv)) * //
                          (k * ww + (1.0f - k) * (1.0f - ww)) * //
-                         dot(c[i][j][k], weight);
+                         vec3::dot(c[i][j][k], weight);
             }
         }
     }

@@ -31,9 +31,9 @@ struct sphere : public hitable
     __device__ bool hit(const ray& r, float t_min, float t_max, hit_record& out) const override
     {
         vec3 oc = r.origin() - _center;
-        const auto a = dot(r.direction(), r.direction());
-        const auto b = dot(oc, r.direction());
-        const auto c = dot(oc, oc) - _radius * _radius;
+        const auto a = vec3::dot(r.direction(), r.direction());
+        const auto b = vec3::dot(oc, r.direction());
+        const auto c = vec3::dot(oc, oc) - _radius * _radius;
         const auto discriminant = b * b - a * c;
 
         if (discriminant > 0.0f)
