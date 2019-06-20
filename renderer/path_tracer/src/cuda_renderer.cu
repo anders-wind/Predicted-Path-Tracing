@@ -80,11 +80,12 @@ __global__ void render_image(vec3* image_matrix,
                              hitable** world,
                              curandState* rand_state)
 {
-    int row = (threadIdx.x + blockIdx.x * blockDim.x) *
-              (((sample_decrease_factor) * (1.0f + curand_uniform(rand_state))));
-    int col = (threadIdx.y + blockIdx.y * blockDim.y) *
-              (((sample_decrease_factor) * (1.0f + curand_uniform(rand_state))));
-    if ((col >= max_x) || (row >= max_y))
+    float half = sample_decrease_factor / 2.0f;
+    int row = (threadIdx.x + blockIdx.x * blockDim.x) * sample_decrease_factor +
+              (sample_decrease_factor * curand_uniform(rand_state) - half);
+    int col = (threadIdx.y + blockIdx.y * blockDim.y) * sample_decrease_factor +
+              (sample_decrease_factor * curand_uniform(rand_state) - half);
+    if (col < 0 || (col >= max_x) || row < 0 || (row >= max_y))
         return;
 
     int pixel_index = RM(row, col, max_x);
@@ -430,7 +431,7 @@ void cuda_renderer::ray_trace(int samples, int sample_sum, render& ray_traced_im
 {
     {
         // const auto timer = shared::scoped_timer("ray_tracing");
-        constexpr int reduce_factor = 3;
+        constexpr int reduce_factor = 5;
         const dim3 blocks_decrease =
             dim3(h / (reduce_factor * num_threads_y) + 1, w / (reduce_factor * num_threads_x) + 1);
 
