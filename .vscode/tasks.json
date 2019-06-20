@@ -6,7 +6,7 @@
         {
             "label": "build renderer",
             "type": "shell",
-            "command": "cd renderer && cmake . && cmake --build . -j 4",
+            "command": "mkdir -p renderer/build && cd renderer/build && cmake .. && cmake --build . -j 4",
             "group": {
                 "kind": "build",
                 "isDefault": true

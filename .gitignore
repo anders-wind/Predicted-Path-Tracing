@@ -13,3 +13,4 @@
 **/*.ppm
 **/*.ipynb
 **/*Doxy*
+renderer/build
