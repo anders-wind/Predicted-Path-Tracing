@@ -34,8 +34,8 @@ class cuda_renderer
     ~cuda_renderer();
 
     public: // Methods
-    std::shared_ptr<render> ray_trace(int samples, int sample_sum) const;
-    void ray_trace(int samples, int sample_sum, render& ray_traced_image) const;
+    std::shared_ptr<render> ray_trace(int samples, int sample_sum, bool fast = true) const;
+    void ray_trace(int samples, int sample_sum, render& ray_traced_image, bool fast = true) const;
 
     std::vector<path_tracer::render_datapoint> ray_trace_datapoints(size_t number_of_images);
 

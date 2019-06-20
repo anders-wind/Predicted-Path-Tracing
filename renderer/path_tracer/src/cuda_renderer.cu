@@ -135,6 +135,20 @@ __global__ void post_process(vec3* image_matrix,
         vec8(norm_rgb, sample_precision, depth, hit.normal[0], hit.normal[1], hit.normal[2]);
 }
 
+__global__ void post_process_fast(vec3* image_matrix, vec8* out_image_matrix, int max_x, int max_y, int samples)
+{
+    int row = threadIdx.x + blockIdx.x * blockDim.x;
+    int col = threadIdx.y + blockIdx.y * blockDim.y;
+    if ((col >= max_x) || (row >= max_y))
+        return;
+
+    int pixel_index = RM(row, col, max_x);
+
+    auto in_pixel = image_matrix[pixel_index];
+    auto norm_rgb = (vec3::clamp(vec3(in_pixel.e) / float(samples))).v_sqrt();
+
+    out_image_matrix[pixel_index] = vec8(norm_rgb, 0, 0, 0, 0, 0);
+}
 
 __global__ void render_init(int max_x, int max_y, int offset, curandState* rand_state)
 {
@@ -389,16 +403,16 @@ cuda_renderer::~cuda_renderer()
     checkCudaErrors(cudaGetLastError());
 }
 
-std::shared_ptr<render> cuda_renderer::ray_trace(int samples, int sample_sum) const
+std::shared_ptr<render> cuda_renderer::ray_trace(int samples, int sample_sum, bool fast) const
 {
     const auto timer = shared::scoped_timer("ray_trace");
 
     auto ray_traced_image = std::make_shared<render>(w, h);
-    ray_trace(samples, sample_sum, *ray_traced_image);
+    ray_trace(samples, sample_sum, *ray_traced_image, fast);
     return ray_traced_image;
 }
 
-void cuda_renderer::ray_trace(int samples, int sample_sum, render& ray_traced_image) const
+void cuda_renderer::ray_trace(int samples, int sample_sum, render& ray_traced_image, bool fast) const
 {
     {
         // const auto timer = shared::scoped_timer("ray_tracing");
@@ -412,14 +426,22 @@ void cuda_renderer::ray_trace(int samples, int sample_sum, render& ray_traced_im
     {
         // const auto timer = shared::scoped_timer("post process");
 
-        cuda_methods::post_process<<<blocks, threads>>>(ray_traced_image.get_color_matrix(),
-                                                        ray_traced_image.get_image_matrix(),
-                                                        d_world,
-                                                        d_camera,
-                                                        w,
-                                                        h,
-                                                        sample_sum,
-                                                        d_rand_state);
+        if (fast)
+        {
+            cuda_methods::post_process_fast<<<blocks, threads>>>(
+                ray_traced_image.get_color_matrix(), ray_traced_image.get_image_matrix(), w, h, sample_sum);
+        }
+        else
+        {
+            cuda_methods::post_process<<<blocks, threads>>>(ray_traced_image.get_color_matrix(),
+                                                            ray_traced_image.get_image_matrix(),
+                                                            d_world,
+                                                            d_camera,
+                                                            w,
+                                                            h,
+                                                            sample_sum,
+                                                            d_rand_state);
+        }
         checkCudaErrors(cudaGetLastError());
         checkCudaErrors(cudaDeviceSynchronize());
     }
@@ -466,7 +488,7 @@ path_tracer::render_datapoint cuda_renderer::ray_trace_datapoint(render& ray_tra
 
         sample_sum += samples;
 
-        ray_trace(samples, sample_sum, ray_traced_image);
+        ray_trace(samples, sample_sum, ray_traced_image, false);
 
         result.set_result(ray_traced_image, i);
     }
