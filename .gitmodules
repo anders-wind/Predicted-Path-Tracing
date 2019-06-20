@@ -1,3 +1,6 @@
 [submodule "renderer/third_party/glfw"]
 	path = renderer/third_party/glfw
 	url = git@github.com:glfw/glfw.git
+[submodule "renderer/third_party/Catch2"]
+	path = renderer/third_party/Catch2
+	url = git@github.com:catchorg/Catch2.git
