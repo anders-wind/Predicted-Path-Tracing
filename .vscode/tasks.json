@@ -4,9 +4,30 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build renderer",
+            "label": "[RELEASE] build renderer",
             "type": "shell",
             "command": "mkdir -p renderer/build && cd renderer/build && cmake .. && cmake --build . -j 4",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "[DEBUG] build renderer",
+            "type": "shell",
+            "command": "mkdir -p renderer/build && cd renderer/build && cmake -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -j 4",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "[CLEAN] build renderer",
+            "type": "shell",
+            "command": "rm -rf renderer/build",
             "group": {
                 "kind": "build",
                 "isDefault": true

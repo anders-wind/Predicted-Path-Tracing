@@ -34,7 +34,7 @@ void main_loop(GLFWwindow* window, std::shared_ptr<path_tracer::cuda_renderer> p
     using namespace gui;
     auto re = renderer();
     auto state = std::make_shared<gui_state>();
-    constexpr auto inc = 5;
+    constexpr auto inc = 3;
     state->sample_sum += inc;
     auto rendering = path_tracer->ray_trace(inc, state->sample_sum);
     auto gui = gui_controller(state, path_tracer, rendering);
