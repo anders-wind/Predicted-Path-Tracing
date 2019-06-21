@@ -1,4 +1,5 @@
 #pragma once
+#include <builtin_types.h>
 #include <math.h>
 #include <vector>
 
@@ -6,14 +7,6 @@ namespace ppt
 {
 namespace shared
 {
-
-#ifndef __device__
-#define __device__
-#endif
-
-#ifndef __host__
-#define __host__
-#endif
 
 __device__ __host__ inline float calc_mean(const float* const values, int n)
 {
@@ -67,9 +60,9 @@ __device__ __host__ inline float online_variance_sum(float prev_vari, float prev
     return n > 1 ? newS : 0.0;
 }
 
-__device__ __host__ inline float online_variance(float prev_vari, float prev_mean, float new_val, size_t n)
+__device__ __host__ inline float online_variance(float prev_vari_sum, float prev_mean, float new_val, size_t n)
 {
-    return n > 1 ? online_variance_sum(prev_vari, prev_mean, new_val, n) / (n - 1) : 0.0;
+    return n > 1 ? online_variance_sum(prev_vari_sum, prev_mean, new_val, n) / (n - 1) : 0.0;
 }
 
 } // namespace shared
