@@ -12,8 +12,9 @@ include(GNUInstallDirs)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 file(GLOB_RECURSE HEADERS "include/*.hpp")
+SET(RESOURCES res/)
 
-add_executable(${MODULE_NAME} ${SOURCES})
+add_executable(${MODULE_NAME} ${SOURCES} ${RESOURCES})
 
 target_link_libraries (${MODULE_NAME} 
     PUBLIC
@@ -38,3 +39,9 @@ target_include_directories(${MODULE_NAME}
 target_compile_definitions(${MODULE_NAME} 
     PRIVATE -D_EXPORT)
 
+
+add_custom_command(
+    TARGET ${MODULE_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/${RESOURCES} 
+        $<TARGET_FILE_DIR:${MODULE_NAME}>/${RESOURCES})
