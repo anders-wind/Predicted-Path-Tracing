@@ -5,6 +5,7 @@
 #include <shared/probability_helpers.cuh>
 #include <vector>
 
+
 TEST_CASE("Calculate mean for 1 elem is elem", "[calc_mean]")
 {
     auto vals1 = std::vector<float>{ 5 };
@@ -21,4 +22,22 @@ TEST_CASE("Calculate mean for 0 elem is 0", "[calc_mean]")
 {
     auto vals = std::vector<float>{};
     REQUIRE(ppt::shared::calc_mean(&vals[0], 0) == 0.0f);
+}
+
+
+TEST_CASE("Online Mean rollout", "[calc_mean]")
+{
+    auto vals = std::vector<float>{ 1, 1, 1, 2, 1, 1, 1, 1 };
+    auto online_mean = ppt::shared::calc_mean_online_rollout(&vals[0], vals.size());
+    auto offline_mean = ppt::shared::calc_mean(&vals[0], vals.size());
+
+    REQUIRE(online_mean == Approx(offline_mean));
+}
+
+TEST_CASE("Print some online variances", "[calc_mean]")
+{
+    auto vals = std::vector<float>{ 1, 1, 1, 2, 1, 1, 1, 1 };
+    auto online_vari = ppt::shared::calc_variance_online_rollout(&vals[0], vals.size());
+    auto offline_vari = ppt::shared::calc_variance(&vals[0], vals.size());
+    REQUIRE(online_vari == Approx(offline_vari));
 }
