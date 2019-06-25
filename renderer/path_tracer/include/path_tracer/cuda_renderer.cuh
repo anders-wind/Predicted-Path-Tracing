@@ -52,9 +52,9 @@ class cuda_renderer
     // private:
     void reset_image(render& ray_traced_image) const;
     void update_world();
-    float variance_sum() const
+    float get_variance_mean() const
     {
-        return _matrix_probability_stats->get_variance_sum();
+        return _matrix_probability_stats->get_variance_mean();
     }
 };
 

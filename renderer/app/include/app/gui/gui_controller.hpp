@@ -79,7 +79,7 @@ class gui_controller
 
     void add_variance() const
     {
-        ImGui::Text("Variance sum %.3f", path_tracer->variance_sum());
+        ImGui::Text("Variance sum %.3f", path_tracer->get_variance_mean());
     }
 
     void add_update_world_button() const

@@ -99,13 +99,15 @@ matrix_probability_stats<vec3>::matrix_probability_stats(size_t height, size_t w
     checkCudaErrors(cudaMemset(d_variance, 0, width * height));
 }
 
-template <> matrix_probability_stats<vec3>::~matrix_probability_stats()
+template <>
+matrix_probability_stats<vec3>::~matrix_probability_stats()
 {
     checkCudaErrors(cudaFree(d_variance_sum));
     checkCudaErrors(cudaFree(d_means));
     checkCudaErrors(cudaFree(d_variance));
 }
-template <> matrix_probability_stats<float>::~matrix_probability_stats()
+template <>
+matrix_probability_stats<float>::~matrix_probability_stats()
 {
     checkCudaErrors(cudaFree(d_variance_sum));
     checkCudaErrors(cudaFree(d_means));
@@ -131,7 +133,8 @@ void matrix_probability_stats<vec3>::update_variance(const vec3* const d_values,
     checkCudaErrors(cudaDeviceSynchronize());
 }
 
-template <> std::vector<float> matrix_probability_stats<float>::get_variance() const
+template <>
+std::vector<float> matrix_probability_stats<float>::get_variance() const
 {
     auto h_variance = std::vector<float>(width * height);
     h_variance.resize(width * height);
@@ -140,7 +143,8 @@ template <> std::vector<float> matrix_probability_stats<float>::get_variance() c
     return h_variance;
 }
 
-template <> std::vector<vec3> matrix_probability_stats<vec3>::get_variance() const
+template <>
+std::vector<vec3> matrix_probability_stats<vec3>::get_variance() const
 {
     auto h_variance = std::vector<vec3>(width * height);
     h_variance.resize(width * height);
@@ -149,7 +153,8 @@ template <> std::vector<vec3> matrix_probability_stats<vec3>::get_variance() con
     return h_variance;
 }
 
-template <> float matrix_probability_stats<vec3>::get_variance_sum() const
+template <>
+float matrix_probability_stats<vec3>::get_variance_mean() const
 {
     const auto vari = get_variance();
     auto sum = 0.0f;
@@ -157,7 +162,7 @@ template <> float matrix_probability_stats<vec3>::get_variance_sum() const
     {
         sum += vari[i].sum();
     }
-    return sum;
+    return sum / float(height * width * 3);
 }
 
 

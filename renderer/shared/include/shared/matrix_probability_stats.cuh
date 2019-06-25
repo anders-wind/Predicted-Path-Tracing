@@ -39,7 +39,7 @@ template <typename T> class matrix_probability_stats
      * Host memory, variance vector
      */
     std::vector<T> get_variance() const;
-    float get_variance_sum() const;
+    float get_variance_mean() const;
 };
 
 } // namespace shared

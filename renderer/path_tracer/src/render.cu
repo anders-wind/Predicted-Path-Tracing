@@ -46,10 +46,10 @@ render::render(render&& other)
 
 render::~render()
 {
-    cudaFree(d_color_matrix);
-    cudaFree(d_image_matrix);
-    cudaFree(d_samples);
-    cudaFree(d_variance);
+    checkCudaErrors(cudaFree(d_color_matrix));
+    checkCudaErrors(cudaFree(d_image_matrix));
+    checkCudaErrors(cudaFree(d_samples));
+    checkCudaErrors(cudaFree(d_variance));
 }
 
 template <typename T>
