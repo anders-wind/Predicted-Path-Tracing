@@ -5,14 +5,13 @@ namespace ppt
 {
 namespace shared
 {
-
-class matrix_probability_stats
+template <typename T> class matrix_probability_stats
 {
     private:
     // device arrays
-    float* d_variance_sum;
-    float* d_means;
-    float* d_variance;
+    T* d_variance_sum;
+    T* d_means;
+    T* d_variance;
 
     const unsigned int height;
     const unsigned int width;
@@ -29,7 +28,7 @@ class matrix_probability_stats
     matrix_probability_stats(matrix_probability_stats&& other) = delete;
     matrix_probability_stats operator=(matrix_probability_stats&& other) = delete;
 
-    void update_variance(const float* const d_values, const unsigned int* const d_sample_count);
+    void update_variance(const T* const d_values, const unsigned int* const d_sample_count);
 };
 } // namespace shared
 } // namespace ppt

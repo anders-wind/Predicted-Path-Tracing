@@ -1,6 +1,7 @@
 
 #include "shared/matrix_probability_stats.cuh"
 #include "shared/probability_helpers.cuh"
+#include "shared/vecs/vec3.cuh"
 #include <cuda.h>
 #include <device_launch_parameters.h>
 
@@ -39,8 +40,41 @@ __global__ void calc_variance_online_2d(float* variance_sum,
     means[idx] = new_mean;
 }
 
+__global__ void calc_variance_online_2d(vec3* variance_sum,
+                                        vec3* variance,
+                                        vec3* means,
+                                        const vec3* const values,
+                                        const unsigned int* const sample_count,
+                                        unsigned int max_x,
+                                        unsigned int max_y)
+{
+    const auto row = threadIdx.x + blockIdx.x * blockDim.x;
+    const auto col = threadIdx.y + blockIdx.y * blockDim.y;
+    if ((col >= max_x) || (row >= max_y))
+        return;
 
-matrix_probability_stats::matrix_probability_stats(size_t height, size_t width, const dim3& block_dim, const dim3& thread_dim)
+    const auto idx = RM(row, col, max_x);
+    const auto value = values[idx];
+    const auto samples = sample_count[idx];
+    const auto prev_mean = means[idx];
+    const auto prev_vari_sum = variance_sum[idx];
+
+    vec3 new_mean(0.0f);
+    vec3 new_vari(0.0f);
+    for (auto i = 0; i < 3; i++)
+    {
+        new_mean[i] = online_mean(prev_mean[i], value[i], samples);
+        new_vari[i] = online_variance(prev_vari_sum[i], prev_mean[i], new_mean[i], value[i], samples);
+    }
+
+    variance_sum[idx] = new_vari;
+    variance[idx] = new_vari / (samples - 1);
+    means[idx] = new_mean;
+}
+
+
+template <>
+matrix_probability_stats<float>::matrix_probability_stats(size_t height, size_t width, const dim3& block_dim, const dim3& thread_dim)
   : height(height), width(width), block_dim(block_dim), thread_dim(thread_dim)
 {
     checkCudaErrors(cudaMalloc((void**)&d_means, width * height * sizeof(float)));
@@ -52,14 +86,38 @@ matrix_probability_stats::matrix_probability_stats(size_t height, size_t width, 
     cudaMemset((void**)&d_variance, 0, width * height);
 }
 
-matrix_probability_stats::~matrix_probability_stats()
+template <>
+matrix_probability_stats<vec3>::matrix_probability_stats(size_t height, size_t width, const dim3& block_dim, const dim3& thread_dim)
+  : height(height), width(width), block_dim(block_dim), thread_dim(thread_dim)
+{
+    checkCudaErrors(cudaMalloc((void**)&d_means, width * height * sizeof(vec3)));
+    checkCudaErrors(cudaMalloc((void**)&d_variance_sum, width * height * sizeof(vec3)));
+    checkCudaErrors(cudaMalloc((void**)&d_variance, width * height * sizeof(vec3)));
+
+    cudaMemset((void**)&d_means, 0, width * height);
+    cudaMemset((void**)&d_variance_sum, 0, width * height);
+    cudaMemset((void**)&d_variance, 0, width * height);
+}
+
+template <typename T> matrix_probability_stats<T>::~matrix_probability_stats()
 {
     cudaFree(d_variance_sum);
     cudaFree(d_means);
     cudaFree(d_variance);
 }
 
-void matrix_probability_stats::update_variance(const float* const d_values, const unsigned int* const d_sample_count)
+template <>
+void matrix_probability_stats<float>::update_variance(const float* const d_values,
+                                                      const unsigned int* const d_sample_count)
+{
+    calc_variance_online_2d<<<block_dim, thread_dim>>>(
+        d_variance_sum, d_variance, d_means, d_values, d_sample_count, width, height);
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+}
+
+template <>
+void matrix_probability_stats<vec3>::update_variance(const vec3* const d_values, const unsigned int* const d_sample_count)
 {
     calc_variance_online_2d<<<block_dim, thread_dim>>>(
         d_variance_sum, d_variance, d_means, d_values, d_sample_count, width, height);
