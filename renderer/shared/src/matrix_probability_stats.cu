@@ -76,7 +76,7 @@ __global__ void calc_variance_online_2d(vec3* variance_sum,
 __global__ void
 variance_block_sum(const vec3* const variance, float* variance_block, unsigned int max_x, unsigned int max_y)
 {
-    extern __shared__ vec3 sdata[];
+    extern __shared__ float sdata[];
     const auto row = threadIdx.x + blockIdx.x * blockDim.x;
     const auto col = threadIdx.y + blockIdx.y * blockDim.y;
     if ((col >= max_x) || (row >= max_y))
@@ -87,7 +87,7 @@ variance_block_sum(const vec3* const variance, float* variance_block, unsigned i
     const auto block_idx = RM(blockIdx.x, blockIdx.y, gridDim.x);
     const auto block_size = blockDim.x * blockDim.y;
 
-    sdata[local_idx] = variance[idx];
+    sdata[local_idx] = variance[idx].sum();
     __syncthreads();
 
     for (auto s = block_size / 2; s > 32; s >>= 1)
@@ -101,22 +101,12 @@ variance_block_sum(const vec3* const variance, float* variance_block, unsigned i
 
     if (local_idx < 32)
     {
-        sdata[local_idx] += sdata[local_idx + 32];
-        __syncthreads();
-        sdata[local_idx] += sdata[local_idx + 16];
-        __syncthreads();
-        sdata[local_idx] += sdata[local_idx + 8];
-        __syncthreads();
-        sdata[local_idx] += sdata[local_idx + 4];
-        __syncthreads();
-        sdata[local_idx] += sdata[local_idx + 2];
-        __syncthreads();
-        sdata[local_idx] += sdata[local_idx + 1];
+        warp_reduce<64, float>(sdata, local_idx);
     }
     __syncthreads();
     if (local_idx == 0)
     {
-        variance_block[block_idx] = sdata[0].sum();
+        variance_block[block_idx] = sdata[0];
         // printf("test %d, %f \n", block_idx, sdata[local_idx][0]);
     }
 }
@@ -227,7 +217,7 @@ std::vector<float> matrix_probability_stats<vec3>::get_variance_blocks() const
 template <>
 float matrix_probability_stats<vec3>::get_variance_mean() const
 {
-    variance_block_sum<<<block_dim, thread_dim, thread_dim.x * thread_dim.y * sizeof(vec3)>>>(
+    variance_block_sum<<<block_dim, thread_dim, thread_dim.x * thread_dim.y * sizeof(float)>>>(
         d_variance, d_variance_blocks, width, height);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
