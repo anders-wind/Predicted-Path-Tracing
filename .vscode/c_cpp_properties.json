@@ -2,13 +2,16 @@
   "configurations": [
     {
       "name": "Linux",
-      "includePath": ["${workspaceFolder}/**", "/usr/local/cuda/include/**"],
+      "includePath": [
+        "${workspaceFolder}/**",
+        "/usr/local/cuda/include/**"
+      ],
       "defines": [],
       "compilerPath": "/usr/bin/clang",
       "cStandard": "c11",
       "cppStandard": "c++17",
       "intelliSenseMode": "clang-x64",
-      "compileCommands": "${workspaceFolder}/renderer/compile_commands.json"
+      "compileCommands": "${workspaceFolder}/renderer/build/compile_commands.json"
     }
   ],
   "version": 4

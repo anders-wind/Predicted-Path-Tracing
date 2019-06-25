@@ -4,9 +4,21 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "[RELEASE] build renderer",
+            "label": "[RELEASE] build renderer FULL",
             "type": "shell",
             "command": "mkdir -p renderer/build && cd renderer/build && cmake .. && cmake --build . -j 4",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "[RELEASE] build renderer app",
+            "type": "shell",
+            "command": "mkdir -p renderer/build && cd renderer/build && cmake .. && cmake --build app -j 4",
             "group": {
                 "kind": "build",
                 "isDefault": true
