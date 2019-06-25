@@ -1,5 +1,6 @@
 #pragma once
 #include <builtin_types.h>
+#include <vector>
 
 namespace ppt
 {
@@ -29,6 +30,9 @@ template <typename T> class matrix_probability_stats
     matrix_probability_stats operator=(matrix_probability_stats&& other) = delete;
 
     void update_variance(const T* const d_values, const unsigned int* const d_sample_count);
+
+    std::vector<T> get_variance() const;
 };
+
 } // namespace shared
 } // namespace ppt

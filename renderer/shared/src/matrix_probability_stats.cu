@@ -125,5 +125,24 @@ void matrix_probability_stats<vec3>::update_variance(const vec3* const d_values,
     checkCudaErrors(cudaDeviceSynchronize());
 }
 
+template <> std::vector<float> matrix_probability_stats<float>::get_variance() const
+{
+    auto h_variance = std::vector<float>(width * height);
+    h_variance.resize(width * height);
+    auto bytes = sizeof(float) * width * height;
+    checkCudaErrors(cudaMemcpy(&h_variance[0], d_variance, bytes, cudaMemcpyDeviceToHost));
+    return h_variance;
+}
+
+template <> std::vector<vec3> matrix_probability_stats<vec3>::get_variance() const
+{
+    auto h_variance = std::vector<vec3>(width * height);
+    h_variance.resize(width * height);
+    auto bytes = sizeof(vec3) * width * height;
+    checkCudaErrors(cudaMemcpy(&h_variance[0], d_variance, bytes, cudaMemcpyDeviceToHost));
+    return h_variance;
+}
+
+
 } // namespace shared
 } // namespace ppt
