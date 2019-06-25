@@ -10,13 +10,15 @@ namespace shared
 /**
  * T supported types are float and vec3
  */
-template <typename T> class matrix_probability_stats
+template <typename T>
+class matrix_probability_stats
 {
     private:
     // device arrays
     T* d_variance_sum;
     T* d_means;
     T* d_variance;
+    float* d_variance_blocks;
 
     const unsigned int height;
     const unsigned int width;
@@ -34,11 +36,13 @@ template <typename T> class matrix_probability_stats
     matrix_probability_stats& operator=(matrix_probability_stats&& other) = delete;
 
     void update_variance(const T* const d_values, const unsigned int* const d_sample_count);
-
+    void calc_variance_blocks();
     /**
      * Host memory, variance vector
      */
     std::vector<T> get_variance() const;
+    std::vector<float> get_variance_blocks() const;
+
     float get_variance_mean() const;
 };
 

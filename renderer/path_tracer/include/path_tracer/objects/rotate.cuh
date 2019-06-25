@@ -27,12 +27,12 @@ struct rotate_y : public hitable
         cos_theta = cos(radians);
         has_box = inner->bounding_box(0, 1, bbox);
 
-        vec3 min = (std::numeric_limits<float>::max(),
-                    std::numeric_limits<float>::max(),
-                    std::numeric_limits<float>::max());
-        vec3 max = (std::numeric_limits<float>::min(),
-                    std::numeric_limits<float>::min(),
-                    std::numeric_limits<float>::min());
+        vec3 min = vec3(std::numeric_limits<float>::max(),
+                        std::numeric_limits<float>::max(),
+                        std::numeric_limits<float>::max());
+        vec3 max = vec3(std::numeric_limits<float>::min(),
+                        std::numeric_limits<float>::min(),
+                        std::numeric_limits<float>::min());
 
         for (auto i = 0; i < 2; i++)
         {

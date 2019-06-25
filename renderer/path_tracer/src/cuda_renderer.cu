@@ -248,7 +248,7 @@ create_small_world(hitable** d_list, hitable** d_world, camera* d_camera, int hi
         d_list[2] = new sphere(vec3(0, 7, 0), 2, new diffuse_light(new constant_texture(vec3(4))));
         d_list[3] = new sphere(vec3(-1, 0.0, -1), 0.5, new dielectric(1.5f));
         d_list[4] = new sphere(vec3(-1, 0.0, -1), -0.45, new dielectric(1.5f));
-        d_list[5] = new xy_rect(3, 5, 1, 3, -2, new diffuse_light(new constant_texture(9.0f)));
+        d_list[5] = new xy_rect(3, 5, 1, 3, -2, new diffuse_light(new constant_texture(vec3(9.0f))));
 
 
         *d_world = new bvh_node(d_list, hitables_size);
