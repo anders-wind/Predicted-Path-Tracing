@@ -94,16 +94,22 @@ matrix_probability_stats<vec3>::matrix_probability_stats(size_t height, size_t w
     checkCudaErrors(cudaMalloc((void**)&d_variance_sum, width * height * sizeof(vec3)));
     checkCudaErrors(cudaMalloc((void**)&d_variance, width * height * sizeof(vec3)));
 
-    cudaMemset((void**)&d_means, 0, width * height);
-    cudaMemset((void**)&d_variance_sum, 0, width * height);
-    cudaMemset((void**)&d_variance, 0, width * height);
+    checkCudaErrors(cudaMemset(d_means, 0, width * height));
+    checkCudaErrors(cudaMemset(d_variance_sum, 0, width * height));
+    checkCudaErrors(cudaMemset(d_variance, 0, width * height));
 }
 
-template <typename T> matrix_probability_stats<T>::~matrix_probability_stats()
+template <> matrix_probability_stats<vec3>::~matrix_probability_stats()
 {
-    cudaFree(d_variance_sum);
-    cudaFree(d_means);
-    cudaFree(d_variance);
+    checkCudaErrors(cudaFree(d_variance_sum));
+    checkCudaErrors(cudaFree(d_means));
+    checkCudaErrors(cudaFree(d_variance));
+}
+template <> matrix_probability_stats<float>::~matrix_probability_stats()
+{
+    checkCudaErrors(cudaFree(d_variance_sum));
+    checkCudaErrors(cudaFree(d_means));
+    checkCudaErrors(cudaFree(d_variance));
 }
 
 template <>
@@ -141,6 +147,17 @@ template <> std::vector<vec3> matrix_probability_stats<vec3>::get_variance() con
     auto bytes = sizeof(vec3) * width * height;
     checkCudaErrors(cudaMemcpy(&h_variance[0], d_variance, bytes, cudaMemcpyDeviceToHost));
     return h_variance;
+}
+
+template <> float matrix_probability_stats<vec3>::get_variance_sum() const
+{
+    const auto vari = get_variance();
+    auto sum = 0.0f;
+    for (auto i = 0; i < vari.size(); i++)
+    {
+        sum += vari[i].sum();
+    }
+    return sum;
 }
 
 

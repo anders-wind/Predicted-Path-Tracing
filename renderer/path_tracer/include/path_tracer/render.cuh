@@ -24,7 +24,7 @@ class render
     ppt::shared::vec3* d_color_matrix;
     ppt::shared::vec8* d_image_matrix;
     std::shared_ptr<std::mutex> lock = std::make_shared<std::mutex>();
-    int* d_samples;
+    unsigned int* d_samples;
     float* d_variance;
 
     public:
@@ -57,7 +57,7 @@ class render
         return d_color_matrix;
     }
 
-    int* get_sample_matrix()
+    unsigned int* get_sample_matrix()
     {
         return d_samples;
     }

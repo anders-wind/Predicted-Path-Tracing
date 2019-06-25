@@ -46,6 +46,7 @@ class gui_controller
             ImGui::Begin("PPT controller"); // Create a window called "Hello, world!" and append into it.
 
             add_fps();
+            add_variance();
 
             ImGui::Checkbox("Toggle Demo Window", &state->show_demo_window); // Edit bools storing our window open/close state
 
@@ -74,6 +75,11 @@ class gui_controller
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                     1000.0f / ImGui::GetIO().Framerate,
                     ImGui::GetIO().Framerate);
+    }
+
+    void add_variance() const
+    {
+        ImGui::Text("Variance sum %.3f", path_tracer->variance_sum());
     }
 
     void add_update_world_button() const

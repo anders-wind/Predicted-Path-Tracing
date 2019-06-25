@@ -18,6 +18,7 @@
 #include <iostream>
 #include <memory>
 #include <path_tracer/cuda_renderer.cuh>
+#include <shared/matrix_probability_stats.cuh>
 #include <shared/sample_service.cuh>
 #include <shared/scoped_thread.cuh>
 #include <sstream>
@@ -142,8 +143,14 @@ int main(void)
     int w = 1280;
     int h = 720;
 
+    const auto threads = dim3(8, 8);
+    const auto blocks = dim3(h / threads.y + 1, w / threads.x + 1);
     const auto sampler = std::make_shared<ppt::shared::sample_service>();
-    auto path_tracer = std::make_shared<ppt::path_tracer::cuda_renderer>(w, h, sampler);
+    const auto matrix_probability_stats =
+        std::make_shared<ppt::shared::matrix_probability_stats<ppt::shared::vec3>>(w, h, blocks, threads);
+
+    auto path_tracer =
+        std::make_shared<ppt::path_tracer::cuda_renderer>(w, h, blocks, threads, sampler, matrix_probability_stats);
 
     GLFWwindow* window = ppt::app::init_window(w, h + 20);
 

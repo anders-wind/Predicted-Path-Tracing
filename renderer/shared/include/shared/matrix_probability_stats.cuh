@@ -6,6 +6,10 @@ namespace ppt
 {
 namespace shared
 {
+
+/**
+ * T supported types are float and vec3
+ */
 template <typename T> class matrix_probability_stats
 {
     private:
@@ -25,13 +29,17 @@ template <typename T> class matrix_probability_stats
     ~matrix_probability_stats();
 
     matrix_probability_stats(const matrix_probability_stats& other) = delete;
-    matrix_probability_stats operator=(const matrix_probability_stats& other) = delete;
+    matrix_probability_stats& operator=(const matrix_probability_stats& other) = delete;
     matrix_probability_stats(matrix_probability_stats&& other) = delete;
-    matrix_probability_stats operator=(matrix_probability_stats&& other) = delete;
+    matrix_probability_stats& operator=(matrix_probability_stats&& other) = delete;
 
     void update_variance(const T* const d_values, const unsigned int* const d_sample_count);
 
+    /**
+     * Host memory, variance vector
+     */
     std::vector<T> get_variance() const;
+    float get_variance_sum() const;
 };
 
 } // namespace shared

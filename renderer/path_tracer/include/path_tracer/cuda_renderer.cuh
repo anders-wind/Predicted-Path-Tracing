@@ -4,6 +4,7 @@
 #include "render.cuh"
 #include "render_datapoint.cuh"
 #include <shared/cuda_helpers.cuh>
+#include <shared/matrix_probability_stats.cuh>
 #include <shared/sample_service.cuh>
 #include <vector>
 
@@ -21,16 +22,20 @@ class cuda_renderer
     camera* d_camera;
 
     const std::shared_ptr<shared::sample_service> _sampler;
+    const std::shared_ptr<shared::matrix_probability_stats<vec3>> _matrix_probability_stats;
 
     public:
-    int num_threads_x = 8;
-    int num_threads_y = 8;
     const dim3 blocks;
     const dim3 threads;
     const size_t w;
     const size_t h;
 
-    cuda_renderer(int w, int h, std::shared_ptr<shared::sample_service> sampler);
+    cuda_renderer(int w,
+                  int h,
+                  const dim3& blocks,
+                  const dim3& threads,
+                  std::shared_ptr<shared::sample_service> sampler,
+                  std::shared_ptr<shared::matrix_probability_stats<vec3>> matrix_probability_stats);
 
     ~cuda_renderer();
 
@@ -47,6 +52,10 @@ class cuda_renderer
     // private:
     void reset_image(render& ray_traced_image) const;
     void update_world();
+    float variance_sum() const
+    {
+        return _matrix_probability_stats->get_variance_sum();
+    }
 };
 
 } // namespace path_tracer
